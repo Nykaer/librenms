@@ -1,101 +1,157 @@
 <?php
+/*
+ * LibreNMS module to capture Cisco Class-Based QoS Details
+ *
+ * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.  Please see LICENSE.txt at the top level of
+ * the source code distribution for details.
+ */
 
 if ($device['os_group'] == 'cisco') {
 
-    /**
-     * Indexed_SNMP - returns an array in the format array[OID][Index] = value from a string input of snmpwalk results.
-     * @param $string
-     * @return array
-     */
-    function indexed_snmp($string) {
-        $array = array();
-        // Let's turn the result into something we can work with.
-        foreach (explode("\n", $string) as $line) {
-            if ($line[0] == '.') {
-                // strip the leading . if it exists.
-                $line = substr($line,1);
-            }
-            list($key, $value) = explode(' ', $line, 2);
+    $MODULE = 'Cisco-CBQOS';
+    echo $MODULE.' : '."\n";
 
-            $prop_id = explode('.', $key);
-
-            // Grab the last value as our index.
-            $index = $prop_id[count($prop_id)-1];
-
-            // Pop the index off when we re-build our key.
-            array_pop($prop_id);
-            $key = implode('.',$prop_id);
-
-            $array[$key][$index] = trim($value);
-        }
-        return $array;
-    }
-    /**
-     * Dual_Indexed_SNMP - returns an array in the format array[OID][Index] = value from a string input of snmpwalk results.
-     * @param $string
-     * @return array
-     */
-    function dual_indexed_snmp($string) {
-        $array = array();
-        // Let's turn the result into something we can work with.
-        foreach (explode("\n", $string) as $line) {
-            if ($line[0] == '.') {
-                // strip the leading . if it exists.
-                $line = substr($line,1);
-            }
-            list($key, $value) = explode(' ', $line, 2);
-
-            $prop_id = explode('.', $key);
-
-            // Grab the last values as our indexes.
-            $index1 = $prop_id[count($prop_id)-2];
-            $index2 = $prop_id[count($prop_id)-1];
-
-            // Pop the index off when we re-build our key.
-            array_pop($prop_id);
-            array_pop($prop_id);
-            $key = implode('.',$prop_id);
-
-            $array[$key][$index1][$index2] = trim($value);
-        }
-        return $array;
-    }
-
-    echo 'Class-Based QOS : ';
-
-    require 'includes/component.php';
+    require_once 'includes/component.php';
     $COMPONENT = new component();
-    $COMPONENTS = $COMPONENT->getComponents($device['id'],array('type'=>'Cisco-CBQOS'));
+    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE));
 
-//    $tblcbQosServicePolicy = indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.1', '-Osqn'));
     // Begin our master array, all other values will be processed into this array.
     $tblCBQOS = array();
 
-    $tblcbQosObjects = dual_indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.5', '-Osqn'));
+    // Let's gather some data..
+    $tblcbQosServicePolicy = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.1', '-Osqn'));
+    $tblcbQosObjects = dual_indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.5', '-Osqn'));
+    $tblcbQosPolicyMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.6', '-Osqn'));
+    $tblcbQosClassMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.7', '-Osqn'));
+//    $tblcbQosMatchStmtCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.8', '-Osqn'));
+//    $tblcbQosQueueingCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.9', '-Osqn'));
+//    $tblcbQosREDCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.10', '-Osqn'));
 
-    $tblcbQosPolicyMapCfg = dual_indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.6', '-Osqn'));
-    $tblcbQosClassMapCfg = dual_indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.7', '-Osqn'));
-    $tblcbQosMatchStmtCfg = dual_indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.8', '-Osqn'));
-    $tblcbQosQueueingCfg = dual_indexed_snmp(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.9', '-Osqn'));
+    foreach ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'] as $spid => $array) {
 
-    // populate our indexes into the destination array.
-//    foreach ($tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.2'] as $key => $value) {
-//        $tblCBQOS[$key] = array();
-//    }
+        foreach ($array as $spobj => $index) {
+            $RESULT = array();
 
-    // now we have our indexes, lets start building the rest of our data.
-/*    foreach ($tblCBQOS as $key => $value) {
-        $tblCBQOS[$key]['ifindex'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.4'][$key];
-        if ($tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.3'][$key] == 1) {
-            $tblCBQOS[$key]['direction'] = 'in';
-        }
-        else {
-            $tblCBQOS[$key]['direction'] = 'out';
+            // Produce a unique reproducible index for this entry.
+            $RESULT['UID'] = hash('crc32', $spid."-".$spobj);
+
+            // Now that we have a valid identifiers, lets add some more data
+            $RESULT['sp-id'] = $spid;
+            $RESULT['sp-obj'] = $spobj;
+
+            // Add the Type, Policy-map, Class-map, etc.
+            $type = $tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.3'][$spid][$spobj];
+            $RESULT['qos-type'] = $type;
+
+            // Gather different data depending on the type.
+            switch ($type) {
+                case 1:
+                    // Policy-map, get data from that table.
+                    $RESULT['label'] = $tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.1'][$index];
+                    if ($tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.2'][$index] != "") {
+                        $RESULT['label'] .= " - ".$tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.2'][$index];
+                    }
+                    break;
+                case 2:
+                    // Class-map, get data from that table.
+                    $RESULT['label'] = $tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.1'][$index];
+                    if($tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.2'][$index] != "") {
+                        $RESULT['label'] .= " - ".$tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.2'][$index];
+                    }
+                    if ($tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.3'][$index] == 2) {
+                        $RESULT['map-type'] = 'Match-All';
+                    }
+                    elseif ($tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.3'][$index] == 3) {
+                        $RESULT['map-type'] = 'Match-Any';
+                    }
+                    else {
+                        $RESULT['map-type'] = 'None';
+                    }
+                    break;
+                case 3:
+                    // Match Statement, get data from that table.
+                    $RESULT['label'] = $tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$index];
+                    break;
+//                case 4:
+//                    // Queueing, get data from that table.
+//                    if (isset($tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.13'])) {
+//                        $RESULT['que-bandwidth'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.13'][$index];
+//                    }
+//                    else {
+//                        $RESULT['que-bandwidth'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.1'][$index];
+//                    }
+//                    if (isset($tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.14'])) {
+//                        $RESULT['que-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.14'][$index];
+//                    }
+//                    else {
+//                        $RESULT['que-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.6'][$index];
+//                    }
+//
+//                    $RESULT['que-units'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.2'][$index];
+//                    $RESULT['que-fair-queue'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.3'][$index];
+//                    $RESULT['que-low-latency-queue'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.4'][$index];
+//                    $RESULT['que-burst'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.8'][$index];
+//                    $RESULT['que-aggregate-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.10'][$index];
+//                    break;
+//                case 5:
+//                    // RED, get data from that table.
+//                    $RESULT['red-weight'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.1'][$index];
+//                    $RESULT['red-queue-size'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.2'][$index];
+//                    $RESULT['red-mechanism'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.3'][$index];
+//                    $RESULT['red-ecn'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.4'][$index];
+//                    break;
+                default:
+                    continue 2;
+            }
+
+            // Add the Parent, this lets us work out our hierarchy for display later.
+            $RESULT['parent'] = $tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.4'][$spid][$spobj];
+            $RESULT['direction'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.3'][$spid];
+            $RESULT['ifindex'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.4'][$spid];
+
+            print "ID: ".$spid."-".$spobj.", parent: ".$RESULT['parent'].", Type: ".$RESULT['qos-type'].", Label: ".$RESULT['label']."\n";
+
+            $tblCBQOS[] = $RESULT;
         }
     }
-*/
 
-    print_r($tblCBQOS);
+    /*
+     * Ok, we have our 2 array's (Components and SNMP) now we need
+     * to compare and see what needs to be added/removed.
+     *
+     * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
+     */
+    foreach ($tblCBQOS as $key => $array) {
+        $COMPONENT_KEY = false;
 
+        // Loop over our components to determine if the component exists, or we need to add it.
+        foreach ($COMPONENTS as $COMPID => $CHILD) {
+            if ($CHILD['UID'] === $array['UID']) {
+                $COMPONENT_KEY = $COMPID;
+            }
+        }
+
+        if (!$COMPONENT_KEY) {
+            // The component doesn't exist, we need to ADD it - ADD.
+            $NEW_COMPONENT = $COMPONENT->createComponent($device['device_id'],$MODULE);
+            $COMPONENT_KEY = key($NEW_COMPONENT);
+            $COMPONENTS[$COMPONENT_KEY] = array_merge($NEW_COMPONENT[$COMPONENT_KEY], $array);
+            echo "+";
+        }
+        else {
+            // The component does exist, merge the details in - UPDATE.
+            $COMPONENTS[$COMPONENT_KEY] = array_merge($COMPONENTS[$COMPONENT_KEY], $array);
+            echo ".";
+        }
+
+    }
+
+    // Write the Components back to the DB.
+    $COMPONENT->setComponentPrefs($device['device_id'],$COMPONENTS);
     echo "\n";
 }
