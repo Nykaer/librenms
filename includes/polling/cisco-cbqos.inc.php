@@ -33,7 +33,7 @@ if ($device['os_group'] == "cisco") {
             // Get data from the class-map table.
             if ($TYPE == 2) {
                 // Let's make sure the RRD is setup for this component.
-                $filename = "cisco-cbqos-".$ARRAY['sp-id']."-".$ARRAY['sp-obj'].".rrd";
+                $filename = "port-".$ARRAY['ifindex']."-cbqos-".$ARRAY['sp-id']."-".$ARRAY['sp-obj'].".rrd";
                 $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
 
                 if (!file_exists ($rrd_filename)) {
