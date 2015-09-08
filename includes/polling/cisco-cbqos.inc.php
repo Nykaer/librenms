@@ -37,7 +37,7 @@ if ($device['os_group'] == "cisco") {
                 $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
 
                 if (!file_exists ($rrd_filename)) {
-                    rrdtool_create ($rrd_filename, " DS:postbits:GAUGE:600:0:U DS:bufferdrops:GAUGE:600:0:U DS:qosdrops:GAUGE:600:0:U" . $config['rrd_rra']);
+                    rrdtool_create ($rrd_filename, " DS:postbits:COUNTER:600:0:U DS:bufferdrops:COUNTER:600:0:U DS:qosdrops:COUNTER:600:0:U" . $config['rrd_rra']);
                 }
 
                 $TEMP['postbytes'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
