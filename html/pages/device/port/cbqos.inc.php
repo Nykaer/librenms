@@ -1,4 +1,28 @@
 <?php
+/*
+ * LibreNMS module to display Cisco Class-Based QoS Details
+ *
+ * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.  Please see LICENSE.txt at the top level of
+ * the source code distribution for details.
+ */
+
+function find_child($COMPONENTS,$parent,$level) {
+    foreach($COMPONENTS as $ID => $ARRAY) {
+        if (($ARRAY['parent'] == $COMPONENTS[$parent]['sp-obj']) && ($ARRAY['sp-id'] == $COMPONENTS[$parent]['sp-id'])) {
+            // Yay, we found a child.
+            for ($i=0;$i<$level;$i++) {
+                echo "-";
+            }
+            echo "ID: ".$ARRAY['sp-obj'].", Type: ".$ARRAY['qos-type'].", Label: ".$ARRAY['label']."<br>\n";
+            find_child($COMPONENTS,$ID,$level+1);
+        }
+    }
+}
 
 $rrdarr = glob($config['rrd_dir'].'/'.$device['hostname'].'/port-'.$port['ifIndex'].'-cbqos-*.rrd');
 if (!empty($rrdarr)) {
@@ -8,13 +32,13 @@ if (!empty($rrdarr)) {
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
     if (isset($vars['policy'])) {
-        $policy = $vars['policy'];
+        $graph_array['policy'] = $vars['policy'];
     }
     else {
         foreach ($COMPONENTS as $ID => $ARRAY) {
             if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) ) {
                 // Found the first policy
-                $policy = $ID;
+                $graph_array['policy'] = $ID;
                 continue;
             }
         }
@@ -31,14 +55,15 @@ if (!empty($rrdarr)) {
      *
      */
     $CLASSES = array();
-    echo "Policy: ".$policy."<br>";
-    foreach ($COMPONENTS as $ID => $ARRAY) {
-        if ( ($ARRAY['qos-type'] == 2) && ($ARRAY['parent'] == $COMPONENTS[$policy]['sp-obj']) ) {
+    echo "Policy: ".$graph_array['policy']." - ".$COMPONENTS[$graph_array['policy']]['label']."<br>";
+    find_child($COMPONENTS,$graph_array['policy'],1);
+//    foreach ($COMPONENTS as $ID => $ARRAY) {
+//        if ( ($ARRAY['qos-type'] == 2) && ($ARRAY['parent'] == $COMPONENTS[$graph_array['policy']]['sp-obj']) ) {
 //            // We have a child class
-            array_push($CLASSES,$ID);
-            echo $ID." - ".$ARRAY['label']."<br>";
-        }
-    }
+//            array_push($CLASSES,$ID);
+//            echo $ID." - ".$ARRAY['label']."<br>";
+//        }
+//    }
 
 //    $iid = $id;
     echo '<div class=graphhead>Traffic by CBQoS Class</div>';
