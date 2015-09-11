@@ -28,9 +28,7 @@ if ($device['os_group'] == 'cisco') {
     $tblcbQosObjects = dual_indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.5', '-Osqn'));
     $tblcbQosPolicyMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.6', '-Osqn'));
     $tblcbQosClassMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.7', '-Osqn'));
-//    $tblcbQosMatchStmtCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.8', '-Osqn'));
-//    $tblcbQosQueueingCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.9', '-Osqn'));
-//    $tblcbQosREDCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.10', '-Osqn'));
+    $tblcbQosMatchStmtCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.8', '-Osqn'));
 
     foreach ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'] as $spid => $array) {
 
@@ -47,6 +45,11 @@ if ($device['os_group'] == 'cisco') {
             // Add the Type, Policy-map, Class-map, etc.
             $type = $tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.3'][$spid][$spobj];
             $RESULT['qos-type'] = $type;
+
+            // Add the Parent, this lets us work out our hierarchy for display later.
+            $RESULT['parent'] = $tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.4'][$spid][$spobj];
+            $RESULT['direction'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.3'][$spid];
+            $RESULT['ifindex'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.4'][$spid];
 
             // Gather different data depending on the type.
             switch ($type) {
@@ -72,49 +75,31 @@ if ($device['os_group'] == 'cisco') {
                     else {
                         $RESULT['map-type'] = 'None';
                     }
+
+                    // Find a child, this will be a type 3
+                    foreach ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.4'][$spid] as $ID => $VALUE) {
+                        if ($VALUE == $RESULT['sp-obj']) {
+                            // We have our child, import the match
+                            if ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.3'][$spid][$ID] == 3) {
+                                $RESULT['match'] = $RESULT['map-type'].": ".$tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'][$spid][$ID]];
+//                                echo "Label: ".$RESULT['label'].", ".$RESULT['match']."\n";
+                            }
+                        }
+                    }
                     break;
-                case 3:
-                    // Match Statement, get data from that table.
-                    $RESULT['label'] = $tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$index];
-                    break;
-//                case 4:
-//                    // Queueing, get data from that table.
-//                    if (isset($tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.13'])) {
-//                        $RESULT['que-bandwidth'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.13'][$index];
+//                case 3:
+//                    // If we are a match statement, we need to add it to the parent object, there will only be one.
+//                    foreach ($tblCBQOS as $ID => $ARRAY) {
+//                        if ( ($ARRAY['qos-type'] == 2) && ($RESULT['parent'] == $ARRAY['sp-obj']) && ($ARRAY['sp-id'] == $RESULT['sp-id']) ) {
+//                            $tblCBQOS[$ID]['match'] = $tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$index];
+//                        }
 //                    }
-//                    else {
-//                        $RESULT['que-bandwidth'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.1'][$index];
-//                    }
-//                    if (isset($tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.14'])) {
-//                        $RESULT['que-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.14'][$index];
-//                    }
-//                    else {
-//                        $RESULT['que-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.6'][$index];
-//                    }
-//
-//                    $RESULT['que-units'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.2'][$index];
-//                    $RESULT['que-fair-queue'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.3'][$index];
-//                    $RESULT['que-low-latency-queue'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.4'][$index];
-//                    $RESULT['que-burst'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.8'][$index];
-//                    $RESULT['que-aggregate-queue-size'] = $tblcbQosQueueingCfg['1.3.6.1.4.1.9.9.166.1.9.1.1.10'][$index];
-//                    break;
-//                case 5:
-//                    // RED, get data from that table.
-//                    $RESULT['red-weight'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.1'][$index];
-//                    $RESULT['red-queue-size'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.2'][$index];
-//                    $RESULT['red-mechanism'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.3'][$index];
-//                    $RESULT['red-ecn'] = $tblcbQosREDCfg['1.3.6.1.4.1.9.9.166.1.10.1.1.4'][$index];
-//                    break;
+//                    continue 2;
                 default:
                     continue 2;
             }
 
-            // Add the Parent, this lets us work out our hierarchy for display later.
-            $RESULT['parent'] = $tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.4'][$spid][$spobj];
-            $RESULT['direction'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.3'][$spid];
-            $RESULT['ifindex'] = $tblcbQosServicePolicy['1.3.6.1.4.1.9.9.166.1.1.1.1.4'][$spid];
-
-            print "ID: ".$spid."-".$spobj.", parent: ".$RESULT['parent'].", Type: ".$RESULT['qos-type'].", Label: ".$RESULT['label']."\n";
+//            print "ID: ".$spid."-".$spobj.", parent: ".$RESULT['parent'].", Type: ".$RESULT['qos-type'].", Label: ".$RESULT['label']."\n";
 
             $tblCBQOS[] = $RESULT;
         }

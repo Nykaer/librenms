@@ -12,14 +12,32 @@
  */
 
 function find_child($COMPONENTS,$parent,$level) {
+    global $vars;
+
     foreach($COMPONENTS as $ID => $ARRAY) {
+        if ($ARRAY['qos-type'] == 3) {
+            continue;
+        }
         if (($ARRAY['parent'] == $COMPONENTS[$parent]['sp-obj']) && ($ARRAY['sp-id'] == $COMPONENTS[$parent]['sp-id'])) {
-            // Yay, we found a child.
-            for ($i=0;$i<$level;$i++) {
-                echo "-";
+            echo "<ul>";
+            echo "<li>";
+//            echo "<img src='images/16/server.png' style='vertical-align:middle'/> ";
+            if ($ARRAY['qos-type'] == 1) {
+                // Its a policy, we need to make it a link.
+                echo('<a href="' . generate_url($vars, array('policy' => $ID)) . '">' . $ARRAY['label'] . '</a>');
             }
-            echo "ID: ".$ARRAY['sp-obj'].", Type: ".$ARRAY['qos-type'].", Label: ".$ARRAY['label']."<br>\n";
+            else {
+                // No policy, no link
+                echo $ARRAY['label'];
+            }
+            if (isset($ARRAY['match'])) {
+                echo ' ('.$ARRAY['match'].')';
+            }
+
             find_child($COMPONENTS,$ID,$level+1);
+
+            echo "</li>";
+            echo "</ul>";
         }
     }
 }
@@ -32,11 +50,13 @@ if (!empty($rrdarr)) {
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
     if (isset($vars['policy'])) {
+        // if a policy is set use it.
         $graph_array['policy'] = $vars['policy'];
     }
     else {
+        // if not, find the first parent and use it.
         foreach ($COMPONENTS as $ID => $ARRAY) {
-            if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) ) {
+            if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex'])  && ($ARRAY['parent'] == 0) ) {
                 // Found the first policy
                 $graph_array['policy'] = $ID;
                 continue;
@@ -44,37 +64,55 @@ if (!empty($rrdarr)) {
         }
     }
 
-    $INGRESS = array();
-    $EGRESS = array();
-    /*
-     * Display the structure of the class maps applied to this interface.
-     * Perhaps clickable links for each policy-map, not dropdown???
-     *
-     * $policy = component id for the policy to display
-     * $classes = array of component ID's for child classes.
-     *
-     */
-    $CLASSES = array();
-    echo "Policy: ".$graph_array['policy']." - ".$COMPONENTS[$graph_array['policy']]['label']."<br>";
-    find_child($COMPONENTS,$graph_array['policy'],1);
-//    foreach ($COMPONENTS as $ID => $ARRAY) {
-//        if ( ($ARRAY['qos-type'] == 2) && ($ARRAY['parent'] == $COMPONENTS[$graph_array['policy']]['sp-obj']) ) {
-//            // We have a child class
-//            array_push($CLASSES,$ID);
-//            echo $ID." - ".$ARRAY['label']."<br>";
-//        }
-//    }
+    // Display the ingress policy at the top of the page.
+    echo "<div class='col-md-6'><ul class='mktree' id='ingress'>";
+    echo '<div><strong>Ingress Policy:</strong></div>';
+    $FOUND = false;
+    foreach ($COMPONENTS as $ID => $ARRAY) {
+        if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) && ($ARRAY['direction'] == 1)  && ($ARRAY['parent'] == 0) ) {
+            echo "<li class='liOpen'>";
+            echo('<a href="' . generate_url($vars, array('policy' => $ID)) . '">' . $ARRAY['label'] . '</a>');
+            find_child($COMPONENTS,$ID,1);
+            echo "</li>";
+            $FOUND = true;
+        }
+    }
+    if (!$FOUND) {
+        // No Ingress policies
+        echo '<div><i>No Policies</i></div>';
+    }
 
-//    $iid = $id;
-    echo '<div class=graphhead>Traffic by CBQoS Class</div>';
+    // Display the egress policy at the top of the page.
+    echo '</ul></div>';
+    echo "<div class='col-md-6'><ul class='mktree' id='egress'>";
+    echo '<div><strong>Egress Policy:</strong></div>';
+    $FOUND = false;
+    foreach ($COMPONENTS as $ID => $ARRAY) {
+        if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) && ($ARRAY['direction'] == 2)  && ($ARRAY['parent'] == 0) ) {
+            echo "<li class='liOpen'>";
+            echo('<a href="' . generate_url($vars, array('policy' => $ID)) . '">' . $ARRAY['label'] . '</a>');
+            find_child($COMPONENTS,$ID,1);
+            echo "</li>";
+            $FOUND = true;
+        }
+    }
+    if (!$FOUND) {
+        // No Egress policies
+        echo '<div><i>No Policies</i></div>';
+    }
+    echo '</ul></div>';
+    echo '<div>&nbsp;</div>';
+
+    // Display each graph row.
+    echo '<div class=graphhead>Traffic by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
     $graph_type = 'port_cbqos_traffic';
     include 'includes/print-interface-graphs.inc.php';
 
-    echo '<div class=graphhead>QoS Drops by CBQoS Class</div>';
+    echo '<div class=graphhead>QoS Drops by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
     $graph_type = 'port_cbqos_bufferdrops';
     include 'includes/print-interface-graphs.inc.php';
 
-    echo '<div class=graphhead>Buffer Drops by CBQoS Class</div>';
+    echo '<div class=graphhead>Buffer Drops by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
     $graph_type = 'port_cbqos_qosdrops';
     include 'includes/print-interface-graphs.inc.php';
 }

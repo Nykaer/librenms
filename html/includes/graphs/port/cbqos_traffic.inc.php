@@ -19,7 +19,7 @@ $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 // Determine a policy to show.
 if (!isset($vars['policy'])) {
     foreach ($COMPONENTS as $ID => $ARRAY) {
-        if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) ) {
+        if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex'])  && ($ARRAY['parent'] == 0) ) {
             // Found the first policy
             $vars['policy'] = $ID;
             continue;
