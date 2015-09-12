@@ -82,24 +82,13 @@ if ($device['os_group'] == 'cisco') {
                             // We have our child, import the match
                             if ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.3'][$spid][$ID] == 3) {
                                 $RESULT['match'] = $RESULT['map-type'].": ".$tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'][$spid][$ID]];
-//                                echo "Label: ".$RESULT['label'].", ".$RESULT['match']."\n";
                             }
                         }
                     }
                     break;
-//                case 3:
-//                    // If we are a match statement, we need to add it to the parent object, there will only be one.
-//                    foreach ($tblCBQOS as $ID => $ARRAY) {
-//                        if ( ($ARRAY['qos-type'] == 2) && ($RESULT['parent'] == $ARRAY['sp-obj']) && ($ARRAY['sp-id'] == $RESULT['sp-id']) ) {
-//                            $tblCBQOS[$ID]['match'] = $tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$index];
-//                        }
-//                    }
-//                    continue 2;
                 default:
                     continue 2;
             }
-
-//            print "ID: ".$spid."-".$spobj.", parent: ".$RESULT['parent'].", Type: ".$RESULT['qos-type'].", Label: ".$RESULT['label']."\n";
 
             $tblCBQOS[] = $RESULT;
         }

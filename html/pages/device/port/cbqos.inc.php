@@ -66,7 +66,7 @@ if (!empty($rrdarr)) {
 
     // Display the ingress policy at the top of the page.
     echo "<div class='col-md-6'><ul class='mktree' id='ingress'>";
-    echo '<div><strong>Ingress Policy:</strong></div>';
+    echo '<div><strong><i class="fa fa-sign-in"></i>&nbsp;Ingress Policy:</strong></div>';
     $FOUND = false;
     foreach ($COMPONENTS as $ID => $ARRAY) {
         if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) && ($ARRAY['direction'] == 1)  && ($ARRAY['parent'] == 0) ) {
@@ -85,7 +85,7 @@ if (!empty($rrdarr)) {
     // Display the egress policy at the top of the page.
     echo '</ul></div>';
     echo "<div class='col-md-6'><ul class='mktree' id='egress'>";
-    echo '<div><strong>Egress Policy:</strong></div>';
+    echo '<div><strong><i class="fa fa-sign-out"></i>&nbsp;Egress Policy:</strong></div>';
     $FOUND = false;
     foreach ($COMPONENTS as $ID => $ARRAY) {
         if ( ($ARRAY['qos-type'] == 1) && ($ARRAY['ifindex'] == $port['ifIndex']) && ($ARRAY['direction'] == 2)  && ($ARRAY['parent'] == 0) ) {
