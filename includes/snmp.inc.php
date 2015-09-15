@@ -1199,37 +1199,3 @@ function dual_indexed_snmp_array($string) {
     }
     return $array;
 }
-
-/**
- * Indexed SNMP array - return a single indexed array from SNMPWalk data
- * From: 1.3.6.1.4.1.9.9.166.1.15.1.1.27.18.655360 = 0
- * To: array('1.3.6.1.4.1.9.9.166.1.15.1.1.27.18' => array('655360' => 0))
- * @param $string
- * @return array
- */
-function new_indexed_snmp_array($string,$indexes=1) {
-    $array = array();
-    // Let's turn the result into something we can work with.
-    foreach (explode("\n", $string) as $line) {
-        if ($line[0] == '.') {
-            // strip the leading . if it exists.
-            $line = substr($line,1);
-        }
-        list($key, $value) = explode(' ', $line, 2);
-
-        $prop_id = explode('.', $key);
-
-        // Grab the last value as our index.
-        $tmp_array = array();
-        for ($i=0; $i>$indexes; $i++) {
-            $index = $prop_id[count($prop_id)-1];
-            array_pop($prop_id);
-        }
-
-        // Pop the index off when we re-build our key.
-        $key = implode('.',$prop_id);
-
-        $array[$key][$index] = trim($value);
-    }
-    return $array;
-}

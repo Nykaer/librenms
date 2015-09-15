@@ -142,7 +142,7 @@ if ($device['os_group'] == 'cisco') {
         if ($FOUND === false) {
             // The component has not been found. we should delete it.
             echo "-";
-            unset ($COMPONENTS[$key]);
+            $COMPONENT->deleteComponent($key);
         }
     }
 
