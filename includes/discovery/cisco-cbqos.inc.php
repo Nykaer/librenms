@@ -14,7 +14,7 @@
 if ($device['os_group'] == 'cisco') {
 
     $MODULE = 'Cisco-CBQOS';
-    echo $MODULE.' : '."\n";
+    echo $MODULE.': ';
 
     require_once 'includes/component.php';
     $COMPONENT = new component();
