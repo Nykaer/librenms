@@ -96,7 +96,7 @@ if ($device['os_group'] == 'cisco') {
 
     /*
      * Ok, we have our 2 array's (Components and SNMP) now we need
-     * to compare and see what needs to be added/removed.
+     * to compare and see what needs to be added/updated.
      *
      * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
      */
@@ -123,6 +123,27 @@ if ($device['os_group'] == 'cisco') {
             echo ".";
         }
 
+    }
+
+    /*
+     * Loop over the Component data to see if we need to DELETE any components.
+     */
+    foreach ($COMPONENTS as $key => $array) {
+        // Guilty until proven innocent
+        $FOUND = false;
+
+        foreach ($tblCBQOS as $k => $v) {
+            if ($array['UID'] == $v['UID']) {
+                // Yay, we found it...
+                $FOUND = true;
+            }
+        }
+
+        if ($FOUND === false) {
+            // The component has not been found. we should delete it.
+            echo "-";
+            unset ($COMPONENTS[$key]);
+        }
     }
 
     // Write the Components back to the DB.
