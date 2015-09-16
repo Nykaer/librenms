@@ -73,20 +73,21 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
 
         // RRD magic to make it pretty, see: http://oss.oetiker.ch/rrdtool-trac/wiki/OutlinedAreaGraph
         $rrd_additions .= " DEF:DS".$COUNT."=" . $rrd_filename . ":postbits:AVERAGE ";
+        $rrd_additions .= " CDEF:MOD".$COUNT."=DS".$COUNT.",8,* ";
         $rrd_loop = "";
         for ($i=0;$i<=$COUNT;$i++) {
-            $rrd_loop .= "DS".$i.",";
+            $rrd_loop .= "MOD".$i.",";
         }
         for ($i=0;$i<$COUNT;$i++) {
             $rrd_loop .= "+,";
         }
-        $rrd_additions .= " CDEF:LN".$COUNT."=DS".$COUNT.",".$rrd_loop."UNKN,IF ";
+        $rrd_additions .= " CDEF:LN".$COUNT."=MOD".$COUNT.",".$rrd_loop."UNKN,IF ";
 
-        $rrd_additions .= " AREA:DS".$COUNT."#".$COLORS[$COUNT][0].":'".end_spacer($COMPONENTS[$ID]['label'],15)."'".$STACK." ";
+        $rrd_additions .= " AREA:MOD".$COUNT."#".$COLORS[$COUNT][0].":'".end_spacer($COMPONENTS[$ID]['label'],15)."'".$STACK." ";
         $rrd_additions .= " LINE1:LN".$COUNT."#".$COLORS[$COUNT][1]." ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":LAST:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":AVERAGE:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":MAX:%6.2lf%s\\\l ";
+        $rrd_additions .= " GPRINT:MOD".$COUNT.":LAST:%6.2lf%s ";
+        $rrd_additions .= " GPRINT:MOD".$COUNT.":AVERAGE:%6.2lf%s ";
+        $rrd_additions .= " GPRINT:MOD".$COUNT.":MAX:%6.2lf%s\\\l ";
 
         $COUNT++;
     }
