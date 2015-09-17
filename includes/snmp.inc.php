@@ -1138,108 +1138,28 @@ function poll_mibs($list, $device, &$graphs) {
 }//end poll_mibs()
 
 /**
- * Indexed SNMP array - return a single indexed array from SNMPWalk data
- * From: 1.3.6.1.4.1.9.9.166.1.15.1.1.27.18.655360 = 0
- * To: array('1.3.6.1.4.1.9.9.166.1.15.1.1.27.18' => array('655360' => 0))
- * @param $string
- * @return array
- */
-function indexed_snmp_array($string) {
-    $array = array();
-
-    if ( $string === false) {
-        // if we have been sent false, send it back
-        return false;
-    }
-    if ($string == "") {
-        // If we have been sent nothing, sent back null
-        return null;
-    }
-
-    // Let's turn the result into something we can work with.
-    foreach (explode("\n", $string) as $line) {
-        if ($line[0] == '.') {
-            // strip the leading . if it exists.
-            $line = substr($line,1);
-        }
-        list($key, $value) = explode(' ', $line, 2);
-
-        $prop_id = explode('.', $key);
-
-        // Grab the last value as our index.
-        $index = $prop_id[count($prop_id)-1];
-
-        // Pop the index off when we re-build our key.
-        array_pop($prop_id);
-        $key = implode('.',$prop_id);
-
-        $array[$key][$index] = trim($value);
-    }
-    return $array;
-}
-/**
- * Dual Indexed SNMP array - return a dual indexed array from SNMPWalk data
- * From: 1.3.6.1.4.1.9.9.166.1.15.1.1.27.18.655360 = 0
- * To: array('1.3.6.1.4.1.9.9.166.1.15.1.1.27' => array ('18' => array('655360' => 0)))
- * @param $string
- * @return array
- */
-function dual_indexed_snmp_array($string) {
-    $array = array();
-
-    if ( $string === false) {
-        // if we have been sent false, send it back
-        return false;
-    }
-    if ($string == "") {
-        // If we have been sent nothing, sent back null
-        return null;
-    }
-
-    // Let's turn the result into something we can work with.
-    foreach (explode("\n", $string) as $line) {
-        if ($line[0] == '.') {
-            // strip the leading . if it exists.
-            $line = substr($line,1);
-        }
-        list($key, $value) = explode(' ', $line, 2);
-
-        $prop_id = explode('.', $key);
-
-        // Grab the last values as our indexes.
-        $index1 = $prop_id[count($prop_id)-2];
-        $index2 = $prop_id[count($prop_id)-1];
-
-        // Pop the index off when we re-build our key.
-        array_pop($prop_id);
-        array_pop($prop_id);
-        $key = implode('.',$prop_id);
-
-        $array[$key][$index1][$index2] = trim($value);
-    }
-    return $array;
-}
-
-/**
- * Indexed SNMP array - returns an array containing $count indexes from numeric SNMPWalk data
- * Single Index:
+ * SNMPWalk_array_num - performs a numeric SNMPWalk and returns an array containing $count indexes
+ * One Index:
  *  From: 1.3.6.1.4.1.9.9.166.1.15.1.1.27.18.655360 = 0
  *  To: $array['1.3.6.1.4.1.9.9.166.1.15.1.1.27.18']['655360'] = 0
- * Dual Index:
+ * Two Indexes:
  *  From: 1.3.6.1.4.1.9.9.166.1.15.1.1.27.18.655360 = 0
  *  To: $array['1.3.6.1.4.1.9.9.166.1.15.1.1.27']['18']['655360'] = 0
  * And so on...
+ * Think snmpwalk_cache_*_oid but for numeric data.
  *
  * Why is this useful?
  * Some SNMP data contains a single index (eg. ifIndex in IF-MIB) and some is dual indexed
  * (eg. PolicyIndex/ObjectsIndex in CISCO-CLASS-BASED-QOS-MIB).
  * The resulting array allows us to easily access the top level index we want and iterate over the data from there.
  *
- * @param $string
- * @param int $count
+ * @param $device
+ * @param $OID
+ * @param int $indexes
+ * @internal param $string
  * @return array
  */
-function new_indexed_snmp_array($device,$OID,$count=1) {
+function snmpwalk_array_num($device,$OID,$indexes=1) {
     $array = array();
     $string = snmp_walk($device, $OID, '-Osqn');
 
@@ -1263,11 +1183,11 @@ function new_indexed_snmp_array($device,$OID,$count=1) {
         $value = trim($value);
 
         // if we have requested more levels that exist, set to the max.
-        if ($count > count($prop_id)) {
-            $count = count($prop_id)-1;
+        if ($indexes > count($prop_id)) {
+            $indexes = count($prop_id)-1;
         }
 
-        for ($i=0;$i<$count;$i++) {
+        for ($i=0;$i<$indexes;$i++) {
             // Pop the index off.
             $index = array_pop($prop_id);
             $value = array($index => $value);

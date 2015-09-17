@@ -24,20 +24,18 @@ if ($device['os_group'] == 'cisco') {
     $tblCBQOS = array();
 
     // Let's gather some data..
-    $tblcbQosServicePolicy = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.1', '-Osqn'));
-    $tblcbQosObjects = new_indexed_snmp_array($device, '.1.3.6.1.4.1.9.9.166.1.5', 20);
-print_r($tblcbQosObjects);
-exit;
-    $tblcbQosPolicyMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.6', '-Osqn'));
-    $tblcbQosClassMapCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.7', '-Osqn'));
-    $tblcbQosMatchStmtCfg = indexed_snmp_array(snmp_walk($device, '.1.3.6.1.4.1.9.9.166.1.8', '-Osqn'));
+    $tblcbQosServicePolicy = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.1');
+    $tblcbQosObjects = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.5', 2);
+    $tblcbQosPolicyMapCfg = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.6');
+    $tblcbQosClassMapCfg = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.7');
+    $tblcbQosMatchStmtCfg = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.8');
 
     /*
      * False == no object found - this is not an error, there is no QOS configured
      * null  == timeout or something else that caused an error, there may be QOS configured but we couldn't get it.
      */
     if ( is_null($tblcbQosServicePolicy) || is_null($tblcbQosObjects) || is_null($tblcbQosPolicyMapCfg) || is_null($tblcbQosClassMapCfg) || is_null($tblcbQosMatchStmtCfg) ) {
-        // If any value is null, we have an error.
+        // We have to error here or we will end up deleting all our QoS components.
         echo "Error\n";
     }
     else {
