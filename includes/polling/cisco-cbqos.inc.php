@@ -19,6 +19,7 @@ if ($device['os_group'] == "cisco") {
     $COMPONENT = new component();
     $options['filter']['type'] = array('=',$MODULE);
     $options['filter']['disabled'] = array('=',0);
+    $options['filter']['ignore'] = array('=',0);
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
     // Only collect SNMP data if we have enabled components
@@ -31,7 +32,7 @@ if ($device['os_group'] == "cisco") {
             $TYPE = $ARRAY['qos-type'];
 
             // Get data from the class table.
-            if (($TYPE == 2) && ($ARRAY['ignore'] == 0)) {
+            if ($TYPE == 2) {
                 // Let's make sure the RRD is setup for this class.
                 $filename = "port-".$ARRAY['ifindex']."-cbqos-".$ARRAY['sp-id']."-".$ARRAY['sp-obj'].".rrd";
                 $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
