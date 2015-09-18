@@ -54,6 +54,7 @@ if ($device['os_group'] == "cisco") {
             }
         } // End foreach components
 
+        echo $MODULE." ";
     } // end if count components
 
     // Clean-up after yourself!
