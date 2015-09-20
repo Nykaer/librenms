@@ -32,17 +32,7 @@ $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Class-Map              Now      Avg      Max\\n'";
 $rrd_additions = "";
 
-$COLORS = array(
-    array('EA644A','CC3118'),   // Red
-    array('EC9D48','CC7016'),   // Orange
-    array('ECD748','C9B215'),   // Yellow
-    array('54EC48','24BC14'),   // Green
-    array('48C4EC','1598C3'),   // Blue
-    array('DE48EC','B415C7'),   // Pink
-    array('7648EC','4D18E4'),   // Purple
-    array('806517','52410f'),   // Brown
-    array('787878','3b3b3b'),   // Grey
-);
+$COLORS = array( 'EA644A','EC9D48','ECD748','54EC48','48C4EC','DE48EC','7648EC' );
 
 function end_spacer($text,$length) {
     // Add spaces to the end of $text up until $length
@@ -65,30 +55,30 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
     if ( ($ARRAY['qos-type'] == 2) && ($ARRAY['parent'] == $COMPONENTS[$vars['policy']]['sp-obj']) && ($ARRAY['sp-id'] == $COMPONENTS[$vars['policy']]['sp-id'])) {
         $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("port-".$ARRAY['ifindex']."-cbqos-".$ARRAY['sp-id']."-".$ARRAY['sp-obj'].".rrd");
 
-        // Stack the area on the second and subsequent DS's
-        $STACK = "";
-        if ($COUNT != 0) {
-            $STACK = ":STACK";
-        }
+        if (file_exists($rrd_filename)) {
+            // Stack the area on the second and subsequent DS's
+            $STACK = "";
+            if ($COUNT != 0) {
+                $STACK = ":STACK ";
+            }
 
-        // RRD magic to make it pretty, see: http://oss.oetiker.ch/rrdtool-trac/wiki/OutlinedAreaGraph
-        $rrd_additions .= " DEF:DS".$COUNT."=" . $rrd_filename . ":bufferdrops:AVERAGE ";
-        $rrd_loop = "";
-        for ($i=0;$i<=$COUNT;$i++) {
-            $rrd_loop .= "DS".$i.",";
-        }
-        for ($i=0;$i<$COUNT;$i++) {
-            $rrd_loop .= "+,";
-        }
-        $rrd_additions .= " CDEF:LN".$COUNT."=DS".$COUNT.",".$rrd_loop."UNKN,IF ";
+            // Grab a color from the array.
+            if ( isset($COLORS[$COUNT]) ) {
+                $COLOR = $COLORS[$COUNT];
+            }
+            else {
+                $COLOR = $COLORS[$COUNT-7];
+            }
 
-        $rrd_additions .= " AREA:DS".$COUNT."#".$COLORS[$COUNT][0].":'".end_spacer($COMPONENTS[$ID]['label'],15)."'".$STACK." ";
-        $rrd_additions .= " LINE1:LN".$COUNT."#".$COLORS[$COUNT][1]." ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":LAST:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":AVERAGE:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:DS".$COUNT.":MAX:%6.2lf%s\\\l ";
+            $rrd_additions .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":bufferdrops:AVERAGE ";
+            $rrd_additions .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
+            $rrd_additions .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . end_spacer ($COMPONENTS[$ID]['label'], 15) . "'" . $STACK;
+            $rrd_additions .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
+            $rrd_additions .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
+            $rrd_additions .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\\\l ";
 
-        $COUNT++;
+            $COUNT++;
+        }
     }
 }
 
