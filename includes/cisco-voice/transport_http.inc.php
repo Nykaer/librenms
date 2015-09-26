@@ -20,6 +20,7 @@ class transport_http
                 'method'    => 'POST',
                 'content'   => $data,
                 'timeout'   => 5000,
+                'ignore_errors' => 1,       // Important so that the fault response is not suppressed.
             ),
             'ssl'   => array(
                 'verify_peer'       => false,
@@ -34,8 +35,9 @@ class transport_http
         $ctx = stream_context_create($params);
         $fp = @fopen($url, 'rb', false, $ctx);
         if (!$fp) {
-            throw new HTTPException("Unable to establish http connection");
+            throw new HTTPException("Unable to connect to host");
         }
+//        d_echo("Error: ".print_r($http_response_header)."\n");
         $response = @stream_get_contents($fp);
         if ($response === false) {
             throw new HTTPException("Problem reading data from host");
@@ -47,8 +49,7 @@ class transport_http
     {
         $params = array(
             'http'  => array(
-                'method'    => 'POST',
-                'content'   => $data,
+                'method'    => 'GET',
                 'timeout'   => 5000,
             ),
             'ssl'   => array(

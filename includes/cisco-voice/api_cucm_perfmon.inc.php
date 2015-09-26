@@ -61,45 +61,24 @@ class api_cucm_perfmon extends \transport_http {
         $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
 
         // Remove Namespaces from the response.
-        $RESPONSE = preg_replace('/ns1:/s', '', $RESPONSE);
-        $RESPONSE = preg_replace("/<((\w+)Response .*?) \/>/", "<$1>null</$1>", $RESPONSE);
-        $RESPONSE = preg_replace("/<(.*?) .*?>/", "<$1>", $RESPONSE);
-        d_echo("Sanitised Response: " .print_r($RESPONSE, TRUE)."\n");
+        $RESPONSE = preg_replace('/(ns1:|soapenv:)/s', '', $RESPONSE);
+        d_echo("Namespaces Removed: " .print_r($RESPONSE, TRUE)."\n");
 
-        // *Response is non-error, do we have one?
-        $RESULT = preg_match('(<(\w+)Response>.*?</\1Response>)',$RESPONSE, $EXTRACT);
-        if ($RESULT !== 0) {
-            // Yes, we have a non-error response.
-            $OUT = $EXTRACT[0];
-            d_echo("Successful Response\n");
+        // Convert XML to array
+        $RESULT = json_decode(json_encode((array) simplexml_load_string($RESPONSE)),1);
+
+        // Do we have an error
+        if (isset($RESULT['Body']['Fault'])) {
+            // Yes, we have a faultstring.
+            $MSG = $RESULT['Body']['Fault']['faultcode']." - ".$RESULT['Body']['Fault']['faultstring'];
+            d_echo("Fault: ".$MSG."\n");
+            return array(false, "Fault: " .$MSG);
         }
         else {
-            // No, We dont have a non-error response.
-            // Do re have an error response?
-            $RESULT = preg_match('(<faultstring>.*?</faultstring>)',$RESPONSE, $EXTRACT);
-            if ($RESULT !== 0) {
-                // Yes, we have a faultstring.
-                d_echo("Fault Response\n");
-                $XMLOUT = new \SimpleXMLElement($EXTRACT[0]);
-                $MSG = $XMLOUT[0];
-                d_echo("XML Error: " .$MSG."\n");
-                return array(1, "XML Error: " .$MSG);
-            }
-            else {
-                // No, we dont have a faultstring.
-                // No return and no faultstring, I dont know what to do?
-                d_echo("The response did not Response a return or a faultstring: ".print_r($RESPONSE, TRUE)."\n");
-                return array(1, "An unknown response was returned by the server.");
-            }
-
+            // No fault, must be successful.
+            d_echo("Successful Response: ".print_r($RESULT['Body'],true)."\n");
+            return array(true, $RESULT['Body']);
         }
-        // If we got this far, we have a valid non-error response.
-        d_echo("Extracted Response: " .$OUT."\n");
-        $ARROUT = json_decode(json_encode((array) simplexml_load_string($OUT)),1);
-        d_echo("Turned into array: " .print_r($ARROUT, TRUE)."\n");
-
-        // All done, return the successful response.
-        return array(0, $ARROUT);
     }
 
     private function getSID() {
@@ -124,14 +103,43 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
 ';
 
         $RESULT = $this->request($XML);
-
-        if ($RESULT[0] == 1) {
-            // Check to see if we have an error, if we do, return null.
-            return null;
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
         }
         else {
             // No error, return our SID.
-            return $RESULT[1]['perfmonOpenSessionReturn'];
+            return $RESULT[1]['perfmonOpenSessionResponse']['perfmonOpenSessionReturn'];
+        }
+    }
+
+    public function closeSession() {
+        if (is_null($this->SID)) {
+            d_echo("There is no active session to close\n");
+            return false;
+        }
+
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:soap="http://schemas.cisco.com/ast/soap">
+    <soapenv:Header/>
+    <soapenv:Body>
+       <soap:perfmonCloseSession>
+          <soap:SessionHandle>'.$this->getSID().'</soap:SessionHandle>
+       </soap:perfmonCloseSession>
+    </soapenv:Body>
+ </soapenv:Envelope>
+';
+
+        $RESULT = $this->request($XML);
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, cleanup and return.
+            $this->SID = null;
+            return true;
         }
     }
 
@@ -146,7 +154,6 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
     }
 
     public function listCounter($HOST=null) {
-
         if (is_null($HOST)) {
             $HOST = "";
         }
@@ -164,16 +171,20 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
 ';
 
         $RESULT = $this->request($XML);
-        return $RESULT;
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, return our SID.
+            return $RESULT[1]['perfmonListCounterResponse']['perfmonListCounterReturn'];
+        }
     }
 
-    public function listInstance($HOST=null,$OBJECT=null) {
-
-        if (is_null($HOST)) {
-            $HOST = "";
-        }
-        if (is_null($OBJECT)) {
-            $OBJECT = "";
+    public function listInstance($HOST=false,$OBJECT=false) {
+        // We cant continue without parameters.
+        if ((!$HOST) || (!$OBJECT)) {
+            return false;
         }
 
         $XML = '<?xml version="1.0" encoding="UTF-8"?>
@@ -190,18 +201,25 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
 ';
 
         $RESULT = $this->request($XML);
-        return $RESULT;
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, return our SID.
+            return $RESULT[1]['perfmonListInstanceResponse']['perfmonListInstanceReturn'];
+        }
     }
 
     public function addCounter($ARRAY=array()) {
         // Some error checking..
         if (is_null($this->getSID())) {
             d_echo("Could not get a SID\n");
-            return null;
+            return false;
         }
         if (count($ARRAY) == 0) {
             d_echo("No Counters were supplied to be added\n");
-            return null;
+            return false;
         }
 
         $XML = '<?xml version="1.0" encoding="UTF-8"?>
@@ -225,14 +243,13 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
 ';
 
         $RESULT = $this->request($XML);
-
-        if ($RESULT[0] == 1) {
-            // Check to see if we have an error, if we do, return it.
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
             return false;
         }
         else {
-            // No error, return the data.
-            return $RESULT[1]['perfmonAddCounterResponse'];
+            // No error, return our SID.
+            return true;
         }
     }
 
@@ -241,43 +258,6 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
     public function addHeader($string) {
         $this->aHTTPHeader[] = $string;
         return true;
-    }
-
-    public function runSQLQuery($SQL) {
-        d_echo("SQL Query: " .$SQL."\n");
-
-        $XML = '<?xml version="1.0" encoding="UTF-8"?>';
-        $XML .= '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">';
-        $XML .= '    <SOAP-ENV:Body>';
-        $XML .= '        <axlapi:executeSQLQuery xmlns:axlapi="http://www.cisco.com/AXL/API/1.0" xmlns:axl="http://www.cisco.com/AXL/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" sequence="1" xsi:schemaLocation="http://www.cisco.com/AXL/API/1.0 axlsoap.xsd">';
-        $XML .= '            <sql>'.$SQL.'</sql>';
-        $XML .= '        </axlapi:executeSQLQuery>';
-        $XML .= '	    </SOAP-ENV:Body>';
-        $XML .= '</SOAP-ENV:Envelope>';
-
-        $RESULT = $this->request($XML);
-
-        // Check to see if we have an error, if we do, return it.
-        if ($RESULT[0] == 1) {
-            return $RESULT;
-        }
-
-        /*
-         * If a query only returns a single item CUCM does not put it in an array.
-         * This is annoying and makes it hard to process the data in a consistent way.
-         * Here we check if the data is an array, and if not we make it one.
-         */
-        if ($this->is_sequential($RESULT[1]['row'])) {
-            d_echo("NOT Associative Array, make it one: " .print_r($RESULT[1]['row'], TRUE)."\n");
-            $RETURN[] = $RESULT[1]['row'];
-        }
-        else {
-            d_echo("IS Associative Array: " .print_r($RESULT[1]['row'], TRUE)."\n");
-            $RETURN = $RESULT[1]['row'];
-        }
-
-        // All done, return the successful response.
-        return array(0, $RETURN);
     }
 
 }
