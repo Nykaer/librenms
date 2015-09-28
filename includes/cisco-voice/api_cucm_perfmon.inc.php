@@ -13,11 +13,10 @@
 
 class api_cucm_perfmon extends \transport_http {
 	private $sURL           = array();
-	private $sAuthHeader    = NULL;
-    private $aHTTPHeader    = array();
+    private $options        = array('nosslcheck'=>true);
     private $SID            = NULL;
 
-    // Todo move to transport_http
+    // TODO: Common - move to transport_http
     private function is_sequential( array $ARRAY ) {
         $ISSEQ = TRUE;
         for (reset($ARRAY); is_int(key($ARRAY)); next($ARRAY)) {
@@ -40,7 +39,9 @@ class api_cucm_perfmon extends \transport_http {
         $MSG = "No hosts supplied to connect to";
         foreach ($this->sURL as $URL) {
             try {
-                $RESPONSE = $this->do_post_request($URL,$XMLIN,$this->aHTTPHeader);
+                $this->options['method'] = 'POST';
+                $this->options['content'] = $XMLIN;
+                $HTTPRES = $this->http_request($URL,$this->options);
                 $HTTPSTATUS = TRUE;
                 break;
             }
@@ -51,11 +52,12 @@ class api_cucm_perfmon extends \transport_http {
         }
         if ($HTTPSTATUS === FALSE) {
             d_echo("HTTP Connection failed to all hosts.\n");
-            return array(1, "HTTP Error: " .$MSG);
+            return array(false, "HTTP Error: " .$MSG);
         }
 
         // If we got this far we have a SOAP result.
-        d_echo("Response received: " .$RESPONSE."\n");
+        d_echo("Response received: " .print_r($HTTPRES,true)."\n");
+        $RESPONSE = $HTTPRES['content'];
 
         // Remove excess whitespace from the response.
         $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
@@ -66,11 +68,17 @@ class api_cucm_perfmon extends \transport_http {
 
         // Convert XML to array
         $RESULT = json_decode(json_encode((array) simplexml_load_string($RESPONSE)),1);
+        d_echo(print_r($RESULT,TRUE));
 
         // Do we have an error
-        if (isset($RESULT['Body']['Fault'])) {
-            // Yes, we have a faultstring.
-            $MSG = $RESULT['Body']['Fault']['faultcode']." - ".$RESULT['Body']['Fault']['faultstring'];
+        if ($HTTPRES['http_code'] != 200) {
+            // Yes, have some kind of fault.
+            if (isset($RESULT['Body']['Fault'])) {
+                $MSG = $RESULT['Body']['Fault']['faultcode'] . " - " . $RESULT['Body']['Fault']['faultstring'];
+            }
+            else {
+                $MSG = $HTTPRES['content'];
+            }
             d_echo("Fault: ".$MSG."\n");
             return array(false, "Fault: " .$MSG);
         }
@@ -108,7 +116,7 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
             return false;
         }
         else {
-            // No error, return our SID.
+            // No error, return the response.
             return $RESULT[1]['perfmonOpenSessionResponse']['perfmonOpenSessionReturn'];
         }
     }
@@ -148,8 +156,8 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
         foreach ($hosts as $host) {
             $this->sURL[] = "https://" .$host. ":8443/perfmonservice2/services/PerfmonService";
         }
-        $this->aHTTPHeader[] = "Authorization: Basic ".base64_encode($user.":".$pass);
-        $this->aHTTPHeader[] = "Content-Type: text/xml";
+        $this->options['headers'][] = "Authorization: Basic ".base64_encode($user.":".$pass);
+        $this->options['headers'][] = "Content-Type: text/xml";
         return true;
     }
 
@@ -176,7 +184,7 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
             return false;
         }
         else {
-            // No error, return our SID.
+            // No error, return the result.
             return $RESULT[1]['perfmonListCounterResponse']['perfmonListCounterReturn'];
         }
     }
@@ -206,7 +214,7 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
             return false;
         }
         else {
-            // No error, return our SID.
+            // No error, return the result.
             return $RESULT[1]['perfmonListInstanceResponse']['perfmonListInstanceReturn'];
         }
     }
@@ -248,12 +256,111 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
             return false;
         }
         else {
-            // No error, return our SID.
+            // No error, return true.
             return true;
         }
     }
 
-    public function collectSessionData() {}
+    public function removeCounter($ARRAY=array()) {
+        // Some error checking..
+        if (is_null($this->getSID())) {
+            d_echo("Could not get a SID\n");
+            return false;
+        }
+        if (count($ARRAY) == 0) {
+            d_echo("No Counters were supplied to be added\n");
+            return false;
+        }
+
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:soap="http://schemas.cisco.com/ast/soap">
+    <soapenv:Header/>
+    <soapenv:Body>
+       <soap:perfmonRemoveCounter>
+          <soap:SessionHandle>'.$this->getSID().'</soap:SessionHandle>
+          <soap:ArrayOfCounter>
+';
+        foreach ($ARRAY as $COUNTER) {
+            $XML .= '             <soap:Counter>
+                <soap:Name>'.$COUNTER.'</soap:Name>
+             </soap:Counter>'."\n";
+        }
+        $XML .= '          </soap:ArrayOfCounter>
+       </soap:perfmonRemoveCounter>
+    </soapenv:Body>
+</soapenv:Envelope>
+';
+
+        $RESULT = $this->request($XML);
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, return true
+            return true;
+        }
+    }
+
+    public function collectSessionData() {
+        // Some error checking..
+        if (is_null($this->getSID())) {
+            d_echo("Could not get a SID\n");
+            return false;
+        }
+
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://schemas.cisco.com/ast/soap">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <soap:perfmonCollectSessionData>
+         <soap:SessionHandle>'.$this->getSID().'</soap:SessionHandle>
+      </soap:perfmonCollectSessionData>
+   </soapenv:Body>
+</soapenv:Envelope>
+';
+
+        $RESULT = $this->request($XML);
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, return true.
+            return true;
+        }
+    }
+
+    public function collectCounterData($HOST=false,$OBJECT=false) {
+        // We cant continue without parameters.
+        if ((!$HOST) || (!$OBJECT)) {
+            return false;
+        }
+
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:soap="http://schemas.cisco.com/ast/soap">
+    <soapenv:Header/>
+    <soapenv:Body>
+       <soap:perfmonCollectCounterData>
+          <soap:Host>'.$HOST.'</soap:Host>
+          <soap:Object>'.$OBJECT.'</soap:Object>
+       </soap:perfmonCollectCounterData>
+    </soapenv:Body>
+</soapenv:Envelope>
+';
+
+        $RESULT = $this->request($XML);
+        if ($RESULT[0] === false) {
+            // Check to see if we have an error, if we do, return false.
+            return false;
+        }
+        else {
+            // No error, return the result.
+            return $RESULT[1]['perfmonCollectCounterDataResponse']['perfmonCollectCounterDataReturn'];
+        }
+    }
 
     public function addHeader($string) {
         $this->aHTTPHeader[] = $string;

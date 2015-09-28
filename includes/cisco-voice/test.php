@@ -1,7 +1,6 @@
 <?php
-include "transport_http.inc.php";
-//include "api_cucm_axl.inc.php";
-include "api_cucm_perfmon.inc.php";
+require_once "transport_http.inc.php";
+require_once "api_cucm_perfmon.inc.php";
 include "../common.php";
 
 $debug = true;
@@ -13,7 +12,11 @@ $HOST = array('192.168.174.13');
 $API = new api_cucm_perfmon();
 $API->connect($USER, $PASS, $HOST);
 
-$RESULT = $API->listInstance('192.168.174.13','Cisco SIP');
+$RESULT = $API->collectCounterData('192.168.174.13','Cisco SIP');
+
+print_r($RESULT);
+
+/*$RESULT = $API->listInstance('192.168.174.13','Cisco SIP');
 
 $ARRAY = array();
 foreach ($RESULT as $VALUE) {
@@ -25,5 +28,5 @@ if ($API->addCounter($ARRAY)) {
     echo "Counter(s) Added\n";
 }
 
-$RESULT = $API->closeSession();
+$RESULT = $API->closeSession();*/
 ?>
