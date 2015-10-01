@@ -75,7 +75,7 @@ class transport_http {
     function http_request ($url, $options = array ()) {
         if (!isset($options['timeout'])) {
             // if unset, set the timeout to 5 seconds.
-            $options['timeout'] = 5000;
+            $options['timeout'] = 5;
         }
         $params['http'] = array (
             'timeout' => $options['timeout'],

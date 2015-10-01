@@ -415,6 +415,19 @@ $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 $config['os'][$os]['icon']             = 'cisco';
 
+// CUOS - Unified Communications OS
+$os = "ucos";
+$config['os'][$os]['text']              = "Cisco UC Appliance";
+$config['os'][$os]['group']             = "cisco";
+$config['os'][$os]['type']              = "voice";
+$config['os'][$os]['over'][0]['graph'] = 'device_processor';
+$config['os'][$os]['over'][0]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][1]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][1]['text']  = 'Memory Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_bits';
+$config['os'][$os]['over'][2]['text']  = 'Device Traffic';
+$config['os'][$os]['icon']              = "cisco";
+
 // Brocade NOS
 $os = 'nos';
 $config['os'][$os]['text']             = 'Brocade NOS';

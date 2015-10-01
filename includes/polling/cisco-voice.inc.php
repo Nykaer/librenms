@@ -37,4 +37,10 @@ if ($device['os_group'] == "cisco") {
      */
     include "cisco-voice/cisco-xcode.inc.php";
 
+    /*
+     * Cisco CallManager Active Calls
+     * This module graphs the Active Calls on a Cisco CallManager Server
+     */
+    include "cisco-voice/cucm-callsactive.inc.php";
+
 }

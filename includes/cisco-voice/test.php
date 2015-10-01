@@ -12,9 +12,8 @@ $HOST = array('192.168.174.13');
 $API = new api_cucm_perfmon();
 $API->connect($USER, $PASS, $HOST);
 
-$RESULT = $API->collectCounterData('192.168.174.13','Cisco SIP');
-
-print_r($RESULT);
+//$RESULT = $API->collectCounterData('192.168.174.13','Cisco CallManager');
+//print_r($RESULT);
 
 /*$RESULT = $API->listInstance('192.168.174.13','Cisco SIP');
 
@@ -23,10 +22,17 @@ foreach ($RESULT as $VALUE) {
     $ARRAY[] = '\\\\192.168.174.13\Cisco SIP('.$VALUE.')\CallsActive';
 }
 print_r ($ARRAY);
+*/
 
+$ARRAY[] = '\\\\192.168.174.13\Cisco CallManager\CallsActive';
 if ($API->addCounter($ARRAY)) {
     echo "Counter(s) Added\n";
+    $RESULT = $API->collectSessionData();
+
+    if ($RESULT !== false) {
+        print_r($RESULT);
+        $RESULT = $API->closeSession();
+    }
 }
 
-$RESULT = $API->closeSession();*/
 ?>

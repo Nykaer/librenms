@@ -32,8 +32,6 @@ class api_cucm_perfmon extends \transport_http {
      * Sends a SOAP request to the CUCM AXL interface.
      */
     private function request($XMLIN) {
-        d_echo("XMLIN set to: " .$XMLIN."\n");
-
         // Loop over the URL array, try each one in order.
         $HTTPSTATUS = FALSE;
         $MSG = "No hosts supplied to connect to";
@@ -56,7 +54,7 @@ class api_cucm_perfmon extends \transport_http {
         }
 
         // If we got this far we have a SOAP result.
-        d_echo("Response received: " .print_r($HTTPRES,true)."\n");
+        d_echo("HTTP Response received: " .$HTTPRES['http_code']."\n");
         $RESPONSE = $HTTPRES['content'];
 
         // Remove excess whitespace from the response.
@@ -68,7 +66,6 @@ class api_cucm_perfmon extends \transport_http {
 
         // Convert XML to array
         $RESULT = json_decode(json_encode((array) simplexml_load_string($RESPONSE)),1);
-        d_echo(print_r($RESULT,TRUE));
 
         // Do we have an error
         if ($HTTPRES['http_code'] != 200) {
@@ -327,8 +324,18 @@ xmlns:soap="http://schemas.cisco.com/ast/soap">
             return false;
         }
         else {
-            // No error, return true.
-            return true;
+            // No error, return the result.
+            $RETURN = array();
+            if ($this->is_sequential($RESULT[1]['perfmonCollectSessionDataResponse']['perfmonCollectSessionDataReturn'])) {
+                d_echo("NOT Associative Array, make it one: " .print_r($RESULT[1]['perfmonCollectSessionDataResponse']['perfmonCollectSessionDataReturn'], TRUE)."\n");
+                $RETURN[] = $RESULT[1]['perfmonCollectSessionDataResponse']['perfmonCollectSessionDataReturn'];
+            }
+            else {
+                d_echo("IS Associative Array: " .print_r($RESULT[1]['perfmonCollectSessionDataResponse']['perfmonCollectSessionDataReturn'], TRUE)."\n");
+                $RETURN = $RESULT[1]['perfmonCollectSessionDataResponse']['perfmonCollectSessionDataReturn'];
+            }
+
+            return $RETURN;
         }
     }
 
