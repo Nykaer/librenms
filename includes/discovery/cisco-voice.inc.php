@@ -1,6 +1,6 @@
 <?php
 /*
- * LibreNMS module to Graph ActiveCalls on a Cisco CallManager Server
+ * LibreNMS module to Graph Cisco Voice components.
  *
  * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
  *
@@ -11,3 +11,12 @@
  * the source code distribution for details.
  */
 
+if ($device['os_group'] == "cisco") {
+
+    /*
+     * CallManger Basic Resources
+     * This module graphs some basic resources in a CallManager Server
+     */
+    include "cisco-voice/cucm-basic.inc.php";
+
+}
