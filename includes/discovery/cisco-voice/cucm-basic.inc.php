@@ -45,6 +45,8 @@ if ($device['os'] == "ucos") {
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources';
+    $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceTotal';
+    $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceTotal';
 
     // Can we add the counters.
     if ($API->addCounter($COUNTER)) {
@@ -60,36 +62,52 @@ if ($device['os'] == "ucos") {
 
             // Extract the counter data from the response.
             foreach ($RESULT as $VALUE) {
-                if ($VALUE['Value'] > 0) {
+                if (($VALUE['Value'] > 0) && (($VALUE['CStatus'] == 0) || ($VALUE['CStatus'] == 1))) {
                     // If we have a non-zero value, add the counter
                     switch ($VALUE['Name']) {
                         case '\\\\'.$HOST.'\Cisco CallManager\InitializationState':
-                            $CUCM[] = array('label'=>'InitializationState');
+                            $STATUS = 0;        // Guilty until proven innocent.
+                            if ($VALUE['Value'] == 100) {
+                                // 100 is normal, everything else is an error.
+                                $STATUS = 1;
+                            }
+                            $CUCM[] = array('label'=>'InitializationState','status'=>$STATUS);
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceTotal':
-                            $CUCM[] = array('label'=>'AnnunciatorResource','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'AnnunciatorResource');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\MTPResourceTotal':
-                            $CUCM[] = array('label'=>'MTPResource','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'MTPResource');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceTotal':
-                            $CUCM[] = array('label'=>'TranscoderResource','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'TranscoderResource');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\VCBConferencesTotal':
-                            $CUCM[] = array('label'=>'VCBConferences','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'VCBConferences');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal':
-                            $CUCM[] = array('label'=>'VCBResource','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'VCBResource');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources':
-                            $CUCM[] = array('label'=>'MOHMulticastResources','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'MOHMulticastResources');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources':
-                            $CUCM[] = array('label'=>'MOHUnicastResources','total'=>$VALUE['Value']);
+                            $CUCM[] = array('label'=>'MOHUnicastResources');
                             break;
+                        case '\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceTotal':
+                            $CUCM[] = array('label'=>'SWConferenceResource');
+                            break;
+                        case '\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceTotal':
+                            $CUCM[] = array('label'=>'HWConferenceResource');
+                            break;
+                        default:
+                            d_echo("Unknown Counter: ".$VALUE['Name']);
                     } // End switch
                 } // End if
             } // End foreach
+
+            // Add a component for our active calls
+            $CUCM[] = array('label'=>'Calls');
 
             /*
              * Ok, we have our 2 array's (Components and CUCM) now we need
@@ -104,8 +122,6 @@ if ($device['os'] == "ucos") {
                         $COMPONENT_KEY = $COMPID;
                     }
                 }
-
-                d_echo(print_r($CUCM,TRUE));
 
                 if (!$COMPONENT_KEY) {
                     // The component doesn't exist, we need to ADD it - ADD.
@@ -138,7 +154,7 @@ if ($device['os'] == "ucos") {
                 if ($FOUND === false) {
                     // The component has not been found. we should delete it.
                     echo "-";
-//                    $COMPONENT->deleteComponent($key);
+                    $COMPONENT->deleteComponent($key);
                 }
             }
 
@@ -146,5 +162,6 @@ if ($device['os'] == "ucos") {
             $COMPONENT->setComponentPrefs($device['device_id'],$COMPONENTS);
             echo "\n";
         } // End if $RESULT
+
     }
 }

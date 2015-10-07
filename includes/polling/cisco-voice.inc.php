@@ -43,4 +43,10 @@ if ($device['os_group'] == "cisco") {
      */
     include "cisco-voice/cucm-callsactive.inc.php";
 
+    /*
+     * CallManger Basic Resources
+     * This module graphs some basic resources in a CallManager Server
+     */
+    include "cisco-voice/cucm-basic.inc.php";
+
 }
