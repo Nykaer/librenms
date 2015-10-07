@@ -19,4 +19,10 @@ if ($device['os_group'] == "cisco") {
      */
     include "cisco-voice/cucm-basic.inc.php";
 
+    /*
+     * CallManger Enhanced Location Call Admission Control
+     * This module graphs the bandwidth to each location in a CallManager Server
+     */
+    include "cisco-voice/cucm-elcac.inc.php";
+
 }
