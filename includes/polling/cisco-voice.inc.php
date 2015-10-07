@@ -55,4 +55,10 @@ if ($device['os_group'] == "cisco") {
      */
     include "cisco-voice/cucm-elcac.inc.php";
 
+    /*
+     * CallManger SIP
+     * This module graphs the call counters for SIP trunks on a CallManager Server
+     */
+    include "cisco-voice/cucm-sip.inc.php";
+
 }

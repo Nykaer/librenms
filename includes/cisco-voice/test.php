@@ -15,8 +15,8 @@ $API->connect($USER, $PASS, array($HOST));
 $RESULT = $API->collectCounterData('192.168.174.13','Cisco SIP');
 //print_r($RESULT);
 
+//$RESULT = $API->listInstance('192.168.174.13','Cisco SIP');
 /*
-$RESULT = $API->listInstance('192.168.174.13','Cisco Locations LBM');
 
 print_r($RESULT);
 $ARRAY = array();
