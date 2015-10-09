@@ -55,6 +55,7 @@ if ($device['os'] == "ucos") {
 
         if ($RESULT === false) {
             d_echo("No Data was returned.\n");
+            echo "Error\n";
         }
         else {
             // We have counter data..
@@ -163,5 +164,9 @@ if ($device['os'] == "ucos") {
             echo "\n";
         } // End if $RESULT
 
+    }
+    else {
+        // Could not add counters.
+        echo "Error\n";
     }
 }

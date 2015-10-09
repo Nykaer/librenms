@@ -42,6 +42,7 @@ if ($device['os'] == "ucos") {
     $RESULT = $API->listInstance($HOST,'Cisco SIP');
     if ($RESULT === false) {
         d_echo("No Data was returned.\n");
+        echo "Error\n";
     }
     else {
         d_echo("We have SIP Instances.\n");
@@ -105,5 +106,4 @@ if ($device['os'] == "ucos") {
         echo "\n";
     } // End if $RESULT
 
-    // Can we add the counters.
 }
