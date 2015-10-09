@@ -53,6 +53,11 @@ class api_cucm_perfmon extends \transport_http {
             return array(false, "HTTP Error: " .$MSG);
         }
 
+        if ($HTTPRES['http_code'] == 401) {
+            d_echo("401 - Incorrect Credentials Supplied.\n");
+            return array(false, "401 - Incorrect Credentials Supplied.");
+        }
+
         // If we got this far we have a SOAP result.
         d_echo("HTTP Response received: " .$HTTPRES['http_code']."\n");
         $RESPONSE = $HTTPRES['content'];
