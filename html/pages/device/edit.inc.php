@@ -38,7 +38,12 @@ else {
 
   $panes['component'] = 'Components';
 
-  print_optionbar_start();
+    // If this is a Cisco UC appliance..
+    if ($device['os'] == "ucos") {
+        $panes['ucosaxl'] = 'UC AXL';
+    }
+
+    print_optionbar_start();
 
   unset($sep);
   foreach ($panes as $type => $text) {

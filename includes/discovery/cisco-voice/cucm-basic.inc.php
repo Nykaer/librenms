@@ -23,10 +23,10 @@ if ($device['os'] == "ucos") {
     $COMPONENT = new component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE));
 
-    // Pull from DB.
-    $USER = "script";
-    $PASS = "script";
-    $HOST = "192.168.174.13";
+    // Grab the details UCOS requires.
+    $USER = get_dev_attrib($device, 'ucosaxl_user');
+    $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
+    $HOST = get_dev_attrib($device, 'ucosaxl_host');
 
     $API = new api_cucm_perfmon();
     $API->connect($USER, $PASS, array($HOST));
