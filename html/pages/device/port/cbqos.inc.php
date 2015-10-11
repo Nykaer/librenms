@@ -21,7 +21,6 @@ function find_child($COMPONENTS,$parent,$level) {
         if (($ARRAY['parent'] == $COMPONENTS[$parent]['sp-obj']) && ($ARRAY['sp-id'] == $COMPONENTS[$parent]['sp-id'])) {
             echo "<ul>";
             echo "<li>";
-//            echo "<img src='images/16/server.png' style='vertical-align:middle'/> ";
             if ($ARRAY['qos-type'] == 1) {
                 // Its a policy, we need to make it a link.
                 echo('<a href="' . generate_url($vars, array('policy' => $ID)) . '">' . $ARRAY['label'] . '</a>');
@@ -63,6 +62,7 @@ if (!empty($rrdarr)) {
             }
         }
     }
+    echo "\n\n";
 
     // Display the ingress policy at the top of the page.
     echo "<div class='col-md-6'><ul class='mktree' id='ingress'>";
@@ -81,9 +81,9 @@ if (!empty($rrdarr)) {
         // No Ingress policies
         echo '<div><i>No Policies</i></div>';
     }
+    echo '</ul></div>';
 
     // Display the egress policy at the top of the page.
-    echo '</ul></div>';
     echo "<div class='col-md-6'><ul class='mktree' id='egress'>";
     echo '<div><strong><i class="fa fa-sign-out"></i>&nbsp;Egress Policy:</strong></div>';
     $FOUND = false;
@@ -100,19 +100,22 @@ if (!empty($rrdarr)) {
         // No Egress policies
         echo '<div><i>No Policies</i></div>';
     }
-    echo '</ul></div>';
-    echo '<div>&nbsp;</div>';
+    echo "</ul></div>\n\n";
+
+    echo "<div class='col-md-12'>&nbsp;</div>\n\n";
 
     // Display each graph row.
-    echo '<div class=graphhead>Traffic by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
+    echo "<div class='col-md-12'>";
+    echo "<div class='graphhead'>Traffic by CBQoS Class - ".$COMPONENTS[$graph_array['policy']]['label']."</div>";
     $graph_type = 'port_cbqos_traffic';
     include 'includes/print-interface-graphs.inc.php';
 
-    echo '<div class=graphhead>QoS Drops by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
+    echo "<div class='graphhead'>QoS Drops by CBQoS Class - ".$COMPONENTS[$graph_array['policy']]['label']."</div>";
     $graph_type = 'port_cbqos_bufferdrops';
     include 'includes/print-interface-graphs.inc.php';
 
-    echo '<div class=graphhead>Buffer Drops by CBQoS Class - '.$COMPONENTS[$graph_array['policy']]['label'].'</div>';
+    echo "<div class='graphhead'>Buffer Drops by CBQoS Class - ".$COMPONENTS[$graph_array['policy']]['label']."</div>";
     $graph_type = 'port_cbqos_qosdrops';
     include 'includes/print-interface-graphs.inc.php';
+    echo "</div>\n\n";
 }
