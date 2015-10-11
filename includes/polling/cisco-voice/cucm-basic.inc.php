@@ -44,6 +44,9 @@ if ($device['os'] == "ucos") {
             case 'InitializationState':
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\InitializationState';
                 break;
+            case 'Replicate_State':
+                $COUNTER[] = '\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State';
+                break;
             case 'AnnunciatorResource':
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceActive';
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceTotal';
@@ -126,6 +129,14 @@ if ($device['os'] == "ucos") {
                         unset($graphs[$MODULE.'-'.$ARRAY['label']]);    // Disable this graph because there is none.
                         $COMPONENTS[$COMPID]['status'] = 0;             // Guilty Until proven innocent.
                         if ($API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\InitializationState') == 100) {
+                            $COMPONENTS[$COMPID]['status'] = 1;
+                        }
+                        break;
+                    case 'Replicate_State':
+                        unset($RRD);                                    // We don't need an RRD for this one.
+                        unset($graphs[$MODULE.'-'.$ARRAY['label']]);    // Disable this graph because there is none.
+                        $COMPONENTS[$COMPID]['status'] = 0;             // Guilty Until proven innocent.
+                        if ($API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State') == 100) {
                             $COMPONENTS[$COMPID]['status'] = 1;
                         }
                         break;

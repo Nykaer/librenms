@@ -37,6 +37,7 @@ if ($device['os'] == "ucos") {
     // Add all the counters we are interested in.
     $COUNTER = array();
     // Basic
+    $COUNTER[] = '\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\InitializationState';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceTotal';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MTPResourceTotal';
@@ -66,6 +67,14 @@ if ($device['os'] == "ucos") {
                 if (($VALUE['Value'] > 0) && (($VALUE['CStatus'] == 0) || ($VALUE['CStatus'] == 1))) {
                     // If we have a non-zero value, add the counter
                     switch ($VALUE['Name']) {
+                        case '\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State':
+                            $STATUS = 0;        // Guilty until proven innocent.
+                            if ($VALUE['Value'] == 2) {
+                                // 2 is normal, everything else is an error.
+                                $STATUS = 1;
+                            }
+                            $CUCM[] = array('label'=>'Replicate_State','status'=>$STATUS);
+                            break;
                         case '\\\\'.$HOST.'\Cisco CallManager\InitializationState':
                             $STATUS = 0;        // Guilty until proven innocent.
                             if ($VALUE['Value'] == 100) {
