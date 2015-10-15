@@ -68,9 +68,6 @@ if ($device['os'] == "ucos") {
                 $RRD = array();
                 $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
 
-                // Enable the graph.
-                $graphs[$MODULE.'-'.$ARRAY['label']] = TRUE;
-
                 $RRD['create'] = " DS:totalvoice:GAUGE:600:0:U DS:availablevoice:GAUGE:600:0:U DS:totalimmersive:GAUGE:600:0:U DS:availableimmersive:GAUGE:600:0:U DS:totalvideo:GAUGE:600:0:U DS:availablevideo:GAUGE:600:0:U";
                 $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthMaximum');
                 $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthAvailable');
@@ -92,6 +89,11 @@ if ($device['os'] == "ucos") {
                     }
                 }
             } // End foreach COMPONENT
+
+            // Enable the graph.
+            $graphs[$MODULE."-voice"] = TRUE;
+            $graphs[$MODULE."-video"] = TRUE;
+            $graphs[$MODULE."-immersive"] = TRUE;
 
             echo $MODULE.' ';
         } // End if RESULTS

@@ -64,10 +64,7 @@ if ($device['os'] == "ucos") {
                 $RRD = array();
                 $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
 
-                // Enable the graph.
-                $graphs[$MODULE.'-'.$ARRAY['label']] = TRUE;
-
-                $RRD['create'] = " DS:callsvoice:GAUGE:600:0:U DS:callsvideo:GAUGE:600:0:U";
+                $RRD['create'] = " DS:callsall:GAUGE:600:0:U DS:callsvideo:GAUGE:600:0:U";
                 $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\CallsActive');
                 $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\VideoCallsActive');
 
@@ -84,6 +81,10 @@ if ($device['os'] == "ucos") {
                     }
                 }
             } // End foreach COMPONENT
+
+            // Enable the graph.
+            $graphs[$MODULE."-all"] = TRUE;
+            $graphs[$MODULE."-video"] = TRUE;
 
             echo $MODULE.' ';
         } // End if RESULTS
