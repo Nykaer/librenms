@@ -7,7 +7,7 @@ if (component_exists($CUCM_BASIC,$labels)) {
 ?>
     <div class="panel panel-default panel-condensed">
         <div class="panel-heading">
-            <a href="device/device=<?=$device['device_id']?>/tab=cucm/metric=status/"><img src='images/icons/overview.png'> <strong>Component Status</strong></a>
+            <img src='images/icons/overview.png'> <strong>Component Status</strong>
         </div>
         <div class="panel-body">
     <?php
