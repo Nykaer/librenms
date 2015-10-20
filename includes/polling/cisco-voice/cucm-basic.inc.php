@@ -124,11 +124,12 @@ if ($device['os'] == "ucos") {
                         $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VideoCallsActive');
                         $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\EncryptedCallsActive');
                         break;
-                    case 'InitializationState':
+                        case 'InitializationState':
                         unset($RRD);                                    // We don't need an RRD for this one.
                         unset($graphs[$MODULE.'-'.$ARRAY['label']]);    // Disable this graph because there is none.
                         $COMPONENTS[$COMPID]['status'] = 0;             // Guilty Until proven innocent.
-                        if ($API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\InitializationState') == 100) {
+                        $COMPONENTS[$COMPID]['state'] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\InitializationState');
+                        if ($COMPONENTS[$COMPID]['state'] == 100) {
                             $COMPONENTS[$COMPID]['status'] = 1;
                         }
                         break;
@@ -136,7 +137,8 @@ if ($device['os'] == "ucos") {
                         unset($RRD);                                    // We don't need an RRD for this one.
                         unset($graphs[$MODULE.'-'.$ARRAY['label']]);    // Disable this graph because there is none.
                         $COMPONENTS[$COMPID]['status'] = 0;             // Guilty Until proven innocent.
-                        if ($API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State') == 100) {
+                        $COMPONENTS[$COMPID]['state'] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State');
+                        if ($COMPONENTS[$COMPID]['state'] == 2) {
                             $COMPONENTS[$COMPID]['status'] = 1;
                         }
                         break;

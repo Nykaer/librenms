@@ -54,12 +54,6 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
-
-            $rrd_additions .= " DEF:DS3" . $COUNT . "=" . $rrd_filename . ":active:AVERAGE ";
-            $rrd_additions .= " AREA:DS3" . $COUNT . "#" . $COLORS[2] . ":'" . end_spacer ('Conferences', 15) . "'";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":LAST:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":MAX:%3.0lf\\\l ";
         }
     }
 }

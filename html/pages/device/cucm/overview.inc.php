@@ -1,46 +1,27 @@
 <?php
 
-if ($services['down']) {
-    $services_colour = $warn_colour_a;
-}
-else {
-    $services_colour = $list_colour_a;
-}
-if ($ports['down']) {
-    $ports_colour = $warn_colour_a;
-}
-else {
-    $ports_colour = $list_colour_a;
-}
+require_once '../includes/component.php';
+$COMPONENT = new component();
+$CUCM_BASIC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-BASIC','ignore'=>0));
+?>
 
-echo '
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-md-12"></div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-';
+    <div class="row"><div class="col-md-12"></div></div>
+    <div class="row">
+        <div class="col-md-6">
+<?php
 // Left Pane
-require 'includes/dev-overview-data.inc.php';
-Plugins::call('device_overview_container',array($device));
-
-require 'overview/ports.inc.php';
-echo '
-    </div>
-    <div class="col-md-6">
-';
-
+include 'pages/device/cucm/widgets/calls.inc.php';
+include 'pages/device/cucm/widgets/moh.inc.php';
+?>
+        </div>
+        <div class="col-md-6">
+<?php
 // Right Pane
-require 'overview/processors.inc.php';
-require 'overview/mempools.inc.php';
-require 'overview/storage.inc.php';
-
-if(is_array($entity_state['group']['c6kxbar'])) {
-    require 'overview/c6kxbar.inc.php';
-}
-
-echo '
+include 'pages/device/cucm/widgets/status.inc.php';
+include 'pages/device/cucm/widgets/conferences.inc.php';
+include 'pages/device/cucm/widgets/mediaresources.inc.php';
+?>
+        </div>
     </div>
 </div>
-</div>';

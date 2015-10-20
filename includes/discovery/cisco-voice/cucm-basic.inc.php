@@ -68,12 +68,10 @@ if ($device['os'] == "ucos") {
                     // If we have a non-zero value, add the counter
                     switch ($VALUE['Name']) {
                         case '\\\\'.$HOST.'\Number of Replicates Created and State of Replication(ReplicateCount)\Replicate_State':
-                            $STATUS = 0;        // Guilty until proven innocent.
-                            if ($VALUE['Value'] == 2) {
-                                // 2 is normal, everything else is an error.
-                                $STATUS = 1;
+                            // Only Add the metric if replication is started.
+                            if ($VALUE['Value'] != 0) {
+                                $CUCM[] = array('label'=>'Replicate_State');
                             }
-                            $CUCM[] = array('label'=>'Replicate_State','status'=>$STATUS);
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\InitializationState':
                             $STATUS = 0;        // Guilty until proven innocent.
