@@ -134,6 +134,28 @@ class transport_http {
         }
         return $result;
     }
+
+    public function is_sequential( array $ARRAY ) {
+        $ISSEQ = TRUE;
+        for (reset($ARRAY); is_int(key($ARRAY)); next($ARRAY)) {
+            $ISSEQ = is_null(key($ARRAY));
+        }
+        return $ISSEQ;
+    }
+
+    public function make_sequential( array $ARRAY ) {
+        if ($this->is_sequential($ARRAY))
+        {
+            d_echo("NOT Associative Array, make it one\n");
+            $RETURN[] = $ARRAY;
+        } else {
+            d_echo("IS Associative Array\n");
+            $RETURN = $ARRAY;
+        }
+        // All done, return the successful response.
+        return $RETURN;
+    }
+
 }
 
 class HTTPException extends \Exception {}

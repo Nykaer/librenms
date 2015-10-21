@@ -16,15 +16,6 @@ class api_cucm_perfmon extends \transport_http {
     private $options        = array('nosslcheck'=>true);
     private $SID            = NULL;
 
-    // TODO: Common - move to transport_http
-    private function is_sequential( array $ARRAY ) {
-        $ISSEQ = TRUE;
-        for (reset($ARRAY); is_int(key($ARRAY)); next($ARRAY)) {
-            $ISSEQ = is_null(key($ARRAY));
-        }
-        return $ISSEQ;
-    }
-
     /**
      * @param $XMLIN - XML to send in a CUCM SOAP request
      * @return array (True/False, DATA)

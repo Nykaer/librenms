@@ -11,11 +11,10 @@
  * the source code distribution for details.
  */
 
-class api_cucm_axl extends \transport_http
-{
-	var $sURL			= array();
-	var $sAuthHeader	= NULL;
-    var $aHTTPHeader    = array();
+class api_cucm_axl extends \transport_http {
+    private $sURL           = array();
+    private $options        = array('nosslcheck'=>true);
+//    var $aHTTPHeader    = array();
 
     public function connect($user,$pass,$hosts)
     {
@@ -24,8 +23,8 @@ class api_cucm_axl extends \transport_http
         {
             $this->sURL[] = "https://" .$host. ":8443/axl/";
         }
-        $this->aHTTPHeader[] = "Authorization: Basic ".base64_encode($user.":".$pass);
-        $this->aHTTPHeader[] = "Content-Type: text/xml";
+        $this->options['headers'][] = "Authorization: Basic ".base64_encode($user.":".$pass);
+        $this->options['headers'][] = "Content-Type: text/xml";
         return true;
     }
 
@@ -41,86 +40,64 @@ class api_cucm_axl extends \transport_http
      * @throws HTTPException
      * Sends a SOAP request to the CUCM AXL interface.
      */
-    private function getCUCMData($XMLIN)
-    {
-        d_echo("XMLIN set to: " .$XMLIN."\n");
-
+    private function request($XMLIN) {
         // Loop over the URL array, try each one in order.
         $HTTPSTATUS = FALSE;
         $MSG = "No hosts supplied to connect to";
-        foreach ($this->sURL as $URL)
-        {
-            try
-            {
-                $RESPONSE = $this->do_post_request($URL,$XMLIN,$this->aHTTPHeader);
+        foreach ($this->sURL as $URL) {
+            try {
+                $this->options['method'] = 'POST';
+                $this->options['content'] = $XMLIN;
+                $HTTPRES = $this->http_request($URL,$this->options);
                 $HTTPSTATUS = TRUE;
                 break;
             }
-            catch (\HTTPException $e)
-            {
+            catch (\HTTPException $e) {
                 $MSG = $e->getMessage();
                 d_echo("HTTP Failed Attempt to: ".$URL." with error: " .$MSG."\n");
             }
         }
-        if ($HTTPSTATUS === FALSE)
-        {
+        if ($HTTPSTATUS === FALSE) {
             d_echo("HTTP Connection failed to all hosts.\n");
-            return array(1, "HTTP Error: " .$MSG);
+            return array(false, "HTTP Error: " .$MSG);
+        }
+
+        if ($HTTPRES['http_code'] == 401) {
+            d_echo("401 - Incorrect Credentials Supplied.\n");
+            return array(false, "401 - Incorrect Credentials Supplied.");
         }
 
         // If we got this far we have a SOAP result.
-        d_echo("Response received: " .$RESPONSE."\n");
+        d_echo("HTTP Response received: " .$HTTPRES['http_code']."\n");
+        $RESPONSE = $HTTPRES['content'];
 
         // Remove excess whitespace from the response.
         $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
-        d_echo("Removed Excess Whitespace: " .print_r($RESPONSE, TRUE)."\n");
 
-        // Turn blank XML tags into empty XML tags (<emptytag/> into <emptytag></emptytag>.
-        $RESPONSE = preg_replace("/<(\w+)\/>/", "<$1>null</$1>", $RESPONSE);
-        d_echo("Tag Fixup: " .print_r($RESPONSE, TRUE)."\n");
+        // Remove Namespaces from the response.
+        $RESPONSE = preg_replace('/(ns:|soapenv:)/s', '', $RESPONSE);
+        d_echo("Namespaces Removed: " .print_r($RESPONSE, TRUE)."\n");
 
-        // return is a non-error response, do we have one?
-        $RESULT = preg_match('(<return>.*?</return>)',$RESPONSE, $EXTRACT);
-        if ($RESULT !== 0)
-        {
-            // Yes, we have a non-error response.
-            $OUT = $EXTRACT[0];
-            // is the response empty (no results)?
-            if ($OUT == "<return>null</return>")
-            {
-                // Yes.
-                d_echo("No data was received in the fault response\n");
-                return array(1, "There are no results matching the search query.");
+        // Convert XML to array
+        $RESULT = json_decode(json_encode((array) simplexml_load_string($RESPONSE)),1);
+
+        // Do we have an error
+        if ($HTTPRES['http_code'] != 200) {
+            // Yes, have some kind of fault.
+            if (isset($RESULT['Body']['Fault'])) {
+                $MSG = $RESULT['Body']['Fault']['faultcode'] . " - " . $RESULT['Body']['Fault']['faultstring'];
             }
-            // No, we have a non-error response with some results.
-            d_echo("Successful Response\n");
-        } else {
-            // No, We dont have a non-error response.
-            // Do re have an error response?
-            $RESULT = preg_match('(<faultstring>.*?</faultstring>)',$RESPONSE, $EXTRACT);
-            if ($RESULT !== 0)
-            {
-                // Yes, we have a faultstring.
-                d_echo("Fault Response\n");
-                $XMLOUT = new \SimpleXMLElement($EXTRACT[0]);
-                $MSG = $XMLOUT[0];
-                d_echo("XML Error: " .$MSG."\n");
-                return array(1, "XML Error: " .$MSG);
-            } else {
-                // No, we dont have a faultstring.
-                // No return and no faultstring, I dont know what to do?
-                d_echo("The response did not contain a return or a faultstring: ".print_r($RESPONSE, TRUE)."\n");
-                return array(1, "An unknown response was returned by the server.");
+            else {
+                $MSG = $HTTPRES['content'];
             }
-
+            d_echo("Fault: ".$MSG."\n");
+            return array(false, "Fault: " .$MSG);
         }
-        // If we got this far, we have a valid non-error response.
-        d_echo("Extracted Response: " .$OUT."\n");
-        $ARROUT = json_decode(json_encode((array) simplexml_load_string($OUT)),1);
-        d_echo("Turned into array: " .print_r($ARROUT, TRUE)."\n");
-
-        // All done, return the successful response.
-        return array(0, $ARROUT);
+        else {
+            // No fault, must be successful.
+            d_echo("Successful Response: ".print_r($RESULT['Body'],true)."\n");
+            return array(true, $RESULT['Body']);
+        }
     }
 
     public function runSQLQuery($SQL)
@@ -136,10 +113,10 @@ class api_cucm_axl extends \transport_http
         $XML .= '	    </SOAP-ENV:Body>';
         $XML .= '</SOAP-ENV:Envelope>';
 
-        $RESULT = $this->getCUCMData($XML);
+        $RESULT = $this->request($XML);
 
         // Check to see if we have an error, if we do, return it.
-        if ($RESULT[0] == 1)
+        if ($RESULT[0] === false)
         {
             return $RESULT;
         }
@@ -149,17 +126,10 @@ class api_cucm_axl extends \transport_http
          * This is annoying and makes it hard to process the data in a consistent way.
          * Here we check if the data is an array, and if not we make it one.
          */
-        if ($this->is_sequential($RESULT[1]['row']))
-        {
-            d_echo("NOT Associative Array, make it one: " .print_r($RESULT[1]['row'], TRUE)."\n");
-            $RETURN[] = $RESULT[1]['row'];
-        } else {
-            d_echo("IS Associative Array: " .print_r($RESULT[1]['row'], TRUE)."\n");
-            $RETURN = $RESULT[1]['row'];
-        }
+        $RETURN = $this->make_sequential($RESULT[1]['executeSQLQueryResponse']['return']['row']);
 
         // All done, return the successful response.
-        return array(0, $RETURN);
+        return array(true, $RETURN);
     }
 
     public function getEndUser($username)
@@ -173,7 +143,16 @@ class api_cucm_axl extends \transport_http
         $XML .= '    </SOAP-ENV:Body>';
         $XML .= '</SOAP-ENV:Envelope>';
 
-        return $this->getCUCMData($XML);
+        $RESULT = $this->request($XML);
+
+        // Check to see if we have an error, if we do, return it.
+        if ($RESULT[0] === false)
+        {
+            return $RESULT;
+        }
+
+        // All done, return the successful response.
+        return array(true, $RESULT[1]['getUserResponse']['return']['user']);
 	}
 
     public function setDeviceOwner($device='',$user=null)
@@ -195,17 +174,23 @@ class api_cucm_axl extends \transport_http
                </soapenv:Body>
             </soapenv:Envelope>';
 
-        return $this->getCUCMData($XML);
-    }
+        $RESULT = $this->request($XML);
 
-	private function is_sequential( array $ARRAY )
-	{
-		$ISSEQ = TRUE;
-		for (reset($ARRAY); is_int(key($ARRAY)); next($ARRAY))
-		{
-			$ISSEQ = is_null(key($ARRAY));
-		}
-		return $ISSEQ;
-	}
+        // Check to see if we have an error, if we do, return it.
+        if ($RESULT[0] === false)
+        {
+            return $RESULT;
+        }
+
+        /*
+         * If a query only returns a single item CUCM does not put it in an array.
+         * This is annoying and makes it hard to process the data in a consistent way.
+         * Here we check if the data is an array, and if not we make it one.
+         */
+        $RETURN = $this->make_sequential($RESULT[1]['updatePhoneResponse']['return']);
+
+        // All done, return the successful response.
+        return array(true, $RETURN);
+    }
 
 }
