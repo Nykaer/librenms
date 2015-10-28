@@ -42,7 +42,9 @@ if ($device['os_group'] == "cisco") {
      * This module graphs the Active Calls on a Cisco CallManager Server
      */
     include "cisco-voice/cucm-callsactive.inc.php";
+}
 
+if ($device['os_group'] == "ucos") {
     /*
      * CallManger Basic Resources
      * This module graphs some basic resources in a CallManager Server

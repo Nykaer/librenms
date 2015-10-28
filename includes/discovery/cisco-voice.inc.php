@@ -11,7 +11,7 @@
  * the source code distribution for details.
  */
 
-if ($device['os_group'] == "cisco") {
+if ($device['os_group'] == "ucos") {
 
     /*
      * CallManger Basic Resources

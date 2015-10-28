@@ -39,7 +39,7 @@ else {
   $panes['component'] = 'Components';
 
     // If this is a Cisco UC appliance..
-    if ($device['os'] == "ucos") {
+    if ($device['os_group'] == "ucos") {
         $panes['ucosaxl'] = 'UC AXL';
     }
 

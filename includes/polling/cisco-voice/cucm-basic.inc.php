@@ -11,7 +11,7 @@
  * the source code distribution for details.
  */
 
-if ($device['os'] == "ucos") {
+if ($device['os'] == "cucm") {
 
     $MODULE = 'CUCM-Basic';
 

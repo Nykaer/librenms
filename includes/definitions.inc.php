@@ -416,9 +416,9 @@ $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 $config['os'][$os]['icon']             = 'cisco';
 
 // CUOS - Unified Communications OS
-$os = "ucos";
-$config['os'][$os]['text']              = "Cisco UC Appliance";
-$config['os'][$os]['group']             = "cisco";
+$os = "cucm";
+$config['os'][$os]['text']              = "Cisco CallManager";
+$config['os'][$os]['group']             = "ucos";
 $config['os'][$os]['type']              = "voice";
 $config['os'][$os]['over'][0]['graph'] = 'device_processor';
 $config['os'][$os]['over'][0]['text']  = 'CPU Usage';

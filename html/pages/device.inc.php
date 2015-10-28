@@ -357,7 +357,7 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
             </a>
             </li>';
 
-        if (device_permitted($device['device_id']) && ($device['os'] == "ucos")) {
+        if (device_permitted($device['device_id']) && ($device['os'] == "cucm")) {
             echo '<li class="'.$select['cucm'].'">
                 <a href="'.generate_device_url($device, array('tab' => 'cucm')).'">
                 <img src="images/16/telephone.png" align="absmiddle" border="0" /> Call Manager
