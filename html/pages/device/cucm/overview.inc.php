@@ -2,7 +2,9 @@
 
 require_once '../includes/component.php';
 $COMPONENT = new component();
-$CUCM_BASIC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-BASIC','ignore'=>0));
+$options['type'] = 'CUCM-BASIC';
+$options['filter']['ignore'] = array('=',0);
+$CUCM_BASIC = $COMPONENT->getComponents($device['device_id'],$options);
 ?>
 
 <div class="container-fluid">

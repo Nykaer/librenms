@@ -2,7 +2,9 @@
 
 require_once "../includes/component.php";
 $COMPONENT = new component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
+$options['type'] = 'CUCM-ELCAC';
+$options['filter']['ignore'] = array('=',0);
+$COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
 if (count($COMPONENTS) > 0) {
     ?>

@@ -2,7 +2,9 @@
 
 require_once "../includes/component.php";
 $COMPONENT = new component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
+$options['type'] = 'CUCM-SIP';
+$options['filter']['ignore'] = array('=',0);
+$COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
 if (count($COMPONENTS) > 0) {
     $graph_array['device'] = $device['device_id'];
