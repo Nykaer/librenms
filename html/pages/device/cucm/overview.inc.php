@@ -18,7 +18,7 @@ include 'pages/device/cucm/widgets/moh.inc.php';
         <div class="col-md-6">
 <?php
 // Right Pane
-include 'pages/device/cucm/widgets/status.inc.php';
+include 'pages/device/cucm/widgets/alerts.inc.php';
 include 'pages/device/cucm/widgets/conferences.inc.php';
 include 'pages/device/cucm/widgets/mediaresources.inc.php';
 ?>
