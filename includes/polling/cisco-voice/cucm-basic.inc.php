@@ -67,10 +67,6 @@ if ($device['os'] == "cucm") {
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\VCBResourceActive';
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal';
                 break;
-            case 'MOHMulticastResources':
-                $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHMulticastResourceActive';
-                $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources';
-                break;
             case 'MOHUnicastResources':
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHUnicastResourceActive';
                 $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources';

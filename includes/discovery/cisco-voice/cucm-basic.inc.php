@@ -44,7 +44,6 @@ if ($device['os'] == "cucm") {
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceTotal';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\VCBConferencesTotal';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal';
-    $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceTotal';
     $COUNTER[] = '\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceTotal';
@@ -95,9 +94,6 @@ if ($device['os'] == "cucm") {
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal':
                             $CUCM[] = array('label'=>'VCBResource');
-                            break;
-                        case '\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources':
-                            $CUCM[] = array('label'=>'MOHMulticastResources');
                             break;
                         case '\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources':
                             $CUCM[] = array('label'=>'MOHUnicastResources');

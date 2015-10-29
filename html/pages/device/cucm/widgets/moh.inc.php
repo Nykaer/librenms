@@ -1,7 +1,7 @@
 <?php
 require_once 'pages/device/cucm/widgets/functions.inc.php';
 
-$labels = array('MOHMulticastResources','MOHUnicastResources');
+$labels = array('MOHUnicastResources');
 if (component_exists($CUCM_BASIC,$labels)) {
 
     // Generic Graph Settings
@@ -22,12 +22,6 @@ if (component_exists($CUCM_BASIC,$labels)) {
 
     foreach ($CUCM_BASIC as $ID => $ARRAY) {
         switch ($ARRAY['label']) {
-            case 'MOHMulticastResources':
-                echo "            <div>\n";
-                $graph_array['type']   = 'device_cucm-basic-mohmulticastresources';
-                generate_widget_part($graph_array,$device,"Multicast");
-                echo "            </div>\n";
-                break;
             case 'MOHUnicastResources':
                 echo "            <div>\n";
                 $graph_array['type']   = 'device_cucm-basic-mohunicastresources';
