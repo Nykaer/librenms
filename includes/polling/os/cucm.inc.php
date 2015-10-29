@@ -4,9 +4,9 @@
  */
 
 require_once 'includes/cisco-voice/transport_http.inc.php';
-require_once 'includes/cisco-voice/api_ucos_generic.inc.php';
+require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
 
-$API = new api_ucos_generic();
+$API = new api_ucos_ast();
 // Grab the details UCOS requires.
 $USER = get_dev_attrib($device, 'ucosaxl_user');
 $PASS = get_dev_attrib($device, 'ucosaxl_pass');;

@@ -11,7 +11,7 @@
  * the source code distribution for details.
  */
 
-class api_ucos_generic extends \transport_http {
+class api_ucos_ast extends \transport_http {
     private $sURL           = "";
     private $sHOST          = "";
     private $options        = array('nosslcheck'=>true);
@@ -25,26 +25,20 @@ class api_ucos_generic extends \transport_http {
         return true;
     }
 
-    public function addHeader($string)
-    {
-        $this->aHTTPHeader[] = $string;
-        return true;
-    }
-
     /**
-     * @param $XMLIN - XML to send in a CUCM SOAP request
+     * @param $DATA - DATA to send
      * @return array (True/False, DATA)
      * @throws HTTPException
-     * Sends a SOAP request to the CUCM AXL interface.
+     * Sends a SOAP request to the UCOS ast interface.
      */
-    private function request($XMLIN) {
+    private function request($DATA) {
         // Loop over the URL array, try each one in order.
         $HTTPSTATUS = FALSE;
         $MSG = "No hosts supplied to connect to";
         $URL = $this->sURL;
         try {
             $this->options['method'] = 'POST';
-            $this->options['content'] = $XMLIN;
+            $this->options['content'] = $DATA;
             $HTTPRES = $this->http_request($URL,$this->options);
             $HTTPSTATUS = TRUE;
         }
