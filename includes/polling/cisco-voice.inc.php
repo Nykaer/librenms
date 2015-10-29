@@ -63,4 +63,10 @@ if ($device['os_group'] == "ucos") {
      */
     include "cisco-voice/cucm-sip.inc.php";
 
+    /*
+     * CallManger H323
+     * This module graphs the call counters for H323 Non-GK controlled ICT's on a CallManager Server
+     */
+    include "cisco-voice/cucm-h323.inc.php";
+
 }
