@@ -65,6 +65,11 @@ if ($device['os'] == "cucm") {
             else {
                 $ARRAY['status'] = 0;
             }
+
+            // Alert if the uptime has been restarted
+            if ($STATISTICS[$ARRAY['label']]['uptime'] < $ARRAY['uptime']) {
+                $ARRAY['status'] = 0;
+            }
             $ARRAY['uptime'] = $STATISTICS[$ARRAY['label']]['uptime'];
         } // End foreach COMPONENT
 
