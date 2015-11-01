@@ -12,6 +12,7 @@
  */
 
 class api_ucos_ast extends \transport_http {
+    private $sNODE          = null;
     private $sURL           = "";
     private $sHOST          = "";
     private $options        = array('nosslcheck'=>true);
@@ -61,7 +62,7 @@ class api_ucos_ast extends \transport_http {
         $RESPONSE = $HTTPRES['content'];
 
         // Remove excess whitespace from the response.
-        $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
+//        $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
 
         // Remove Namespaces from the response.
         $RESPONSE = preg_replace('/(ns:|soapenv:)/s', '', $RESPONSE);
@@ -73,6 +74,38 @@ class api_ucos_ast extends \transport_http {
         // We don't know the contents of the response
         // Lets just hand it back and let the calling function deal with it.
         return array($HTTPRES['http_code'], $RESULT);
+    }
+
+    private function getNode()
+    {
+        if (is_null($this->sNODE)) {
+            // NODE is currently null, we need to go find it.
+            $this->sURL = "https://".$this->sHOST.":8443/tracecollection/MainServlet.class?htxtFunctionName=NodeListController";
+            d_echo("URL Set to: " .$this->sURL."\n");
+
+            $RESULT = $this->request(null);
+
+            // HTTP - 200 OK
+            if ($RESULT[0] == 200) {
+//                print_r ($RESULT[1]);
+//                // Make sure we have an associative array.
+//                $RESULT[1] = $this->make_sequential($RESULT[1]);
+//                print_r ($RESULT[1]);
+
+                foreach ( $RESULT[1] as $NODE ) {
+                    if ($NODE["@attributes"]['value1'] == $this->sHOST) {
+                        // We have found our host. Extract the node
+                        $this->sNODE = $NODE["@attributes"]['value2'];
+                        return true;
+                    }
+                }
+                return false;
+            }
+        } // End if is_null
+        else {
+            // is not null, we have a result.
+            return true;
+        }
     }
 
     public function getProduct()
@@ -89,6 +122,68 @@ class api_ucos_ast extends \transport_http {
         else {
             return false;
         }
+    }
+
+    public function getServices()
+    {
+        // Make sure we have a node set.
+        $this->getNode();
+
+        if (is_null($this->sNODE)) {
+            // We cant find a node, can't proceed.
+            return false;
+        }
+
+        $this->sURL = "https://".$this->sHOST.":8443/ast/ASTIsapi.dll?GetPreCannedInfo&Items=getServiceInfoRequest";
+        d_echo("URL Set to: " .$this->sURL."\n");
+
+        $RESULT = $this->request(null);
+
+        // HTTP - 200 OK
+        if ($RESULT[0] == 200) {
+            // Make sure we have an associative array.
+            $RESULT[1]['getServiceInfoReply']['Host'] = $this->make_sequential($RESULT[1]['getServiceInfoReply']['Host']);
+
+            foreach ($RESULT[1]['getServiceInfoReply']['Host'] as $NODE) {
+                if ($NODE["@attributes"]['Name'] == $this->sNODE) {
+                    // We have found our node, return its stats
+                    return $NODE;
+                }
+            }
+        }
+        // if we haven't returned already we must have failed.
+        return false;
+    }
+
+    public function getRegisteredDevices()
+    {
+        // Make sure we have a node set.
+        $this->getNode();
+
+        if (is_null($this->sNODE)) {
+            // We cant find a node, can't proceed.
+            return false;
+        }
+
+        $this->sURL = "https://".$this->sHOST.":8443/ast/ASTIsapi.dll?GetPreCannedInfo&Items=getRegisteredDeviceRequest;getRegisteredOtherStationDeviceRequest";
+        d_echo("URL Set to: " .$this->sURL."\n");
+
+        $RESULT = $this->request(null);
+
+        // HTTP - 200 OK
+        if ($RESULT[0] == 200) {
+            // Make sure we have an associative array.
+            $RESULT[1]['getRegisteredDeviceReply']['CmNode'] = $this->make_sequential($RESULT[1]['getRegisteredDeviceReply']['CmNode']);
+
+            foreach ($RESULT[1]['getRegisteredDeviceReply']['CmNode'] as $NODE) {
+                if ($NODE["@attributes"]['Name'] == $this->sNODE) {
+                    // We have found our node, return its stats
+                    return $NODE;
+                }
+            }
+        }
+        // if we haven't returned already we must have failed.
+        return false;
     }
 
 }

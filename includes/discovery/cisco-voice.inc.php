@@ -12,6 +12,11 @@
  */
 
 if ($device['os_group'] == "ucos") {
+    /*
+     * UCOS Services
+     * This module collects a list of services and their status from UCOS devices.
+     */
+    include "cisco-voice/ucos-services.inc.php";
 
     /*
      * CallManger Basic Resources

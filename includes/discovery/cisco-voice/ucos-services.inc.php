@@ -11,13 +11,13 @@
  * the source code distribution for details.
  */
 
-if ($device['os'] == "cucm") {
+if ($device['os_group'] == "ucos") {
 
-    $MODULE = 'CUCM-SIP';
+    $MODULE = 'UCOS-SERVICES';
     echo $MODULE.': ';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
-    require_once 'includes/cisco-voice/api_cucm_perfmon.inc.php';
+    require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
     require_once 'includes/component.php';
 
     $COMPONENT = new component();
@@ -28,31 +28,47 @@ if ($device['os'] == "cucm") {
     $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
     $HOST = get_dev_attrib($device, 'ucosaxl_host');
 
-    $API = new api_cucm_perfmon();
-    $API->connect($USER, $PASS, array($HOST));
+    $API = new api_ucos_ast();
+    $API->connect($USER, $PASS, $HOST);
 
     // Begin the master array, all data will be processed into this array.
-    $CUCM = array();
+    $SERVICES = array();
 
-    // Extract all SIP instances.
-    $RESULT = $API->listInstance($HOST,'Cisco SIP');
+    // Extract all Services.
+    $RESULT = $API->getServices();
     if ($RESULT === false) {
         d_echo("No Data was returned.\n");
         echo "Error\n";
     }
     else {
-        d_echo("We have Instances.\n");
+        d_echo("We have Services.\n");
 
-        foreach ($RESULT as $VALUE) {
-            // Add a component for each SIP trunk
-            $CUCM[] = array('label'=>$VALUE);
+        foreach ($RESULT['Service'] as $ARRAY) {
+            $status = $ARRAY["@attributes"]['ServiceStatus'];
+            /* A note on Service Status
+             * 1 = Service Started - Operating normally
+             * 2 = Service Not Started, Deactivated - not an issue, has been manually disabled.
+             * 3 = Unknown - Guessing Stopping state
+             * 4 = Unknown - Guessing Starting State
+             * 5 = Service Stopped but should be running - Error State.
+             */
+            if (($status == 1) || ($status == 5)) {
+                if ($status == 1) {
+                    $status = 1;
+                }
+                else {
+                    $status = 0;
+                }
+                // Add a component for each Running Service
+                $SERVICES[] = array('label'=>$ARRAY["@attributes"]['ServiceName'], 'status'=>$status);
+            }
         }
 
         /*
-         * Ok, we have our 2 array's (Components and CUCM) now we need
+         * Ok, we have our 2 array's (Components and Services) now we need
          * to compare and see what needs to be added/updated.
          */
-        foreach ($CUCM as $key => $array) {
+        foreach ($SERVICES as $key => $array) {
             $COMPONENT_KEY = false;
 
             // Loop over our components to determine if the component exists, or we need to add it.
@@ -83,7 +99,7 @@ if ($device['os'] == "cucm") {
             // Guilty until proven innocent
             $FOUND = false;
 
-            foreach ($CUCM as $k => $v) {
+            foreach ($SERVICES as $k => $v) {
                 if ($array['label'] == $v['label']) {
                     // Yay, we found it...
                     $FOUND = true;

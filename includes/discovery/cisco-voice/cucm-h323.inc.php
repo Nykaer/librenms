@@ -34,10 +34,6 @@ if ($device['os'] == "cucm") {
     // Begin the master array, all data will be processed into this array.
     $CUCM = array();
 
-    // Add all the counters we are interested in.
-    $COUNTER = array();
-    $LOCATIONS = array();
-
     // Extract all instances.
     $RESULT = $API->listInstance($HOST,'Cisco H323');
     if ($RESULT === false) {
@@ -45,11 +41,11 @@ if ($device['os'] == "cucm") {
         echo "Error\n";
     }
     else {
-        d_echo("We have SIP Instances.\n");
+        d_echo("We have Instances.\n");
 
         foreach ($RESULT as $VALUE) {
             // Add a component for each instance
-            $CUCM[] = array('label'=>$VALUE);
+            $CUCM[] = array('label'=>$VALUE['Name']);
         }
 
         /*
