@@ -1,9 +1,14 @@
 <?php
 require_once 'pages/device/cucm/widgets/functions.inc.php';
-
+$options = array();
 $options['filter']['type'] = array('LIKE','CUCM-');
 $options['filter']['status'] = array('=',0);
-$ALERTS = $COMPONENT->getComponents($device['device_id'],$options);
+$ALERTS1 = $COMPONENT->getComponents($device['device_id'],$options);
+$options['filter']['type'] = array('LIKE','UCOS-');
+$ALERTS2 = $COMPONENT->getComponents($device['device_id'],$options);
+
+// Merge CUCM Alerts with UCOS Alerts.
+$ALERTS = array_merge($ALERTS1, $ALERTS2);
 if (count($ALERTS) > 0) {
     ?>
     <div class="panel panel-default panel-condensed">

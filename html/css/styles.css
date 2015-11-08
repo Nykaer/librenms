@@ -1763,3 +1763,6 @@ tr.search:nth-child(odd) {
 .edit-storage-input {
     width: 100px;
 }
+.table-striped>tbody>tr>td>.bg-danger {
+    background-color: #f2dede;
+}

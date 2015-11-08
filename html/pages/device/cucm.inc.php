@@ -3,12 +3,16 @@
 require_once "../includes/component.php";
 
 $COMPONENT = new component();
+$UCOS_SERVICES = $COMPONENT->getComponents($device['device_id'],array('type'=>'UCOS-SERVICES','ignore'=>0));
 $CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
 $CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
 $CUCM_H323 = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-H323','ignore'=>0));
 
 unset($datas);
 $datas[] = 'overview';
+if (count($UCOS_SERVICES) > 0) {
+    $datas[] = 'services';
+}
 if (count($CUCM_ELCAC) > 0) {
     $datas[] = 'elcac';
 }
@@ -17,8 +21,9 @@ if ((count($CUCM_SIP) > 0) || (count($CUCM_H323) > 0)) {
 }
 
 $type_text['overview']      = 'Overview';
-$type_text['trunk']           = 'Trunks';
+$type_text['trunk']         = 'Trunks';
 $type_text['elcac']         = 'Locations';
+$type_text['services']      = 'Services';
 
 $link_array = array(
     'page'   => 'device',

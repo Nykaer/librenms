@@ -70,6 +70,7 @@ if ($device['os'] == "cucm") {
             if ($STATISTICS[$ARRAY['label']]['uptime'] < $ARRAY['uptime']) {
                 $ARRAY['status'] = 0;
             }
+            // Update our uptime to the new value
             $ARRAY['uptime'] = $STATISTICS[$ARRAY['label']]['uptime'];
         } // End foreach COMPONENT
 

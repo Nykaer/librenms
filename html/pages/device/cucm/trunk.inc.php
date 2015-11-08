@@ -2,6 +2,7 @@
 
 require_once "../includes/component.php";
 $COMPONENT = new component();
+$options = array();
 $options['filter']['ignore'] = array('=',0);
 $graph_array['device'] = $device['device_id'];
 $options['type'] = 'CUCM-SIP';
