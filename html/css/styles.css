@@ -1763,6 +1763,7 @@ tr.search:nth-child(odd) {
 .edit-storage-input {
     width: 100px;
 }
-.table-striped>tbody>tr>td>.bg-danger {
-    background-color: #f2dede;
+/* Add the ability to override a table stripe with bg-danger */
+table.table.table-striped tr.bg-danger td {
+    background-color: #ebccd1;
 }

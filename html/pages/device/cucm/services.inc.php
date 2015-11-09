@@ -27,13 +27,12 @@ $SERVICES = $COMPONENT->getComponents($device['device_id'],$options);
             else {
                 $STATUS = "Alert";
                 $CLASS = 'bg-danger';
-                $STYLE = 'style="color: #FF1C00;"';
             }
             ?>
-            <tr>
-                <td class="<?=$CLASS?>"><?=$VALUE['label']?></td>
-                <td class="<?=$CLASS?>"><?=$STATUS?></td>
-                <td class="<?=$CLASS?>"><?=(floor($VALUE['uptime']/86400))." days, ".(gmdate("H:i:s", $VALUE['uptime']));?></td>
+            <tr class="<?=$CLASS?>">
+                <td><?=$VALUE['label']?></td>
+                <td><?=$STATUS?></td>
+                <td><?=(floor($VALUE['uptime']/86400))." days, ".(gmdate("H:i:s", $VALUE['uptime']));?></td>
             </tr>
         <?php
         }
