@@ -16,17 +16,25 @@ list($active, $reading, $writing, $waiting, $req) = explode("\n", $nginx);
 if (!is_file($nginx_rrd)) {
     rrdtool_create(
         $nginx_rrd,
-        '--step 300 \
-        DS:Requests:DERIVE:600:0:125000000000 \
-        DS:Active:GAUGE:600:0:125000000000 \
-        DS:Reading:GAUGE:600:0:125000000000 \
-        DS:Writing:GAUGE:600:0:125000000000 \
+        '--step 300 
+        DS:Requests:DERIVE:600:0:125000000000 
+        DS:Active:GAUGE:600:0:125000000000 
+        DS:Reading:GAUGE:600:0:125000000000 
+        DS:Writing:GAUGE:600:0:125000000000 
         DS:Waiting:GAUGE:600:0:125000000000 '.$config['rrd_rra']
     );
 }
 
 print "active: $active reading: $reading writing: $writing waiting: $waiting Requests: $req";
-rrdtool_update($nginx_rrd, "N:$req:$active:$reading:$writing:$waiting");
+$fields = array(
+                'Requests' => $req,
+                'Active'   => $active,
+                'Reading'  => $reading,
+                'Writing'  => $writing,
+                'Waiting'  => $waiting,
+);
+
+rrdtool_update($nginx_rrd, $fields);
 
 // Unset the variables we set here
 unset($nginx);

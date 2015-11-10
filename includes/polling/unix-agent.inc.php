@@ -38,7 +38,11 @@ if ($device['os_group'] == 'unix') {
             rrdtool_create($agent_rrd, 'DS:time:GAUGE:600:0:U '.$config['rrd_rra']);
         }
 
-        rrdtool_update($agent_rrd, 'N:'.$agent_time);
+        $fields = array(
+            'time' => $agent_time,
+        );
+ 
+        rrdtool_update($agent_rrd, $fields);
         $graphs['agent'] = true;
 
         foreach (explode('<<<', $agent_raw) as $section) {
@@ -47,6 +51,7 @@ if ($device['os_group'] == 'unix') {
 
             $agentapps = array(
                 "apache",
+                "ceph",
                 "mysql",
                 "nginx",
                 "bind",
@@ -100,7 +105,7 @@ if ($device['os_group'] == 'unix') {
             if (file_exists("includes/polling/applications/$key.inc.php")) {
                 d_echo("Enabling $key for ".$device['hostname']." if not yet enabled\n");
 
-                if (in_array($key, array('apache', 'mysql', 'nginx', 'proxmox'))) {
+                if (in_array($key, array('apache', 'mysql', 'nginx', 'proxmox', 'ceph'))) {
                     if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], $key)) == '0') {
                         echo "Found new application '$key'\n";
                         dbInsert(array('device_id' => $device['device_id'], 'app_type' => $key), 'applications');

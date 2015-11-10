@@ -758,3 +758,40 @@ function round_Nth($val = 0, $round_to) {
     }
 } // end round_Nth 
 
+/**
+ * Checks if config allows us to ping this device
+ * $attribs contains an array of all of this devices
+ * attributes
+ * @param array $attribs Device attributes
+ * @return bool
+**/
+function can_ping_device($attribs) {
+    global $config;
+    if ($config['icmp_check'] === true && $attribs['override_icmp_disable'] != "true") {
+        return true;
+    }
+    else {
+        return false;
+    }
+} // end can_ping_device
+
+/**
+ * Constructs the path to an RRD for the Ceph application
+ * @param string $gtype The type of rrd we're looking for
+ * @return string
+**/
+function ceph_rrd($gtype) {
+    global $device;
+    global $vars;
+    global $config;
+
+    if ($gtype == "osd") {
+        $var = $vars['osd'];
+    }
+    else {
+        $var = $vars['pool'];
+    }
+
+    $rrd = join('-', array('app', 'ceph', $vars['id'], $gtype, $var)).'.rrd';
+    return join('/', array($config['rrd_dir'], $device['hostname'], $rrd));
+}

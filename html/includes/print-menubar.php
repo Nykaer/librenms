@@ -51,7 +51,7 @@ else {
           <ul class="dropdown-menu">
             <li><a href="<?php echo(generate_url(array('page'=>'overview'))); ?>"><i class="fa fa-lightbulb-o fa-fw fa-lg"></i> Overview</a></li>
           <li class="dropdown-submenu">
-            <a href="<?php echo(generate_url(array('page'=>'alerts'))); ?>"><i class="fa fa-exclamation-circle fa-fw fa-lg"></i> Alerts</a>
+            <a><i class="fa fa-exclamation-circle fa-fw fa-lg"> </i> Alerts</a>
             <ul class="dropdown-menu scrollable-menu">
             <li><a href="<?php echo(generate_url(array('page'=>'alerts'))); ?>"><i class="fa fa-bell fa-fw fa-lg"></i> Notifications</a></li>
             <li><a href="<?php echo(generate_url(array('page'=>'alert-log'))); ?>"><i class="fa fa-th-list fa-fw fa-lg"></i> Historical Log</a></li>
@@ -93,7 +93,7 @@ if (isset($config['graylog']['server']) && isset($config['graylog']['port'])) {
 if ( dbFetchCell("SELECT 1 from `packages` LIMIT 1") ) {
 ?>
         <li>
-          <a href="<?php echo(generate_url(array('page'=>'search','search'=>'packages'))); ?>"><i class="fa fa-archive fa-fw fa-lg fa-nav-icons"></i> Packages</a>
+          <a href="<?php echo(generate_url(array('page'=>'search','search'=>'packages'))); ?>"><i class="fa fa-archive fa-fw fa-lg"></i> Packages</a>
         </li>
 <?php
 } # if ($packages)
@@ -129,16 +129,18 @@ foreach (dbFetchRows($sql,$param) as $devtype) {
     echo('            <li><a href="devices/type=' . $devtype['type'] . '/"><i class="fa fa-angle-double-right fa-fw fa-lg"></i> ' . ucfirst($devtype['type']) . '</a></li>');
 }
 
-require_once '../includes/device-groups.inc.php';
-
-foreach( GetDeviceGroups() as $group ) {
-    echo '<li><a href="'.generate_url(array('page'=>'devices','group'=>$group['id'])).'" alt="'.$group['desc'].'"><i class="fa fa-th fa-fw fa-lg"></i> '.ucfirst($group['name']).'</a></li>';
-}
-unset($group);
-
         echo ('</ul>
              </li>');
-
+            require_once '../includes/device-groups.inc.php';
+            $devices_groups = GetDeviceGroups();
+            if (count($devices_groups) > 0 ){
+                echo '<li class="dropdown-submenu"><a href="#"><i class="fa fa-th fa-fw fa-lg"></i> Device Groups</a><ul class="dropdown-menu scrollable-menu">';
+                foreach( $devices_groups as $group ) {
+                    echo '<li><a href="'.generate_url(array('page'=>'devices','group'=>$group['id'])).'" alt="'.$group['desc'].'"><i class="fa fa-th fa-fw fa-lg"></i> '.ucfirst($group['name']).'</a></li>';
+                }
+                unset($group);
+                echo '</ul></li>';
+            }
 if ($_SESSION['userlevel'] >= '10') {
     if ($config['show_locations']) {
         echo('
@@ -188,7 +190,7 @@ if ($config['show_services']) {
 if ($service_alerts) {
     echo('
             <li role="presentation" class="divider"></li>
-            <li><a href="services/status=0/"><i class="fa fa-bell-o fa-fw fa-lg"></i> Alerts ('.$service_alerts.')</a></li>');
+            <li><a href="services/state=down/"><i class="fa fa-bell-o fa-fw fa-lg"></i> Alerts ('.$service_alerts.')</a></li>');
 }
 
 if ($_SESSION['userlevel'] >= '10') {
@@ -529,7 +531,7 @@ if ($_SESSION['userlevel'] >= '10') {
            </ul>
            </li>
            <li role="presentation" class="divider"></li>');
-} 
+}
 
 if ($_SESSION['authenticated']) {
     echo('
