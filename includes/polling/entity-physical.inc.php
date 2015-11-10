@@ -24,11 +24,13 @@ if ($device['os'] == 'ios') {
             $entPhysical_state[$index][$subindex][$group][$key] = $value;
         }
 
-        $chan_update  = $entry['cc6kxbarStatisticsInUtil'];
-        $chan_update .= ':'.$entry['cc6kxbarStatisticsOutUtil'];
-        $chan_update .= ':'.$entry['cc6kxbarStatisticsOutDropped'];
-        $chan_update .= ':'.$entry['cc6kxbarStatisticsOutErrors'];
-        $chan_update .= ':'.$entry['cc6kxbarStatisticsInErrors'];
+        $fields = array(
+            'inutil'      => $entry['cc6kxbarStatisticsInUtil'],
+            'oututil'     => $entry['cc6kxbarStatisticsOutUtil'],
+            'outdropped'  => $entry['cc6kxbarStatisticsOutDropped'],
+            'outerrors'   => $entry['cc6kxbarStatisticsOutErrors'],
+            'inerrors'    => $entry['cc6kxbarStatisticsInErrors'],
+        );
 
         $rrd = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename('c6kxbar-'.$index.'-'.$subindex.'.rrd');
 
@@ -37,16 +39,17 @@ if ($device['os'] == 'ios') {
         if (!is_file($rrd)) {
             rrdtool_create(
                 $rrd,
-                '--step 300 \
-     DS:inutil:GAUGE:600:0:100 \
-     DS:oututil:GAUGE:600:0:100 \
-     DS:outdropped:DERIVE:600:0:125000000000 \
-     DS:outerrors:DERIVE:600:0:125000000000 \
+                '--step 300 
+     DS:inutil:GAUGE:600:0:100 
+     DS:oututil:GAUGE:600:0:100 
+     DS:outdropped:DERIVE:600:0:125000000000 
+     DS:outerrors:DERIVE:600:0:125000000000 
      DS:inerrors:DERIVE:600:0:125000000000 '.$config['rrd_rra']
             );
         }
 
-        rrdtool_update($rrd, "N:$chan_update");
+        rrdtool_update($rrd, $fields);
+
     }//end foreach
 
     // print_r($entPhysical_state);

@@ -96,14 +96,18 @@ function poll_sensor($device, $class, $unit) {
         if (!is_file($rrd_file)) {
             rrdtool_create(
                 $rrd_file,
-                '--step 300 \
+                '--step 300 
                 DS:sensor:GAUGE:600:-20000:20000 '.$config['rrd_rra']
             );
         }
 
         echo "$sensor_value $unit\n";
 
-        rrdtool_update($rrd_file, "N:$sensor_value");
+        $fields = array(
+            'sensor' => $sensor_value,
+        );
+
+        rrdtool_update($rrd_file, $fields);
 
         // FIXME also warn when crossing WARN level!!
         if ($sensor['sensor_limit_low'] != '' && $sensor['sensor_current'] > $sensor['sensor_limit_low'] && $sensor_value <= $sensor['sensor_limit_low'] && $sensor['sensor_alert'] == 1) {
@@ -115,12 +119,7 @@ function poll_sensor($device, $class, $unit) {
             log_event(ucfirst($class).' '.$sensor['sensor_descr'].' above threshold: '.$sensor_value." $unit (> ".$sensor['sensor_limit']." $unit)", $device, $class, $sensor['sensor_id']);
         }
 
-        if ($config['memcached']['enable'] === true) {
-            $memcache->set('sensor-'.$sensor['sensor_id'].'-value', $sensor_value);
-        }
-        else {
-            dbUpdate(array('sensor_current' => $sensor_value), 'sensors', '`sensor_class` = ? AND `sensor_id` = ?', array($class, $sensor['sensor_id']));
-        }
+        dbUpdate(array('sensor_current' => $sensor_value), 'sensors', '`sensor_class` = ? AND `sensor_id` = ?', array($class, $sensor['sensor_id']));
     }//end foreach
 
 }//end poll_sensor()
@@ -147,6 +146,7 @@ function poll_device($device, $options) {
     unset($poll_update_query);
     unset($poll_separator);
     $poll_update_array = array();
+    $update_array = array();
 
     $host_rrd = $config['rrd_dir'].'/'.$device['hostname'];
     if (!is_dir($host_rrd)) {
@@ -154,12 +154,14 @@ function poll_device($device, $options) {
         echo "Created directory : $host_rrd\n";
     }
 
-    $ping_response = isPingable($device['hostname'], $device['device_id']);
+    $address_family = snmpTransportToAddressFamily($device['transport']);
+
+    $ping_response = isPingable($device['hostname'], $address_family, $attribs);
 
     $device_perf              = $ping_response['db'];
     $device_perf['device_id'] = $device['device_id'];
     $device_perf['timestamp'] = array('NOW()');
-    if (is_array($device_perf)) {
+    if (can_ping_device($attribs) === true && is_array($device_perf)) {
         dbInsert($device_perf, 'device_perf');
     }
 
@@ -257,23 +259,34 @@ function poll_device($device, $options) {
         }
 
         if (!empty($device_time)) {
-            rrdtool_update($poller_rrd, "N:$device_time");
+            $fields = array(
+                'poller' => $device_time,
+            );
+            rrdtool_update($poller_rrd, $fields);
         }
 
         // Ping response rrd
-        $ping_rrd = $config['rrd_dir'].'/'.$device['hostname'].'/ping-perf.rrd';
-        if (!is_file($ping_rrd)) {
-            rrdtool_create($ping_rrd, 'DS:ping:GAUGE:600:0:65535 '.$config['rrd_rra']);
-        }
+        if (can_ping_device($attribs) === true) {
+            $ping_rrd = $config['rrd_dir'].'/'.$device['hostname'].'/ping-perf.rrd';
+            if (!is_file($ping_rrd)) {
+                rrdtool_create($ping_rrd, 'DS:ping:GAUGE:600:0:65535 '.$config['rrd_rra']);
+            }
 
-        if (!empty($ping_time)) {
-            rrdtool_update($ping_rrd, "N:$ping_time");
+            if (!empty($ping_time)) {
+                $fields = array(
+                    'ping' => $ping_time,
+                );
+
+                rrdtool_update($ping_rrd, $fields);
+            }
+
+            $update_array['last_ping']             = array('NOW()');
+            $update_array['last_ping_timetaken']   = $ping_time;
+
         }
 
         $update_array['last_polled']           = array('NOW()');
         $update_array['last_polled_timetaken'] = $device_time;
-        $update_array['last_ping']             = array('NOW()');
-        $update_array['last_ping_timetaken']   = $ping_time;
 
         // echo("$device_end - $device_start; $device_time $device_run");
         echo "Polled in $device_time seconds\n";
@@ -313,6 +326,7 @@ function poll_mib_def($device, $mib_name_table, $mib_subdir, $mib_oids, $mib_gra
 
     $rrdcreate = '--step 300 ';
     $oidglist  = array();
+    $oidnamelist = array();
     foreach ($mib_oids as $oid => $param) {
         $oidindex  = $param[0];
         $oiddsname = $param[1];
@@ -339,6 +353,7 @@ function poll_mib_def($device, $mib_name_table, $mib_subdir, $mib_oids, $mib_gra
 
         // Add to oid GET list
         $oidglist[] = $fulloid;
+        $oidnamelist[] = $oiddsname;
     }//end foreach
 
     // Implde for LibreNMS Version
@@ -350,15 +365,17 @@ function poll_mib_def($device, $mib_name_table, $mib_subdir, $mib_oids, $mib_gra
         return false;
     }
 
-    $rrdupdate = 'N';
+    $oid_count = 0;
+    $fields = array();
     foreach ($oidglist as $fulloid) {
         list($splitoid, $splitindex) = explode('.', $fulloid, 2);
         if (is_numeric($snmpdata[$splitindex][$splitoid])) {
-            $rrdupdate .= ':'.$snmpdata[$splitindex][$splitoid];
+            $fields[$oidnamelist[$oid_count]] = $snmpdata[$splitindex][$splitoid];
         }
         else {
-            $rrdupdate .= ':U';
+            $fields[$oidnamelist[$oid_count]] = 'U';
         }
+        $oid_count++;
     }
 
     $rrdfilename = $config['rrd_dir'].'/'.$device['hostname'].'/'.$rrd_file;
@@ -367,7 +384,7 @@ function poll_mib_def($device, $mib_name_table, $mib_subdir, $mib_oids, $mib_gra
         rrdtool_create($rrdfilename, $rrdcreate.' '.$config['rrd_rra']);
     }
 
-    rrdtool_update($rrdfilename, $rrdupdate);
+    rrdtool_update($rrdfilename, $fields);
 
     foreach ($mib_graphs as $graphtoenable) {
         $graphs[$graphtoenable] = true;

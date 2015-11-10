@@ -52,9 +52,9 @@ if ($device['os_group'] == 'cisco') {
                     if (!is_file($filename)) {
                         rrdtool_create(
                             $filename,
-                            '--step 300 \
-                            DS:drop:DERIVE:600:0:1000000 \
-                            DS:punt:DERIVE:600:0:1000000 \
+                            '--step 300 
+                            DS:drop:DERIVE:600:0:1000000 
+                            DS:punt:DERIVE:600:0:1000000 
                             DS:hostpunt:DERIVE:600:0:1000000 '.$config['rrd_rra']
                         );
                     }
@@ -84,7 +84,13 @@ if ($device['os_group'] == 'cisco') {
 
                     dbUpdate($cef_stat['update'], 'cef_switching', '`device_id` = ? AND `entPhysicalIndex` = ? AND `afi` = ? AND `cef_index` = ?', array($device['device_id'], $entity, $afi, $path));
 
-                    $ret = rrdtool_update("$filename", array($cef_stat['cefSwitchingDrop'], $cef_stat['cefSwitchingPunt'], $cef_stat['cefSwitchingPunt2Host']));
+                    $fields = array(
+                        'drop'      => $cef_stat['cefSwitchingDrop'],
+                        'punt'      => $cef_stat['cefSwitchingPunt'],
+                        'hostpunt'  => $cef_stat['cefSwitchingPunt2Host'],
+                    );
+
+                    $ret = rrdtool_update("$filename", $fields);
 
                     echo "\n";
                 }//end foreach

@@ -26,6 +26,7 @@
     - [`alerts`](#api-alerts)
         - [`get_alert`](#api-route-12)
         - [`ack_alert`](#api-route-13)
+        - [`unmute_alert`](#api-route-24)
         - [`list_alerts`](#api-route-14)
     - [`rules`](#api-rules)
         - [`get_alert_rule`](#api-route-15)
@@ -656,6 +657,33 @@ Output:
 }
 ```
 
+### <a name="api-route-24">Function: `unmute_alert`</a> [`top`](#top)
+
+Unmute an alert
+
+Route: /api/v0/alerts/unmute/:id
+
+- id is the alert id, you can obtain a list of alert ids from [`list_alerts`](#api-route-14).
+
+Input:
+
+ -
+
+Example:
+```curl
+curl -X PUT -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/alerts/unmute/1
+```
+
+Output:
+```text
+{
+ "status": "ok",
+ "err-msg": "",
+ "message": "Alert has been unmuted"
+}
+```
+
+
 ### <a name="api-route-14">Function: `list_alerts`</a> [`top`](#top)
 
 List all alerts
@@ -668,7 +696,7 @@ Input:
 
 Example:
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/alerts
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/alerts?state=1
 ```
 
 Output:

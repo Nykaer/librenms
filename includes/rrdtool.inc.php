@@ -166,7 +166,7 @@ function rrdtool_graph($graph_file, $options) {
 function rrdtool($command, $filename, $options) {
     global $config, $debug, $rrd_pipes, $console_color;
 
-    if ($command != 'create' && $config['rrdcached']) {
+    if ($config['rrdcached'] && ($config['rrdtool_version'] >= 1.5 || $command != "create")) {
         if (isset($config['rrdcached_dir']) && $config['rrdcached_dir'] !== false) {
             $filename = str_replace($config['rrd_dir'].'/', './'.$config['rrdcached_dir'].'/', $filename);
             $filename = str_replace($config['rrd_dir'], './'.$config['rrdcached_dir'].'/', $filename);
@@ -191,7 +191,7 @@ function rrdtool($command, $filename, $options) {
         print $console_color->convert('RRD[%g'.$cmd.'%n] ');
     }
     else {
-        $tmp = stream_get_contents($rrd_pipes[1]).stream_get_contents($rrd_pipes[2]);
+        return array(stream_get_contents($rrd_pipes[1]),stream_get_contents($rrd_pipes[2]));
     }
 
 }
@@ -206,19 +206,14 @@ function rrdtool($command, $filename, $options) {
 
 
 function rrdtool_create($filename, $options) {
-    global $config, $console_color;
-
-    if ($config['norrd']) {
-        print $console_color->convert('[%gRRD Disabled%n] ', false);
+    global $config;
+    if( $config['rrdcached'] && $config['rrdtool_version'] >= 1.5 ) {
+        $chk = rrdtool('info', $filename, '');
+        if (!empty($chk[0])) {
+            return true;
+        }
     }
-    else {
-        $command = $config['rrdtool']." create $filename $options";
-    }
-
-    d_echo($console_color->convert('RRD[%g'.$command.'%n] '));
-
-    return shell_exec($command);
-
+    return rrdtool('create', $filename,  str_replace(array("\r", "\n"), '', $options));
 }
 
 
@@ -234,20 +229,23 @@ function rrdtool_create($filename, $options) {
 function rrdtool_update($filename, $options) {
     $values = array();
     // Do some sanitisation on the data if passed as an array.
+
     if (is_array($options)) {
         $values[] = 'N';
-        foreach ($options as $value) {
-            if (!is_numeric($value)) {
-                $value = U;
+        foreach ($options as $k => $v) {
+            if (!is_numeric($v)) {
+                $v = U;
             }
 
-            $values[] = $value;
+            $values[] = $v;
         }
 
         $options = implode(':', $values);
+        return rrdtool('update', $filename, $options);
     }
-
-    return rrdtool('update', $filename, $options);
+    else {
+        return 'Bad options passed to rrdtool_update';
+    }
 
 }
 
