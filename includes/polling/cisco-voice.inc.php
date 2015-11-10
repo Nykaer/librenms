@@ -75,4 +75,10 @@ if ($device['os_group'] == "ucos") {
      */
     include "cisco-voice/cucm-h323.inc.php";
 
+    /*
+     * CallManger Device Registration
+     * This module graphs the number of registered devices on a CallManager Server
+     */
+    include "cisco-voice/cucm-registereddevices.inc.php";
+
 }

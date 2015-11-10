@@ -186,4 +186,20 @@ class api_ucos_ast extends \transport_http {
         return false;
     }
 
+    public function getRRDValue($DATA,$COUNTER=null) {
+        $RESULT = "U";      // Guilty until proven innocent.
+
+        if (!is_null($COUNTER)) {
+            // Yes, we have a counter.
+            if (isset($DATA[$COUNTER])) {
+                // the counter even exists.
+                if (($DATA[$COUNTER]['CStatus'] == 0) || ($DATA[$COUNTER]['CStatus'] == 1)) {
+                    // its valid too, we are on a winner...
+                    $RESULT = $DATA[$COUNTER]['Value'];
+                }
+            }
+        }
+        return $RESULT;
+    }
+
 }

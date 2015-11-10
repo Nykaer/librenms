@@ -15,6 +15,7 @@ $CUCM_BASIC = $COMPONENT->getComponents($device['device_id'],$options);
 <?php
 // Left Pane
 include 'pages/device/cucm/widgets/calls.inc.php';
+include 'pages/device/cucm/widgets/registereddevices.inc.php';
 include 'pages/device/cucm/widgets/moh.inc.php';
 ?>
         </div>

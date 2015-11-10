@@ -14,7 +14,7 @@ $API->connect($USER, $PASS, $HOST);
 
 //$RESULT = $API->getClusterInfo();
 //$RESULT = $API->getRegisteredDevices();
-$RESULT = $API->getServices();
+$RESULT = $API->getRegisteredDevices();
 print_r($RESULT);
 
 ?>

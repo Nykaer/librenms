@@ -7,6 +7,7 @@ $UCOS_SERVICES = $COMPONENT->getComponents($device['device_id'],array('type'=>'U
 $CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
 $CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
 $CUCM_H323 = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-H323','ignore'=>0));
+$rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
 
 unset($datas);
 $datas[] = 'overview';
@@ -19,11 +20,15 @@ if (count($CUCM_ELCAC) > 0) {
 if ((count($CUCM_SIP) > 0) || (count($CUCM_H323) > 0)) {
     $datas[] = 'trunk';
 }
+if (file_exists ($rrd_filename)) {
+    $datas[] = 'registereddevices';
+}
 
-$type_text['overview']      = 'Overview';
-$type_text['trunk']         = 'Trunks';
-$type_text['elcac']         = 'Locations';
-$type_text['services']      = 'Services';
+$type_text['overview']          = 'Overview';
+$type_text['trunk']             = 'Trunks';
+$type_text['elcac']             = 'Locations';
+$type_text['services']          = 'Services';
+$type_text['registereddevices'] = 'Registered Devices';
 
 $link_array = array(
     'page'   => 'device',
