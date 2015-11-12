@@ -216,7 +216,7 @@ if($stage == 0) {
     }
 
     // Check for pear install
-    require_once 'System.php';
+    @include_once 'System.php';
 
     if(class_exists('System') === true) {
         $ext_loaded = 'yes';
@@ -369,11 +369,15 @@ $config_file = <<<"EOD"
 ## Have a look in defaults.inc.php for examples of settings you can set here. DO NOT EDIT defaults.inc.php!
 
 ### Database config
-\$config\['db_host'\] = \"$dbhost\";
-\$config\['db_user'\] = "$dbuser";
-\$config\['db_pass'\] = "$dbpass";
-\$config\['db_name'\] = "$dbname";
+\$config\['db_host'\] = '$dbhost';
+\$config\['db_user'\] = '$dbuser';
+\$config\['db_pass'\] = '$dbpass';
+\$config\['db_name'\] = '$dbname';
 \$config\['db'\]\['extension'\] = "mysqli";// mysql or mysqli
+
+// This is the user LibreNMS will run as
+//Please ensure this user is created and has the correct permissions to your install
+\$config['user'] = 'librenms';
 
 ### Memcached config - We use this to store realtime usage
 \$config\['memcached'\]\['enable'\]  = FALSE;

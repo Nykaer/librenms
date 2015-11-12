@@ -51,7 +51,9 @@ $config['own_hostname'] = 'localhost';
 
 // Location of executables
 $config['rrdtool']                  = '/usr/bin/rrdtool';
+$config['rrdtool_version']          = 1.4; // Doesn't need to contain minor numbers.
 $config['fping']                    = '/usr/bin/fping';
+$config['fping6']                   = 'fping6';
 $config['fping_options']['retries'] = 3;
 $config['fping_options']['timeout'] = 500;
 $config['fping_options']['count']   = 3;
@@ -73,6 +75,7 @@ $config['sfdp']           = '/usr/bin/sfdp';
 $config['memcached']['enable'] = false;
 $config['memcached']['host']   = 'localhost';
 $config['memcached']['port']   = 11211;
+$config['memcached']['ttl']    = 240;
 
 $config['slow_statistics'] = true;
 // THIS WILL CHANGE TO FALSE IN FUTURE
@@ -192,6 +195,8 @@ $config['snmp']['v3'][0]['cryptopass'] = '';
 $config['snmp']['v3'][0]['cryptoalgo'] = 'AES';
 // AES | DES
 
+// Devices must respond to icmp by default
+$config['icmp_check'] = true;
 
 // Autodiscovery Settings
 $config['autodiscovery']['xdp'] = true;
@@ -210,6 +215,8 @@ $config['autodiscovery']['nets-exclude'][] = '127.0.0.0/8';
 $config['autodiscovery']['nets-exclude'][] = '169.254.0.0/16';
 $config['autodiscovery']['nets-exclude'][] = '224.0.0.0/4';
 $config['autodiscovery']['nets-exclude'][] = '240.0.0.0/4';
+// Autodiscover by IP
+$config['discovery_by_ip'] = false;// Set to true if you want to enable auto discovery by IP.
 
 $config['alerts']['email']['enable'] = false;
 // Enable email alerts
@@ -339,7 +346,7 @@ $config['network_map_vis_options'] = '{
         enabled: false
     },
     font: {
-        size: 12,
+        size: 14,
         color: "red",
         face: "sans",
         background: "white",
@@ -349,19 +356,53 @@ $config['network_map_vis_options'] = '{
     }
   },
   "physics": {
-    "forceAtlas2Based": {
-      "gravitationalConstant": -800,
-      "centralGravity": 0.03,
-      "springLength": 50,
-      "springConstant": 0,
-      "damping": 1,
+     "barnesHut": {
+      "gravitationalConstant": -2000,
+      "centralGravity": 0.3,
+      "springLength": 200,
+      "springConstant": 0.04,
+      "damping": 0.09,
       "avoidOverlap": 1
     },
-    "maxVelocity": 50,
-    "minVelocity": 0.01,
-    "solver": "forceAtlas2Based",
-    "timestep": 0.30
-  }
+
+     "forceAtlas2Based": {
+      "gravitationalConstant": -50,
+      "centralGravity": 0.01,
+      "springLength": 200,
+      "springConstant": 0.08,
+      "damping": 0.4,
+      "avoidOverlap": 1
+    },
+    
+     "repulsion": {
+      "centralGravity": 0.2,
+      "springLength": 250,
+      "springConstant": 0.2,
+      "nodeDistance": 200,
+      "damping": 0.07
+    },
+
+     "hierarchicalRepulsion": {
+      "nodeDistance": 300,
+      "centralGravity": 0.2,
+      "springLength": 300,
+      "springConstant": 0.2,
+      "damping": 0.07
+    },
+    
+  "maxVelocity": 50,
+  "minVelocity": 0.4,
+  "solver": "hierarchicalRepulsion",
+  "stabilization": {
+    "enabled": true,
+    "iterations": 1000,
+    "updateInterval": 100,
+    "onlyDynamicEdges": false,
+    "fit": true
+  },
+
+  "timestep": 0.4,
+ }
 }';
 
 // Device page options
@@ -370,8 +411,6 @@ $config['show_overview_tab'] = true;
 // The device overview page options
 $config['overview_show_sysDescr'] = true;
 
-// Enable version checker & stats
-$config['version_check'] = 0;
 // Enable checking of version in discovery
 // Poller/Discovery Modules
 $config['enable_bgp'] = 1;
@@ -492,22 +531,22 @@ $config['device_traffic_iftype'][] = '/ppp/';
 $config['device_traffic_descr'][] = '/loopback/';
 $config['device_traffic_descr'][] = '/vlan/';
 $config['device_traffic_descr'][] = '/tunnel/';
-$config['device_traffic_descr'][] = '/:\d+/';
 $config['device_traffic_descr'][] = '/bond/';
 $config['device_traffic_descr'][] = '/null/';
 $config['device_traffic_descr'][] = '/dummy/';
 
 // IRC Bot configuration
-$config['irc_host']     = '';
-$config['irc_port']     = '';
-$config['irc_maxretry'] = 3;
-$config['irc_nick']     = $config['project_name'];
-$config['irc_chan'][]   = '##'.$config['project_id'];
-$config['irc_pass']     = '';
-$config['irc_external'] = '';
-$config['irc_authtime'] = 3;
-$config['irc_debug']    = false;
-$config['irc_alert']    = false;
+$config['irc_host']       = '';
+$config['irc_port']       = '';
+$config['irc_maxretry']   = 3;
+$config['irc_nick']       = $config['project_name'];
+$config['irc_chan'][]     = '##'.$config['project_id'];
+$config['irc_pass']       = '';
+$config['irc_external']   = '';
+$config['irc_authtime']   = 3;
+$config['irc_debug']      = false;
+$config['irc_alert']      = false;
+$config['irc_alert_utf8'] = false;
 
 // Authentication
 $config['allow_unauth_graphs'] = 0;
@@ -773,8 +812,8 @@ $config['geoloc']['latlng']                             = false; // True to enab
 $config['geoloc']['engine']                             = 'google';
 $config['map']['engine']                                = 'leaflet';
 $config['mapael']['default_map']                        = 'maps/world_countries.js';
-$config['leaflet']['default_lat']                       = '50.898482';
-$config['leaflet']['default_lng']                       = '-3.401402';
+$config['leaflet']['default_lat']                       = '51.4800';
+$config['leaflet']['default_lng']                       = '0';
 $config['leaflet']['default_zoom']                       = 2;
 
 // General GUI options
@@ -785,3 +824,6 @@ $config['navbar']['manage_groups']['hide']              = 0;
 
 // Show errored ports in the summary table on the dashboard
 $config['summary_errors']                               = 0;
+
+// Default width of the availability map's tiles
+$config['availability-map-width']                       = 25;

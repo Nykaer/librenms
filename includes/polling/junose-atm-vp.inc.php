@@ -36,20 +36,32 @@ if (count($vp_rows)) {
         if (!is_file($rrd)) {
             rrdtool_create(
                 $rrd,
-                '--step 300 \
-                DS:incells:DERIVE:600:0:125000000000 \
-                DS:outcells:DERIVE:600:0:125000000000 \
-                DS:inpackets:DERIVE:600:0:125000000000 \
-                DS:outpackets:DERIVE:600:0:125000000000 \
-                DS:inpacketoctets:DERIVE:600:0:125000000000 \
-                DS:outpacketoctets:DERIVE:600:0:125000000000 \
-                DS:inpacketerrors:DERIVE:600:0:125000000000 \
-                DS:outpacketerrors:DERIVE:600:0:125000000000 \
+                '--step 300 
+                DS:incells:DERIVE:600:0:125000000000 
+                DS:outcells:DERIVE:600:0:125000000000 
+                DS:inpackets:DERIVE:600:0:125000000000 
+                DS:outpackets:DERIVE:600:0:125000000000 
+                DS:inpacketoctets:DERIVE:600:0:125000000000 
+                DS:outpacketoctets:DERIVE:600:0:125000000000 
+                DS:inpacketerrors:DERIVE:600:0:125000000000 
+                DS:outpacketerrors:DERIVE:600:0:125000000000 
                 '.$config['rrd_rra']
             );
         }
 
-        rrdtool_update($rrd, "N:$vp_update");
+        $fields = array(
+            'incells'         => $t_vp['juniAtmVpStatsInCells'],
+            'outcells'        => $t_vp['juniAtmVpStatsOutCells'],
+            'inpackets'       => $t_vp['juniAtmVpStatsInPackets'],
+            'outpackets'      => $t_vp['juniAtmVpStatsOutPackets'],
+            'inpacketoctets'  => $t_vp['juniAtmVpStatsInPacketOctets'],
+            'outpacketoctets' => $t_vp['juniAtmVpStatsOutPacketOctets'],
+            'inpacketerrors'  => $t_vp['juniAtmVpStatsInPacketErrors'],
+            'outpacketerrors' => $t_vp['juniAtmVpStatsOutPacketErrors'],
+        );
+
+        rrdtool_update($rrd, $fields);
+
     }//end foreach
 
     echo "\n";

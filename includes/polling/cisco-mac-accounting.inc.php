@@ -65,21 +65,21 @@ if ($device['os_group'] == 'cisco') {
             if (!is_file($rrdfile)) {
                 rrdtool_create(
                     $rrdfile,
-                    'DS:IN:COUNTER:600:0:12500000000 \
-                    DS:OUT:COUNTER:600:0:12500000000 \
-                    DS:PIN:COUNTER:600:0:12500000000 \
+                    'DS:IN:COUNTER:600:0:12500000000 
+                    DS:OUT:COUNTER:600:0:12500000000 
+                    DS:PIN:COUNTER:600:0:12500000000 
                     DS:POUT:COUNTER:600:0:12500000000 '.$config['rrd_rra']
                 );
             }
 
             // FIXME - use memcached to make sure these values don't go backwards?
-            $rrdupdate = array(
-                $b_in,
-                $b_out,
-                $p_in,
-                $p_out,
+            $fields = array(
+                'IN'   => $b_in,
+                'OUT'  => $b_out,
+                'PIN'  => $p_in,
+                'POUT' => $p_out,
             );
-            rrdtool_update($rrdfile, $rrdupdate);
+            rrdtool_update($rrdfile, $fields);
 
             if ($acc['update']) {
                 // Do Updates
