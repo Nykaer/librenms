@@ -545,8 +545,8 @@ function get_components() {
     $output       = array(
         'status'  => "$status",
         'err-msg' => $message,
-        'count'   => count($components),
-        'components'  => $components,
+        'count'   => count($components[$device_id]),
+        'components'  => $components[$device_id],
     );
     $app->response->setStatus($code);
     $app->response->headers->set('Content-Type', 'application/json');
