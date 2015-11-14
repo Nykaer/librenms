@@ -45,51 +45,18 @@ class component {
         }
     }
 
-    public function getComponentCount($device_id,$options=array()) {
-        // Our base SQL Query, with no options.
-        $SQL = "SELECT COUNT(`id`) FROM `component` WHERE `device_id` = ?";
-        $PARAM = array($device_id);
-
-        // Type is shorthand for filter type = $type.
-        if (isset($options['type'])) {
-            $options['filter']['type'] = array('=', $options['type']);
-        }
-
-        // filter   field => array(operator,value)
-        //          Filters results based on the field, operator and value
-        if (isset($options['filter'])) {
-            $SQL .= " AND ( ";
-            foreach ($options['filter'] as $field => $array) {
-                if ($array[0] == 'LIKE') {
-                    $SQL .= "`".$field."` LIKE '%?%' AND ";
-                }
-                else {
-                    // Equals operator is the default
-                    $SQL .= "`".$field."` = ? AND ";
-                }
-                array_push($PARAM,$value);
-            }
-            // Strip the last " AND " before closing the bracket.
-            $SQL = substr($SQL,0,-5)." )";
-        }
-
-        // Get our results using our built SQL.
-        $RESULT = dbFetchCell($SQL, $PARAM);
-        if (empty($RESULT)) {
-            return 0;
-        }
-        else {
-            return $RESULT;
-        }
-    }
-
-    public function getComponents($device_id,$options=array()) {
+    public function getComponents($device_id=null,$options=array()) {
         // Define our results array, this will be set even if no rows are returned.
         $RESULT = array();
+        $PARAM = array();
 
         // Our base SQL Query, with no options.
-        $SQL = "SELECT `id`,`type`,`label`,`status`,`disabled`,`ignore` FROM `component` WHERE `device_id` = ?";
-        $PARAM = array($device_id);
+        $SQL = "SELECT `C`.`id`,`C`.`device_id`,`C`.`type`,`C`.`label`,`C`.`status`,`C`.`disabled`,`C`.`ignore`,`CP`.`attribute`,`CP`.`value` FROM `component` as `C` LEFT JOIN `component_prefs` as `CP` on `C`.`id`=`CP`.`component` WHERE ";
+
+        // Device_id is shorthand for filter C.device_id = $device_id.
+        if (!is_null($device_id)) {
+            $options['filter']['device_id'] = array('=', $device_id);
+        }
 
         // Type is shorthand for filter type = $type.
         if (isset($options['type'])) {
@@ -98,8 +65,10 @@ class component {
 
         // filter   field => array(operator,value)
         //          Filters results based on the field, operator and value
+        $COUNT = 0;
         if (isset($options['filter'])) {
-            $SQL .= " AND ( ";
+            $COUNT++;
+            $SQL .= " ( ";
             foreach ($options['filter'] as $field => $array) {
                 if ($array[0] == 'LIKE') {
                     $SQL .= "`".$field."` LIKE ? AND ";
@@ -115,16 +84,15 @@ class component {
             $SQL = substr($SQL,0,-5)." )";
         }
 
+        if ($COUNT == 0) {
+            // Strip the " WHERE " that we didn't use.
+            $SQL = substr($SQL,0,-7);
+        }
+
         // sort     column direction
         //          Add SQL sorting to the results
         if (isset($options['sort'])) {
             $SQL .= " ORDER BY ".$options['sort'];
-        }
-
-        // limit    array(start,count)
-        //          Adds a SQL limit to the rows returned
-        if (isset($options['limit'])) {
-            $SQL .= " LIMIT ".$options['limit'][0].",".$options['limit'][1];
         }
 
         // Get our component records using our built SQL.
@@ -135,32 +103,38 @@ class component {
             return $RESULT;
         }
 
-        // Build the SQL to grab the AVP's we are after.
-        $SQL = "SELECT `component`,`attribute`,`value` FROM `component_prefs` WHERE ";
-        $PARAM = array ();
+        // Add the AVP's to the array.
         foreach ($COMPONENTS as $COMPONENT) {
-            $SQL .= "`component`= ? OR ";
-            array_push($PARAM,$COMPONENT['id']);
-        }
-        // Strip the last "OR ".
-        $SQL = substr($SQL,0,-3);
-
-        // Grab the data.
-        $PREFERENCES = dbFetchRows($SQL, $PARAM);
-
-        // Add each preference to the array.
-        foreach ($PREFERENCES as $AVP) {
-            $RESULT[$AVP['component']][$AVP['attribute']] = $AVP['value'];
+            $RESULT[$COMPONENT['device_id']][$COMPONENT['id']][$COMPONENT['attribute']] = $COMPONENT['value'];
         }
 
-        // Populate our reserved fields into the Array, these cant be added as user attributes.
+        // Populate our reserved fields into the Array, these cant be used as user attributes.
         foreach ($COMPONENTS as $COMPONENT) {
             foreach ($this->reserved as $k => $v) {
-                $RESULT[$COMPONENT['id']][$k] = $COMPONENT[$k];
+                $RESULT[$COMPONENT['device_id']][$COMPONENT['id']][$k] = $COMPONENT[$k];
             }
 
             // Sort each component array so the attributes are in order.
-            ksort($RESULT[$COMPONENT['id']]);
+            ksort($RESULT[$RESULT[$COMPONENT['device_id']][$COMPONENT['id']]]);
+            ksort($RESULT[$RESULT[$COMPONENT['device_id']]]);
+        }
+
+        // limit    array(start,count)
+        if (isset($options['limit'])) {
+            $TEMP = array();
+            $COUNT = 0;
+            // k = device_id, v = array of components for that device_id
+            foreach ($RESULT as $k => $v) {
+                // k1 = component id, v1 = component array
+                foreach ($v as $k1 => $v1) {
+                    if ( ($COUNT >= $options['limit'][0]) && ($COUNT < $options['limit'][0]+$options['limit'][1])) {
+                        $TEMP[$k][$k1] = $v1;
+                    }
+                    // We are counting components.
+                    $COUNT++;
+                }
+            }
+            $RESULT = $TEMP;
         }
 
         return $RESULT;
@@ -193,16 +167,16 @@ class component {
 
         $OLD = $this->getComponents($device_id);
         // Loop over each component.
-        foreach ($ARRAY as $COMPONENT => $AVP) {
+        foreach ($ARRAY[$device_id] as $COMPONENT => $AVP) {
 
             // Make sure the component already exists.
-            if (!isset($OLD[$COMPONENT])) {
+            if (!isset($OLD[$device_id][$COMPONENT])) {
                 // Error. Component doesn't exist in the database.
                 continue;
             }
 
             // Ignore type, we cant change that.
-            unset($AVP['type'],$OLD[$COMPONENT]['type']);
+            unset($AVP['type'],$OLD[$device_id][$COMPONENT]['type']);
 
             // Process our reserved components first.
             $UPDATE = array();
@@ -211,13 +185,13 @@ class component {
                 if (isset($AVP[$k])) {
 
                     // Has the value changed?
-                    if ($AVP[$k] != $OLD[$COMPONENT][$k]) {
+                    if ($AVP[$k] != $OLD[$device_id][$COMPONENT][$k]) {
                         // The value has been modified, add it to our update array.
                         $UPDATE[$k] = $AVP[$k];
                     }
 
                     // Unset the reserved field. We don't want to insert it below.
-                    unset($AVP[$k],$OLD[$COMPONENT][$k]);
+                    unset($AVP[$k],$OLD[$device_id][$COMPONENT][$k]);
                 }
             }
 
@@ -239,33 +213,39 @@ class component {
             foreach ($AVP as $ATTR => $VALUE) {
                 // We have our AVP, lets see if we need to do anything with it.
 
-                if (!isset($OLD[$COMPONENT][$ATTR])) {
+                if (!isset($OLD[$device_id][$COMPONENT][$ATTR])) {
                     // We have a newly added attribute, need to insert into the DB
                     $DATA = array('component'=>$COMPONENT, 'attribute'=>$ATTR, 'value'=>$VALUE);
                     $id = dbInsert($DATA, 'component_prefs');
 
-                    // Log the addition to the Eventlog.
-                    log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was added with value: ".$VALUE,$device_id,'component',$COMPONENT);
+                    // Log the addition to the Eventlog, unless it is a statistic.
+                    if ($ATTR != 'statistic') {
+                        log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was added with value: " . $VALUE, $device_id, 'component', $COMPONENT);
+                    }
                 }
-                elseif ($OLD[$COMPONENT][$ATTR] != $VALUE) {
+                elseif ($OLD[$device_id][$COMPONENT][$ATTR] != $VALUE) {
                     // Attribute exists but the value is different, need to update
                     $DATA = array('value'=>$VALUE);
                     dbUpdate($DATA, 'component_prefs', '`component` = ? AND `attribute` = ?', array($COMPONENT, $ATTR));
 
-                    // Add the modification to the Eventlog.
-                    log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was modified from: ".$OLD[$COMPONENT][$ATTR].", to: ".$VALUE,$device_id,'component',$COMPONENT);
+                    // Add the modification to the Eventlog, unless it is a statistic.
+                    if ($ATTR != 'statistic') {
+                        log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was modified from: ".$OLD[$COMPONENT][$ATTR].", to: ".$VALUE,$device_id,'component',$COMPONENT);
+                    }
                 }
 
             } // End Foreach COMPONENT
 
             // Process our Deletes.
-            $DELETE = array_diff_key($OLD[$COMPONENT], $AVP);
+            $DELETE = array_diff_key($OLD[$device_id][$COMPONENT], $AVP);
             foreach ($DELETE as $KEY => $VALUE) {
                 // As the Attribute has been removed from the array, we should remove it from the database.
                 dbDelete('component_prefs', "`component` = ? AND `attribute` = ?",array($COMPONENT,$KEY));
 
-                // Log the addition to the Eventlog.
-                log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was deleted.",$COMPONENT);
+                // Log the addition to the Eventlog, unless it is a statistic.
+                if ($ATTR != 'statistic') {
+                    log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was deleted.", $COMPONENT);
+                }
             }
 
         }

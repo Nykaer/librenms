@@ -7,11 +7,8 @@ $device_id = $_POST['device_id'];
 require_once "../includes/component.php";
 $OBJCOMP = new component();
 
-$total = $OBJCOMP->getComponentCount($device_id);
-
 // Add a filter if supplied
 if (isset($searchPhrase) && !empty($searchPhrase)) {
-    $options['filter']['type'] = array('=', $searchPhrase);
     $options['filter']['label'] = array('LIKE', $searchPhrase);
 }
 
@@ -42,7 +39,7 @@ $response[] = array(
     'ignore' => '<button type="submit" id="ignore-toggle" class="btn btn-default btn-sm" title="Toggle alerting for all components">Toggle</button><button type="button" id="ignore-select" class="btn btn-default btn-sm" title="Disable alerting on all components">Select All</button>',
 );
 
-foreach ($COMPONENTS as $ID => $AVP) {
+foreach ($COMPONENTS[$device_id] as $ID => $AVP) {
     $response[] = array(
         'id' => $ID,
         'type' => $AVP['type'],
@@ -57,6 +54,6 @@ $output = array(
     'current'  => $current,
     'rowCount' => $rowCount,
     'rows'     => $response,
-    'total'    => $total,
+    'total'    => count($COMPONENTS[$device_id]),
 );
 echo _json_encode($output);
