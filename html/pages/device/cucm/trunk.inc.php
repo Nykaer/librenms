@@ -7,6 +7,7 @@ $options['filter']['ignore'] = array('=',0);
 $graph_array['device'] = $device['device_id'];
 $options['type'] = 'CUCM-SIP';
 $SIP = $COMPONENT->getComponents($device['device_id'],$options);
+$SIP = $SIP[$device['device_id']];
 
 if (count($SIP) > 0) {
     ?>
@@ -37,6 +38,7 @@ if (count($SIP) > 0) {
 
 $options['type'] = 'CUCM-H323';
 $H323 = $COMPONENT->getComponents($device['device_id'],$options);
+$H323 = $H323[$device['device_id']];
 
 if (count($H323) > 0) {
     ?>

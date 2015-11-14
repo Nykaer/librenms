@@ -15,6 +15,9 @@ require_once "../includes/component.php";
 $COMPONENT = new component();
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-Basic','ignore'=>0));
 
+// We only care about our device id.
+$COMPONENTS = $COMPONENTS[$device['device_id']];
+
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Hardware Conferencing       Now   Avg   Max\\n'";

@@ -15,6 +15,9 @@ require_once "../includes/component.php";
 $COMPONENT = new component();
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
 
+// We only care about our device id.
+$COMPONENTS = $COMPONENTS[$device['device_id']];
+
 // Determine a location to show.
 if (!isset($vars['item'])) {
     foreach ($COMPONENTS as $ID => $ARRAY) {

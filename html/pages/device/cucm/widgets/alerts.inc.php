@@ -4,8 +4,10 @@ $options = array();
 $options['filter']['type'] = array('LIKE','CUCM-');
 $options['filter']['status'] = array('=',0);
 $ALERTS1 = $COMPONENT->getComponents($device['device_id'],$options);
+$ALERTS1 = $ALERTS1[$device['device_id']];
 $options['filter']['type'] = array('LIKE','UCOS-');
 $ALERTS2 = $COMPONENT->getComponents($device['device_id'],$options);
+$ALERTS2 = $ALERTS2[$device['device_id']];
 
 // Merge CUCM Alerts with UCOS Alerts.
 $ALERTS = array_merge($ALERTS1, $ALERTS2);

@@ -23,6 +23,9 @@ if ($device['os'] == "cucm") {
     $COMPONENT = new component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE));
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
     // Grab the details UCOS requires.
     $USER = get_dev_attrib($device, 'ucosaxl_user');
     $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
