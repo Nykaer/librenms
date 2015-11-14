@@ -22,6 +22,9 @@ if ($device['os_group'] == "cisco") {
     $options['filter']['ignore'] = array('=',0);
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
     // Only collect SNMP data if we have enabled components
     if (count($COMPONENTS > 0)) {
         // Let's gather the stats..

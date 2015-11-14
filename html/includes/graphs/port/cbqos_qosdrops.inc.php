@@ -16,6 +16,9 @@ $COMPONENT = new component();
 $options['filter']['type'] = array('=','Cisco-CBQOS');
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
+// We only care about our device id.
+$COMPONENTS = $COMPONENTS[$device['device_id']];
+
 // Determine a policy to show.
 if (!isset($vars['policy'])) {
     foreach ($COMPONENTS as $ID => $ARRAY) {
