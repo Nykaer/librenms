@@ -1,5 +1,5 @@
 <?php
-require_once 'pages/device/cucm/widgets/functions.inc.php';
+require_once 'pages/device/apps/cucm/widgets/functions.inc.php';
 $options = array();
 $options['filter']['type'] = array('LIKE','CUCM-');
 $options['filter']['status'] = array('=',0);

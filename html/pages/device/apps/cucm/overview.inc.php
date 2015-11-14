@@ -16,17 +16,17 @@ $CUCM_BASIC = $CUCM_BASIC[$device['device_id']];
         <div class="col-md-6">
 <?php
 // Left Pane
-include 'pages/device/cucm/widgets/calls.inc.php';
-include 'pages/device/cucm/widgets/registereddevices.inc.php';
-include 'pages/device/cucm/widgets/moh.inc.php';
+include 'pages/device/apps/cucm/widgets/calls.inc.php';
+include 'pages/device/apps/cucm/widgets/registereddevices.inc.php';
+include 'pages/device/apps/cucm/widgets/moh.inc.php';
 ?>
         </div>
         <div class="col-md-6">
 <?php
 // Right Pane
-include 'pages/device/cucm/widgets/alerts.inc.php';
-include 'pages/device/cucm/widgets/conferences.inc.php';
-include 'pages/device/cucm/widgets/mediaresources.inc.php';
+include 'pages/device/apps/cucm/widgets/alerts.inc.php';
+include 'pages/device/apps/cucm/widgets/conferences.inc.php';
+include 'pages/device/apps/cucm/widgets/mediaresources.inc.php';
 ?>
         </div>
     </div>
