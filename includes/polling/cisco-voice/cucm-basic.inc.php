@@ -119,9 +119,9 @@ if ($device['os'] == "cucm") {
                 switch ($ARRAY['label']) {
                     case 'Calls':
                         $RRD['create'] = " DS:calls:GAUGE:600:0:U DS:videocalls:GAUGE:600:0:U DS:encryptedcalls:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\CallsActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VideoCallsActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\EncryptedCallsActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\CallsActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VideoCallsActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\EncryptedCallsActive');
                         break;
                         case 'InitializationState':
                         unset($RRD);                                    // We don't need an RRD for this one.
@@ -143,50 +143,50 @@ if ($device['os'] == "cucm") {
                         break;
                     case 'AnnunciatorResource':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\AnnunciatorResourceTotal');
                         break;
                     case 'MTPResource':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MTPResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MTPResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MTPResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MTPResourceTotal');
                         break;
                     case 'TranscoderResource':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\TranscoderResourceTotal');
                         break;
                     case 'VCBConferences':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBConferencesActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBConferencesTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBConferencesActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBConferencesTotal');
                         break;
                     case 'VCBResource':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\VCBResourceTotal');
                         break;
                     case 'MOHMulticastResources':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHMulticastResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHMulticastResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHTotalMulticastResources');
                         break;
                     case 'MOHUnicastResources':
                         $RRD['create'] = " DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHUnicastResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHUnicastResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\MOHTotalUnicastResources');
                         break;
                     case 'SWConferenceResource':
                         $RRD['create'] = " DS:conferences:GAUGE:600:0:U DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\SWConferenceResourceTotal');
                         break;
                     case 'HWConferenceResource':
                         $RRD['create'] = " DS:conferences:GAUGE:600:0:U DS:active:GAUGE:600:0:U DS:total:GAUGE:600:0:U";
-                        $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceActive');
-                        $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceTotal');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceActive');
+                        $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco CallManager\HWConferenceResourceTotal');
                         break;
                     default:
                         d_echo("Unknown Component label: ".$ARRAY['label']);
@@ -200,7 +200,7 @@ if ($device['os'] == "cucm") {
                     }
 
                     // Add the data to the RRD if it exists.
-                    if (isset($RRD['data'])) {
+                    if (is_array($RRD['data'])) {
                         rrdtool_update ($RRD['filename'], $RRD['data']);
                     }
                 }
