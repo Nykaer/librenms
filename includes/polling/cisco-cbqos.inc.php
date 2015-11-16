@@ -44,16 +44,15 @@ if ($device['os_group'] == "cisco") {
                     rrdtool_create ($rrd_filename, " DS:postbits:COUNTER:600:0:U DS:bufferdrops:COUNTER:600:0:U DS:qosdrops:COUNTER:600:0:U" . $config['rrd_rra']);
                 }
 
-                $TEMP['postbytes'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
-                $TEMP['bufferdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
-                $TEMP['qosdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
-                $RRD_ENTRY = "N:" . $TEMP['postbytes'] . ":" . $TEMP['bufferdrops'] . ":" . $TEMP['qosdrops'];
+                $RRD['postbytes'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
+                $RRD['bufferdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
+                $RRD['qosdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
 
                 // Update RRD
-                rrdtool_update ($rrd_filename, $RRD_ENTRY);
+                rrdtool_update ($rrd_filename, $RRD);
 
                 // Clean-up after yourself!
-                unset($filename, $rrd_filename, $TEMP);
+                unset($filename, $rrd_filename);
             }
         } // End foreach components
 
