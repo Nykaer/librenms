@@ -31,24 +31,6 @@ $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Video Bandwidth (kbps)   Now  Avg  Max\\n'";
 $rrd_additions = "";
 
-$COLORS = array( 'EA644A','EC9D48','ECD748','54EC48','48C4EC','DE48EC','7648EC' );
-
-function end_spacer($text,$length) {
-    // Add spaces to the end of $text up until $length
-    if (strlen($text) < $length) {
-        // $text is shorter than $length, pad.
-        return str_pad($text, $length);
-    }
-    elseif (strlen($text) > $length) {
-        // $text is already longer than $length, truncate.
-        return substr($text, 0, $length);
-    }
-    else {
-        // $text must equal $length, return.
-        return $text;
-    }
-}
-
 if (isset($vars['item'])) {
     $ID = $vars['item'];
     // Have we found a valid location to display?
@@ -59,12 +41,12 @@ if (isset($vars['item'])) {
         $rrd_additions .= " DEF:AVA" . $COUNT . "=" . $rrd_filename . ":availablevideo:AVERAGE";
         $rrd_additions .= " CDEF:ACT" . $COUNT . "=TOT" . $COUNT . ",AVA,- ";
 
-        $rrd_additions .= " AREA:TOT" . $COUNT . "#" . $COLORS[0] . ":'" . end_spacer ('Total', 20) . "'";
+        $rrd_additions .= " AREA:TOT" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total               '";
         $rrd_additions .= " GPRINT:TOT" . $COUNT . ":LAST:%3.0lf";
         $rrd_additions .= " GPRINT:TOT" . $COUNT . ":AVERAGE:%3.0lf";
         $rrd_additions .= " GPRINT:TOT" . $COUNT . ":MAX:%3.0lf\\\l ";
 
-        $rrd_additions .= " AREA:ACT" . $COUNT . "#" . $COLORS[1] . ":'" . end_spacer ('Used', 20) . "'";
+        $rrd_additions .= " AREA:ACT" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Used                '";
         $rrd_additions .= " GPRINT:ACT" . $COUNT . ":LAST:%3.0lf";
         $rrd_additions .= " GPRINT:ACT" . $COUNT . ":AVERAGE:%3.0lf";
         $rrd_additions .= " GPRINT:ACT" . $COUNT . ":MAX:%3.0lf\\\l";

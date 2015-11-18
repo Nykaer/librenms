@@ -20,26 +20,8 @@ $COMPONENTS = $COMPONENTS[$device['device_id']];
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
-$rrd_options .= " COMMENT:'MOH Unicast Resources       Now   Avg   Max\\n'";
+$rrd_options .= " COMMENT:'MOH Unicast Resources      Now   Avg   Max\\n'";
 $rrd_additions = "";
-
-$COLORS = array( 'EA644A','EC9D48','ECD748','54EC48','48C4EC','DE48EC','7648EC' );
-
-function end_spacer($text,$length) {
-    // Add spaces to the end of $text up until $length
-    if (strlen($text) < $length) {
-        // $text is shorter than $length, pad.
-        return str_pad($text, $length);
-    }
-    elseif (strlen($text) > $length) {
-        // $text is already longer than $length, truncate.
-        return substr($text, 0, $length);
-    }
-    else {
-        // $text must equal $length, return.
-        return $text;
-    }
-}
 
 foreach ($COMPONENTS as $ID => $ARRAY) {
     if ($ARRAY['label'] == 'MOHUnicastResources') {
@@ -47,13 +29,13 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
         if (file_exists($rrd_filename)) {
 
             $rrd_additions .= " DEF:DS1" . $COUNT . "=" . $rrd_filename . ":total:AVERAGE ";
-            $rrd_additions .= " AREA:DS1" . $COUNT . "#" . $COLORS[0] . ":'" . end_spacer ('Total', 15) . "'";
+            $rrd_additions .= " AREA:DS1" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total                  '";
             $rrd_additions .= " GPRINT:DS1" . $COUNT . ":LAST:%3.0lf ";
             $rrd_additions .= " GPRINT:DS1" . $COUNT . ":AVERAGE:%3.0lf ";
             $rrd_additions .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\\\l ";
 
             $rrd_additions .= " DEF:DS2" . $COUNT . "=" . $rrd_filename . ":active:AVERAGE ";
-            $rrd_additions .= " AREA:DS2" . $COUNT . "#" . $COLORS[1] . ":'" . end_spacer ('Active', 15) . "'";
+            $rrd_additions .= " AREA:DS2" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Active                 '";
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
             $rrd_additions .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
