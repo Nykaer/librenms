@@ -35,24 +35,6 @@ $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Class-Map              Now      Avg      Max\\n'";
 $rrd_additions = "";
 
-$COLORS = array( 'EA644A','EC9D48','ECD748','54EC48','48C4EC','DE48EC','7648EC' );
-
-function end_spacer($text,$length) {
-    // Add spaces to the end of $text up until $length
-    if (strlen($text) < $length) {
-        // $text is shorter than $length, pad.
-        return str_pad($text, $length);
-    }
-    elseif (strlen($text) > $length) {
-        // $text is already longer than $length, truncate.
-        return substr($text, 0, $length);
-    }
-    else {
-        // $text must equal $length, return.
-        return $text;
-    }
-}
-
 $COUNT = 0;
 foreach ($COMPONENTS as $ID => $ARRAY) {
     if ( ($ARRAY['qos-type'] == 2) && ($ARRAY['parent'] == $COMPONENTS[$vars['policy']]['sp-obj']) && ($ARRAY['sp-id'] == $COMPONENTS[$vars['policy']]['sp-id'])) {
@@ -66,16 +48,16 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             }
 
             // Grab a color from the array.
-            if ( isset($COLORS[$COUNT]) ) {
-                $COLOR = $COLORS[$COUNT];
+            if ( isset($config['graph_colours']['mixed'][$COUNT]) ) {
+                $COLOR = $config['graph_colours']['mixed'][$COUNT];
             }
             else {
-                $COLOR = $COLORS[$COUNT-7];
+                $COLOR = $config['graph_colours']['oranges'][$COUNT-7];
             }
 
             $rrd_additions .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":qosdrops:AVERAGE ";
             $rrd_additions .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
-            $rrd_additions .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . end_spacer ($COMPONENTS[$ID]['label'], 15) . "'" . $STACK;
+            $rrd_additions .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'],0,15),15) . "'" . $STACK;
             $rrd_additions .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
             $rrd_additions .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
             $rrd_additions .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\\\l ";
