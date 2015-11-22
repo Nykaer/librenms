@@ -12,11 +12,25 @@
  */
 
 if ($device['os_group'] == "ucos") {
+    require_once 'includes/component.php';
+    $COMPONENT = new component();
+
     /*
      * UCOS Services
      * This module collects a list of services and their status from UCOS devices.
      */
     include "cisco-voice/ucos-services.inc.php";
+
+    // Do we have any UCOS components, if so we should insert ourselves into the application table.
+    $options['filter']['type'] = array('LIKE','UCOS-');
+    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
+    if (count($COMPONENTS[$device['device_id']]) > 0) {
+        if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], 'UCOS')) == '0') {
+            dbInsert(array('device_id' => $device['device_id'], 'app_type' => 'UCOS'), 'applications');
+        }
+    } else {
+        dbDelete('applications', '`device_id` = ? AND `app_type` = ?', array($device['device_id'], 'UCOS'));
+    }
 
     /*
      * CallManger Basic Resources
@@ -41,5 +55,16 @@ if ($device['os_group'] == "ucos") {
      * This module graphs the call counters for Non-GK controlled ICT's on a CallManager Server
      */
     include "cisco-voice/cucm-h323.inc.php";
+
+    // Do we have any CUCM components, if so we should insert ourselves into the application table.
+    $options['filter']['type'] = array('LIKE','CUCM-');
+    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
+    if (count($COMPONENTS[$device['device_id']]) > 0) {
+        if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], 'CUCM')) == '0') {
+            dbInsert(array('device_id' => $device['device_id'], 'app_type' => 'CUCM'), 'applications');
+        }
+    } else {
+        dbDelete('applications', '`device_id` = ? AND `app_type` = ?', array($device['device_id'], 'CUCM'));
+    }
 
 }
