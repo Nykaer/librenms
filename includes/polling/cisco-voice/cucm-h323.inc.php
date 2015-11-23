@@ -22,6 +22,9 @@ if ($device['os'] == "cucm") {
     $COMPONENT = new component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
     // Grab the details UCOS requires.
     $USER = get_dev_attrib($device, 'ucosaxl_user');
     $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
@@ -65,8 +68,8 @@ if ($device['os'] == "cucm") {
                 $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
 
                 $RRD['create'] = " DS:callsall:GAUGE:600:0:U DS:callsvideo:GAUGE:600:0:U";
-                $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\CallsActive');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\VideoCallsActive');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\CallsActive');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\VideoCallsActive');
 
                 // Do we need to do anything with the RRD?
                 if (isset($RRD)) {
@@ -76,7 +79,7 @@ if ($device['os'] == "cucm") {
                     }
 
                     // Add the data to the RRD if it exists.
-                    if (isset($RRD['data'])) {
+                    if (is_array($RRD['data'])) {
                         rrdtool_update ($RRD['filename'], $RRD['data']);
                     }
                 }

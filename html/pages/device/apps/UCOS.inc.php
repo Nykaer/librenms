@@ -7,6 +7,7 @@ $options['filter']['ignore'] = array('=',0);
 $graph_array['device'] = $device['device_id'];
 $options['type'] = 'UCOS-SERVICES';
 $SERVICES = $COMPONENT->getComponents($device['device_id'],$options);
+$SERVICES = $SERVICES[$device['device_id']];
 
 ?>
     <table id='table' class='table table-condensed table-responsive table-striped'>

@@ -16,47 +16,29 @@ $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Registered Media Resources   Now  Avg  Max\\n'";
 $rrd_additions = "";
 
-$COLORS = array( 'EA644A','EC9D48','ECD748','54EC48','48C4EC','DE48EC','7648EC' );
-
-function end_spacer($text,$length) {
-    // Add spaces to the end of $text up until $length
-    if (strlen($text) < $length) {
-        // $text is shorter than $length, pad.
-        return str_pad($text, $length);
-    }
-    elseif (strlen($text) > $length) {
-        // $text is already longer than $length, truncate.
-        return substr($text, 0, $length);
-    }
-    else {
-        // $text must equal $length, return.
-        return $text;
-    }
-}
-
 $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
 
 if (file_exists($rrd_filename)) {
     $rrd_additions .= " DEF:MOH" . $COUNT . "=" . $rrd_filename . ":mr-moh:AVERAGE";
-    $rrd_additions .= " LINE1.25:MOH" . $COUNT . "#" . $COLORS[0] . ":'" . end_spacer ('MOH', 20) . "'";
+    $rrd_additions .= " LINE1.25:MOH" . $COUNT . "#" . $config['graph_colours']['mixed'][1] . ":'MOH                    '";
     $rrd_additions .= " GPRINT:MOH" . $COUNT . ":LAST:%3.0lf";
     $rrd_additions .= " GPRINT:MOH" . $COUNT . ":AVERAGE:%3.0lf";
     $rrd_additions .= " GPRINT:MOH" . $COUNT . ":MAX:%3.0lf\\\l ";
 
     $rrd_additions .= " DEF:MTP" . $COUNT . "=" . $rrd_filename . ":mr-mtp:AVERAGE";
-    $rrd_additions .= " LINE1.25:MTP" . $COUNT . "#" . $COLORS[1] . ":'" . end_spacer ('MTP', 20) . "'";
+    $rrd_additions .= " LINE1.25:MTP" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'MTP                    '";
     $rrd_additions .= " GPRINT:MTP" . $COUNT . ":LAST:%3.0lf";
     $rrd_additions .= " GPRINT:MTP" . $COUNT . ":AVERAGE:%3.0lf";
     $rrd_additions .= " GPRINT:MTP" . $COUNT . ":MAX:%3.0lf\\\l ";
 
     $rrd_additions .= " DEF:XCODE" . $COUNT . "=" . $rrd_filename . ":mr-xcode:AVERAGE";
-    $rrd_additions .= " LINE1.25:XCODE" . $COUNT . "#" . $COLORS[2] . ":'" . end_spacer ('XCODE', 20) . "'";
+    $rrd_additions .= " LINE1.25:XCODE" . $COUNT . "#" . $config['graph_colours']['mixed'][3] . ":'XCODE                  '";
     $rrd_additions .= " GPRINT:XCODE" . $COUNT . ":LAST:%3.0lf";
     $rrd_additions .= " GPRINT:XCODE" . $COUNT . ":AVERAGE:%3.0lf";
     $rrd_additions .= " GPRINT:XCODE" . $COUNT . ":MAX:%3.0lf\\\l ";
 
     $rrd_additions .= " DEF:CFB" . $COUNT . "=" . $rrd_filename . ":mr-cfb:AVERAGE";
-    $rrd_additions .= " LINE1.25:CFB" . $COUNT . "#" . $COLORS[3] . ":'" . end_spacer ('CFB', 20) . "'";
+    $rrd_additions .= " LINE1.25:CFB" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'CFB                    '";
     $rrd_additions .= " GPRINT:CFB" . $COUNT . ":LAST:%3.0lf";
     $rrd_additions .= " GPRINT:CFB" . $COUNT . ":AVERAGE:%3.0lf";
     $rrd_additions .= " GPRINT:CFB" . $COUNT . ":MAX:%3.0lf\\\l ";

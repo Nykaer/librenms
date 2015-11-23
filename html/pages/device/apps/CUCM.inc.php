@@ -3,17 +3,16 @@
 require_once "../includes/component.php";
 
 $COMPONENT = new component();
-$UCOS_SERVICES = $COMPONENT->getComponents($device['device_id'],array('type'=>'UCOS-SERVICES','ignore'=>0));
 $CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
+$CUCM_ELCAC = $CUCM_ELCAC[$device['device_id']];
 $CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
+$CUCM_SIP = $CUCM_SIP[$device['device_id']];
 $CUCM_H323 = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-H323','ignore'=>0));
+$CUCM_H323 = $CUCM_H323[$device['device_id']];
 $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
 
 unset($datas);
 $datas[] = 'overview';
-if (count($UCOS_SERVICES) > 0) {
-    $datas[] = 'services';
-}
 if (count($CUCM_ELCAC) > 0) {
     $datas[] = 'elcac';
 }
@@ -27,13 +26,13 @@ if (file_exists ($rrd_filename)) {
 $type_text['overview']          = 'Overview';
 $type_text['trunk']             = 'Trunks';
 $type_text['elcac']             = 'Locations';
-$type_text['services']          = 'Services';
 $type_text['registereddevices'] = 'Registered Devices';
 
 $link_array = array(
     'page'   => 'device',
     'device' => $device['device_id'],
-    'tab'    => 'cucm',
+    'tab'    => 'apps',
+    'app'    => 'CUCM',
 );
 
 print_optionbar_start();
@@ -62,12 +61,11 @@ foreach ($datas as $type) {
 
 print_optionbar_end();
 
-if (is_file('pages/device/cucm/'.mres($vars['metric']).'.inc.php')) {
-    include 'pages/device/cucm/'.mres($vars['metric']).'.inc.php';
+if (is_file('pages/device/apps/cucm/'.mres($vars['metric']).'.inc.php')) {
+    include 'pages/device/apps/cucm/'.mres($vars['metric']).'.inc.php';
 }
 else {
     echo "<div class='col-md-12'>Error: The desired metric (".mres($vars['metric']).") does not exist.</div>";
-//    echo "<div class='col-md-12'>No Call Manager Components Exists. Please ensure a discovery has been completed.</div>";
 }
 
 $pagetitle[] = 'Call Manager';

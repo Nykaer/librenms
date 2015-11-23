@@ -40,7 +40,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = "N:".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSIP'])) {
             $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalSIP'];
@@ -48,7 +48,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'])) {
             $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'];
@@ -56,7 +56,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'])) {
             $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'];
@@ -64,7 +64,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'])) {
             $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'];
@@ -72,7 +72,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['Total'])) {
             $VALUE = $RESULT['RegisteredGateway']["@attributes"]['Total'];
@@ -80,7 +80,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['FXS'])) {
             $VALUE = $RESULT['RegisteredGateway']["@attributes"]['FXS'];
@@ -88,7 +88,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['FXO'])) {
             $VALUE = $RESULT['RegisteredGateway']["@attributes"]['FXO'];
@@ -96,7 +96,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['T1CAS'])) {
             $VALUE = $RESULT['RegisteredGateway']["@attributes"]['T1CAS'];
@@ -104,7 +104,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['PRI'])) {
             $VALUE = $RESULT['RegisteredGateway']["@attributes"]['PRI'];
@@ -112,7 +112,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['Total'])) {
             $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['Total'];
@@ -120,7 +120,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MOH'])) {
             $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['MOH'];
@@ -128,7 +128,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MTP'])) {
             $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['MTP'];
@@ -136,7 +136,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['XCODE'])) {
             $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['XCODE'];
@@ -144,7 +144,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['CFB'])) {
             $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['CFB'];
@@ -152,7 +152,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['H323']["@attributes"]['Total'])) {
             $VALUE = $RESULT['H323']["@attributes"]['Total'];
@@ -160,7 +160,7 @@ if ($device['os'] == "cucm") {
         else {
             $VALUE = "U";
         }
-        $RRD['data'] = ":".$VALUE;
+        $RRD['data'][] = $VALUE;
 
         // Create the RRD if it doesn't exist.
         if (!file_exists ($RRD['filename'])) {
@@ -168,7 +168,7 @@ if ($device['os'] == "cucm") {
         }
 
         // Add the data to the RRD if it exists.
-        if (isset($RRD['data'])) {
+        if (is_array($RRD['data'])) {
             rrdtool_update ($RRD['filename'], $RRD['data']);
         }
     }

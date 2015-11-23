@@ -1,5 +1,5 @@
 <?php
-require_once 'pages/device/cucm/widgets/functions.inc.php';
+require_once 'pages/device/apps/cucm/widgets/functions.inc.php';
 
 $labels = array('AnnunciatorResource','MTPResource','TranscoderResource','VCBResource');
 if (component_exists($CUCM_BASIC,$labels)) {

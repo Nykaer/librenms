@@ -6,6 +6,7 @@ $options = array();
 $options['type'] = 'CUCM-ELCAC';
 $options['filter']['ignore'] = array('=',0);
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
+$COMPONENTS = $COMPONENTS[$device['device_id']];
 
 if (count($COMPONENTS) > 0) {
     ?>

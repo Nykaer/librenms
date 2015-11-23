@@ -22,6 +22,9 @@ if ($device['os'] == "cucm") {
     $COMPONENT = new component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
     // Grab the details UCOS requires.
     $USER = get_dev_attrib($device, 'ucosaxl_user');
     $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
@@ -69,12 +72,12 @@ if ($device['os'] == "cucm") {
                 $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
 
                 $RRD['create'] = " DS:totalvoice:GAUGE:600:0:U DS:availablevoice:GAUGE:600:0:U DS:totalimmersive:GAUGE:600:0:U DS:availableimmersive:GAUGE:600:0:U DS:totalvideo:GAUGE:600:0:U DS:availablevideo:GAUGE:600:0:U";
-                $RRD['data'] = "N:".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthMaximum');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthAvailable');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthMaximum');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthAvailable');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthMaximum');
-                $RRD['data'] .= ":".$API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthAvailable');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthMaximum');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthAvailable');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthMaximum');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthAvailable');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthMaximum');
+                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthAvailable');
 
                 // Do we need to do anything with the RRD?
                 if (isset($RRD)) {
@@ -84,7 +87,7 @@ if ($device['os'] == "cucm") {
                     }
 
                     // Add the data to the RRD if it exists.
-                    if (isset($RRD['data'])) {
+                    if (is_array($RRD['data'])) {
                         rrdtool_update ($RRD['filename'], $RRD['data']);
                     }
                 }
