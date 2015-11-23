@@ -20,6 +20,10 @@ if ($device['os_group'] == 'cisco') {
     $COMPONENT = new component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE));
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
+
     // Begin our master array, all other values will be processed into this array.
     $tblCBQOS = array();
 

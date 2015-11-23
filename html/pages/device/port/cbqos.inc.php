@@ -48,6 +48,9 @@ if (!empty($rrdarr)) {
     $options['filter']['type'] = array('=','Cisco-CBQOS');
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 
+    // We only care about our device id.
+    $COMPONENTS = $COMPONENTS[$device['device_id']];
+
     if (isset($vars['policy'])) {
         // if a policy is set use it.
         $graph_array['policy'] = $vars['policy'];
