@@ -167,7 +167,7 @@ class component {
 
         $OLD = $this->getComponents($device_id);
         // Loop over each component.
-        foreach ($ARRAY[$device_id] as $COMPONENT => $AVP) {
+        foreach ($ARRAY as $COMPONENT => $AVP) {
 
             // Make sure the component already exists.
             if (!isset($OLD[$device_id][$COMPONENT])) {
