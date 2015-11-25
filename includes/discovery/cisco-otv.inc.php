@@ -174,12 +174,11 @@ if ($device['os_group'] == 'cisco') {
             }
 
         }
-d_echo(print_r($COMPONENTS)."\n");
 
         /*
          * Loop over the Component data to see if we need to DELETE any components.
          */
-/*        foreach ($COMPONENTS as $key => $array) {
+        foreach ($COMPONENTS as $key => $array) {
             // Guilty until proven innocent
             $FOUND = false;
 
@@ -197,7 +196,7 @@ d_echo(print_r($COMPONENTS)."\n");
             }
         }
 
-        // Write the Components back to the DB.*/
+        // Write the Components back to the DB.
         $COMPONENT->setComponentPrefs($device['device_id'],$COMPONENTS);
         echo "\n";
 
