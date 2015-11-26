@@ -107,6 +107,9 @@ if ($device['os_group'] == 'cisco') {
             // If we have set a message, we have an error, activate alarm.
             if ($message !== false) {
                 $RESULT['error'] = $message;
+                $RESULT['status'] = 0;
+            }
+            else {
                 $RESULT['status'] = 1;
             }
 
@@ -121,21 +124,21 @@ if ($device['os_group'] == 'cisco') {
             $RESULT['index'] = $MATCHES[1];
             $RESULT['endpoint'] = $MATCHES[2];
             $RESULT['otvtype'] = 'adjacency';
-            $RESULT['UID'] = $RESULT['otvtype']."-".str_replace(' ', '', $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.3.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']]);
+            $RESULT['UID'] = $RESULT['otvtype']."-".$RESULT['index']."-".str_replace(' ', '', $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.3.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']]);
             $RESULT['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
             $state = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
             if ($state == 1) {
-                $RESULT['status'] = 0;
+                $RESULT['status'] = 1;
             }
             else {
-                $RESULT['status'] = 1;
+                $RESULT['status'] = 0;
             }
 
             // Set a default name, if for some unknown reason we cant find the parent VPN.
             $RESULT['label'] = "Unknown (".$RESULT['index'].") - ".$value;
             // We need to search the existing array to build the name
             foreach ($tblOTV as $ITEM) {
-                if (($ITEM['type'] == 'overlay') && ($ITEM['index'] == $RESULT['index'])) {
+                if (($ITEM['otvtype'] == 'overlay') && ($ITEM['index'] == $RESULT['index'])) {
                     $RESULT['label'] = $ITEM['label']." - ".$value;
                 }
             }
