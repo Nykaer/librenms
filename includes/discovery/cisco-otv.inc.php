@@ -110,6 +110,7 @@ if ($device['os_group'] == 'cisco') {
                 $RESULT['status'] = 0;
             }
             else {
+                $RESULT['error'] = "";
                 $RESULT['status'] = 1;
             }
 
@@ -197,6 +198,15 @@ if ($device['os_group'] == 'cisco') {
                 echo "-";
                 $COMPONENT->deleteComponent($key);
             }
+        }
+
+        // Do we have any components, if so we should insert ourselves into the application table.
+        if (count($COMPONENTS) > 0) {
+            if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], strtolower($MODULE))) == '0') {
+                dbInsert(array('device_id' => $device['device_id'], 'app_type' => strtolower($MODULE)), 'applications');
+            }
+        } else {
+            dbDelete('applications', '`device_id` = ? AND `app_type` = ?', array($device['device_id'], strtolower($MODULE)));
         }
 
         // Write the Components back to the DB.

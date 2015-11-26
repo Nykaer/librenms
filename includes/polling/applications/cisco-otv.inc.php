@@ -96,6 +96,7 @@ if ($device['os_group'] == "cisco") {
                     $ARRAY['status'] = 0;
                 }
                 else {
+                    $ARRAY['error'] = "";
                     $ARRAY['status'] = 1;
                 }
             }
