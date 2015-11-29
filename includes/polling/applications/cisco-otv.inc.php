@@ -116,7 +116,7 @@ if ($device['os_group'] == "cisco") {
                     }
                 }
 
-                $filename = "cisco-otv-".$ARRAY['label']."-vlans.rrd";
+                $filename = "cisco-otv-".$ARRAY['label']."-vlan.rrd";
                 $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
 
                 if (!file_exists ($rrd_filename)) {
@@ -153,7 +153,7 @@ if ($device['os_group'] == "cisco") {
                     $RRD['count'] = $COUNT_MAC[$ARRAY['endpoint']];
                 }
                 else {
-                    $RRD['count'] = "U";
+                    $RRD['count'] = "0";
                 }
 
                 $filename = "cisco-otv-".$ARRAY['endpoint']."-mac.rrd";
