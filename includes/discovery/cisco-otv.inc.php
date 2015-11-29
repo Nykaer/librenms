@@ -66,6 +66,7 @@ if ($device['os_group'] == 'cisco') {
 
     // Begin our master array, all other values will be processed into this array.
     $tblOTV = array();
+    $tblEndpoints = array();
 
     // Let's gather some data..
     $tblOverlayEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.810.1.2.1.1');
@@ -89,19 +90,25 @@ if ($device['os_group'] == 'cisco') {
             $message = false;
             $RESULT['index'] = $index;
             $RESULT['label'] = $name;
+            if ($tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.15'][$index] == 1) {
+                $RESULT['transport'] = 'Multicast';
+            }
+            else {
+                $RESULT['transport'] = 'Unicast';
+            }
             $RESULT['otvtype'] = 'overlay';
             $RESULT['UID'] = $RESULT['otvtype']."-".$RESULT['index'];
             $RESULT['vpn_state'] = $tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.3'][$index];
             if ($RESULT['vpn_state'] != 2) {
-                $message .= "VPN Down: ".$ERROR_VPN[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.4'][$index]];
+                $message .= "VPN Down: ".$ERROR_VPN[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.4'][$index]]."\n";
             }
             $RESULT['aed_state'] = $tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.13'][$index];
             if ($RESULT['aed_state'] == 2) {
-                $message .= "AED Down: ".$ERROR_AED[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.14'][$index]];
+                $message .= "AED Down: ".$ERROR_AED[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.14'][$index]]."\n";
             }
             $RESULT['overlay_state'] = $tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.23'][$index];
             if ($RESULT['overlay_state'] == 2) {
-                $message .= "Overlay Down: ".$ERROR_OVERLAY[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.24'][$index]];
+                $message .= "Overlay Down: ".$ERROR_OVERLAY[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.24'][$index]]."\n";
             }
 
             // If we have set a message, we have an error, activate alarm.
@@ -124,6 +131,7 @@ if ($device['os_group'] == 'cisco') {
             $RESULT = array();
             $RESULT['index'] = $MATCHES[1];
             $RESULT['endpoint'] = $MATCHES[2];
+            $tblEndpoints[$value] = true;
             $RESULT['otvtype'] = 'adjacency';
             $RESULT['UID'] = $RESULT['otvtype']."-".$RESULT['index']."-".str_replace(' ', '', $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.3.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']]);
             $RESULT['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
@@ -143,6 +151,17 @@ if ($device['os_group'] == 'cisco') {
                     $RESULT['label'] = $ITEM['label']." - ".$value;
                 }
             }
+
+            // Add the result to the parent array.
+            $tblOTV[] = $RESULT;
+        }
+
+        // We retain a list of all endpoints to tie the RRD to.
+        foreach ($tblEndpoints as $K => $V) {
+            $RESULT['label'] = "Endpoint: ".$K;
+            $RESULT['otvtype'] = 'endpoint';
+            $RESULT['endpoint'] = $K;
+            $RESULT['UID'] = $RESULT['otvtype']."-".$K;
 
             // Add the result to the parent array.
             $tblOTV[] = $RESULT;

@@ -70,6 +70,14 @@ if ($device['os_group'] == "cisco") {
         // Let's gather the stats..
         $tblOverlayEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.810.1.2.1.1');
         $tblAdjacencyDatabaseEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.810.1.3.1.1', 0);
+        $tblRouteNextHopAddr = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.810.1.5.1.1.8', 0);
+        $tblVlanEdgeDevIsAed = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.810.1.2.2.1.6', 2);
+
+        // Let's create an array of each remote OTV endpoint and the count of MAC addresses that are reachable via.
+        $COUNT_MAC = array();
+        foreach ($tblRouteNextHopAddr as $k => $v) {
+            $COUNT_MAC[$v]++;
+        }
 
         // Loop through the components and extract the data.
         foreach ($COMPONENTS as $KEY => &$ARRAY) {
@@ -99,17 +107,66 @@ if ($device['os_group'] == "cisco") {
                     $ARRAY['error'] = "";
                     $ARRAY['status'] = 1;
                 }
+
+                // Time to graph the count of the active VLAN's on this overlay.
+                $COUNT_VLAN = 0;
+                foreach ($tblVlanEdgeDevIsAed['1.3.6.1.4.1.9.9.810.1.2.2.1.6'][$ARRAY['index']] as $v) {
+                    if ($v == 1) {
+                        $COUNT_VLAN++;
+                    }
+                }
+
+                $filename = "cisco-otv-".$ARRAY['label']."-vlans.rrd";
+                $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
+
+                if (!file_exists ($rrd_filename)) {
+                    rrdtool_create ($rrd_filename, " DS:count:GAUGE:600:0:U" . $config['rrd_rra']);
+                }
+                $RRD['count'] = $COUNT_VLAN;
+
+                // Update RRD
+                rrdtool_update ($rrd_filename, $RRD);
+
             }
             elseif ($ARRAY['otvtype'] == 'adjacency') {
                 $ARRAY['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']];
-                $state = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']];
-                if ($state == 1) {
-                    $ARRAY['status'] = 1;
+                $message = false;
+                if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']] == 1) {
+//                    $message .= "Adjacency has been reset\n";
                 }
-                else {
+                if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']] < $ARRAY['uptime']) {
+                    $message .= "Adjacency has been reset\n";
+                }
+
+                // If we have set a message, we have an error, activate alarm.
+                if ($message !== false) {
+                    $ARRAY['error'] = $message;
                     $ARRAY['status'] = 0;
                 }
+                else {
+                    $ARRAY['error'] = "";
+                    $ARRAY['status'] = 1;
+                }
             }
+            elseif ($ARRAY['otvtype'] == 'endpoint') {
+                if (isset($COUNT_MAC[$ARRAY['endpoint']])) {
+                    $RRD['count'] = $COUNT_MAC[$ARRAY['endpoint']];
+                }
+                else {
+                    $RRD['count'] = "U";
+                }
+
+                $filename = "cisco-otv-".$ARRAY['endpoint']."-mac.rrd";
+                $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
+
+                if (!file_exists ($rrd_filename)) {
+                    rrdtool_create ($rrd_filename, " DS:count:GAUGE:600:0:U" . $config['rrd_rra']);
+                }
+
+                // Update RRD
+                rrdtool_update ($rrd_filename, $RRD);
+
+            } // End If
 
         } // End foreach components
 
