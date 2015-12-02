@@ -135,12 +135,19 @@ if ($device['os_group'] == 'cisco') {
             $RESULT['otvtype'] = 'adjacency';
             $RESULT['UID'] = $RESULT['otvtype']."-".$RESULT['index']."-".str_replace(' ', '', $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.3.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']]);
             $RESULT['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
-            $state = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
-            if ($state == 1) {
-                $RESULT['status'] = 1;
+            $message = false;
+            if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']] == 1) {
+                $message .= "Adjacency is Down\n";
+            }
+
+            // If we have set a message, we have an error, activate alarm.
+            if ($message !== false) {
+                $RESULT['error'] = $message;
+                $RESULT['status'] = 0;
             }
             else {
-                $RESULT['status'] = 0;
+                $RESULT['error'] = "";
+                $RESULT['status'] = 1;
             }
 
             // Set a default name, if for some unknown reason we cant find the parent VPN.
