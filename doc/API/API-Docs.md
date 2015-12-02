@@ -13,7 +13,7 @@
         - [`get_graphs`](#api-route-5)
         - [`get_graph_generic_by_hostname`](#api-route-6)
         - [`get_port_graphs`](#api-route-7)
-        - [`get_components`](#api-route-24)
+        - [`get_components`](#api-route-25)
         - [`get_port_stats_by_port_hostname`](#api-route-8)
         - [`get_graph_by_port_hostname`](#api-route-9)
         - [`list_devices`](#api-route-10)
@@ -267,7 +267,7 @@ Output:
 }
 ```
 
-### <a name="api-route-24">Function: `get_components`</a> [`top`](#top)
+### <a name="api-route-25">Function: `get_components`</a> [`top`](#top)
 
 Get a list of components for a particular device.
 

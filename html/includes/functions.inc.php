@@ -1151,7 +1151,12 @@ function alert_details($details) {
         }
 
         if ($tmp_alerts['type'] && $tmp_alerts['label']) {
-            $fault_detail .= ' '.$tmp_alerts['type'].' - '.$tmp_alerts['label'].';&nbsp;';
+            if ($tmp_alerts['error'] != "") {
+                $fault_detail .= ' '.$tmp_alerts['type'].' - '.$tmp_alerts['label'].';&nbsp;';
+            }
+            else {
+                $fault_detail .= ' '.$tmp_alerts['type'].' - '.$tmp_alerts['label'].' - '.$tmp_alerts['error'].';&nbsp;';
+            }
             $fallback      = false;
         }
 
