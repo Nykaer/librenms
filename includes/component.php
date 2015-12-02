@@ -23,6 +23,7 @@ class component {
         'status'    => 1,
         'ignore'    => 0,
         'disabled'  => 0,
+        'error'     => '',
     );
 
     public function getComponentType($TYPE=null) {
@@ -51,7 +52,7 @@ class component {
         $PARAM = array();
 
         // Our base SQL Query, with no options.
-        $SQL = "SELECT `C`.`id`,`C`.`device_id`,`C`.`type`,`C`.`label`,`C`.`status`,`C`.`disabled`,`C`.`ignore`,`CP`.`attribute`,`CP`.`value` FROM `component` as `C` LEFT JOIN `component_prefs` as `CP` on `C`.`id`=`CP`.`component` WHERE ";
+        $SQL = "SELECT `C`.`id`,`C`.`device_id`,`C`.`type`,`C`.`label`,`C`.`status`,`C`.`disabled`,`C`.`ignore`,`C`.`error`,`CP`.`attribute`,`CP`.`value` FROM `component` as `C` LEFT JOIN `component_prefs` as `CP` on `C`.`id`=`CP`.`component` WHERE ";
 
         // Device_id is shorthand for filter C.device_id = $device_id.
         if (!is_null($device_id)) {
@@ -218,20 +219,16 @@ class component {
                     $DATA = array('component'=>$COMPONENT, 'attribute'=>$ATTR, 'value'=>$VALUE);
                     $id = dbInsert($DATA, 'component_prefs');
 
-                    // Log the addition to the Eventlog, unless it is a statistic.
-                    if ($ATTR != 'statistic') {
-                        log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was added with value: " . $VALUE, $device_id, 'component', $COMPONENT);
-                    }
+                    // Log the addition to the Eventlog.
+                    log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was added with value: " . $VALUE, $device_id, 'component', $COMPONENT);
                 }
                 elseif ($OLD[$device_id][$COMPONENT][$ATTR] != $VALUE) {
                     // Attribute exists but the value is different, need to update
                     $DATA = array('value'=>$VALUE);
                     dbUpdate($DATA, 'component_prefs', '`component` = ? AND `attribute` = ?', array($COMPONENT, $ATTR));
 
-                    // Add the modification to the Eventlog, unless it is a statistic.
-                    if ($ATTR != 'statistic') {
-                        log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was modified from: ".$OLD[$COMPONENT][$ATTR].", to: ".$VALUE,$device_id,'component',$COMPONENT);
-                    }
+                    // Add the modification to the Eventlog.
+                    log_event("Component: ".$AVP[$COMPONENT]['type']."(".$COMPONENT."). Attribute: ".$ATTR.", was modified from: ".$OLD[$COMPONENT][$ATTR].", to: ".$VALUE,$device_id,'component',$COMPONENT);
                 }
 
             } // End Foreach COMPONENT
@@ -242,10 +239,8 @@ class component {
                 // As the Attribute has been removed from the array, we should remove it from the database.
                 dbDelete('component_prefs', "`component` = ? AND `attribute` = ?",array($COMPONENT,$KEY));
 
-                // Log the addition to the Eventlog, unless it is a statistic.
-                if ($ATTR != 'statistic') {
-                    log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was deleted.", $COMPONENT);
-                }
+                // Log the addition to the Eventlog.
+                log_event ("Component: " . $AVP[$COMPONENT]['type'] . "(" . $COMPONENT . "). Attribute: " . $ATTR . ", was deleted.", $COMPONENT);
             }
 
         }
