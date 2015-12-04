@@ -111,7 +111,7 @@ if ($device['os_group'] == 'cisco') {
                 $message .= "Overlay Down: ".$ERROR_OVERLAY[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.24'][$index]]."\n";
             }
 
-            // If we have set a message, we have an error, activate alarm.
+            // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $RESULT['error'] = $message;
                 $RESULT['status'] = 0;
@@ -140,7 +140,7 @@ if ($device['os_group'] == 'cisco') {
                 $message .= "Adjacency is Down\n";
             }
 
-            // If we have set a message, we have an error, activate alarm.
+            // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $RESULT['error'] = $message;
                 $RESULT['status'] = 0;
