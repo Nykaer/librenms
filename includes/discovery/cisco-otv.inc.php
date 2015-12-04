@@ -111,7 +111,7 @@ if ($device['os_group'] == 'cisco') {
                 $message .= "Overlay Down: ".$ERROR_OVERLAY[$tblOverlayEntry['1.3.6.1.4.1.9.9.810.1.2.1.1.24'][$index]]."\n";
             }
 
-            // If we have set a message, we have an error, activate alarm.
+            // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $RESULT['error'] = $message;
                 $RESULT['status'] = 0;
@@ -136,11 +136,11 @@ if ($device['os_group'] == 'cisco') {
             $RESULT['UID'] = $RESULT['otvtype']."-".$RESULT['index']."-".str_replace(' ', '', $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.3.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']]);
             $RESULT['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']];
             $message = false;
-            if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']] == 1) {
+            if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$RESULT['index'].'.1.4.'.$RESULT['endpoint']] != 1) {
                 $message .= "Adjacency is Down\n";
             }
 
-            // If we have set a message, we have an error, activate alarm.
+            // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $RESULT['error'] = $message;
                 $RESULT['status'] = 0;
