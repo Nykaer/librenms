@@ -131,7 +131,7 @@ if ($device['os_group'] == "cisco") {
             elseif ($ARRAY['otvtype'] == 'adjacency') {
                 $ARRAY['uptime'] = $tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']];
                 $message = false;
-                if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']] == 1) {
+                if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.5.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']] != 1) {
                     $message .= "Adjacency is Down\n";
                 }
                 if ($tblAdjacencyDatabaseEntry['1.3.6.1.4.1.9.9.810.1.3.1.1.6.'.$ARRAY['index'].'.1.4.'.$ARRAY['endpoint']] < $ARRAY['uptime']) {
