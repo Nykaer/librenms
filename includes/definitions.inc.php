@@ -433,6 +433,18 @@ $config['os'][$os]['over'][4]['text']  = 'Number of Clients';
 $config['os'][$os]['icon']             = 'cisco';
 
 // CUOS - Unified Communications OS
+$os = "ucos";
+$config['os'][$os]['text']              = "Unified Communications OS";
+$config['os'][$os]['group']             = "ucos";
+$config['os'][$os]['type']              = "voice";
+$config['os'][$os]['over'][0]['graph'] = 'device_processor';
+$config['os'][$os]['over'][0]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][1]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][1]['text']  = 'Memory Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_bits';
+$config['os'][$os]['over'][2]['text']  = 'Device Traffic';
+$config['os'][$os]['icon']              = "cisco";
+
 $os = "cucm";
 $config['os'][$os]['text']              = "Cisco CallManager";
 $config['os'][$os]['group']             = "ucos";
