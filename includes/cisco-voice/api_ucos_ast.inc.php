@@ -61,9 +61,6 @@ class api_ucos_ast extends \transport_http {
         d_echo("HTTP Response received: " .$HTTPRES['http_code']."\n");
         $RESPONSE = $HTTPRES['content'];
 
-        // Remove excess whitespace from the response.
-//        $RESPONSE = preg_replace('/\s\s/s', '', $RESPONSE);
-
         // Remove Namespaces from the response.
         $RESPONSE = preg_replace('/(ns:|soapenv:)/s', '', $RESPONSE);
         d_echo("Namespaces Removed: " .print_r($RESPONSE, TRUE)."\n");
@@ -87,10 +84,8 @@ class api_ucos_ast extends \transport_http {
 
             // HTTP - 200 OK
             if ($RESULT[0] == 200) {
-//                print_r ($RESULT[1]);
-//                // Make sure we have an associative array.
-//                $RESULT[1] = $this->make_sequential($RESULT[1]);
-//                print_r ($RESULT[1]);
+                // Make sure we have an associative array.
+                $RESULT[1] = $this->make_sequential($RESULT[1]['Node']);
 
                 foreach ( $RESULT[1] as $NODE ) {
                     if ($NODE["@attributes"]['value1'] == $this->sHOST) {
