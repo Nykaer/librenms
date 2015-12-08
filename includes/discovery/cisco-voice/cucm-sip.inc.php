@@ -48,7 +48,7 @@ if ($device['os'] == "cucm") {
 
         foreach ($RESULT as $VALUE) {
             // Add a component for each SIP trunk
-            $CUCM[] = array('label'=>$VALUE);
+            $CUCM[] = array('label'=>$VALUE['Name']);
         }
 
         /*
