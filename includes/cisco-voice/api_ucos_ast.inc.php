@@ -140,7 +140,7 @@ class api_ucos_ast extends \transport_http {
             $RESULT[1]['getServiceInfoReply']['Host'] = $this->make_sequential($RESULT[1]['getServiceInfoReply']['Host']);
 
             foreach ($RESULT[1]['getServiceInfoReply']['Host'] as $NODE) {
-                if ($NODE["@attributes"]['Name'] == $this->sNODE) {
+                if ( ($NODE["@attributes"]['Name'] == $this->sNODE) || ($NODE["@attributes"]['Name'] == $this->sHOST)) {
                     // We have found our node, return its stats
                     return $NODE;
                 }
@@ -171,7 +171,7 @@ class api_ucos_ast extends \transport_http {
             $RESULT[1]['getRegisteredDeviceReply']['CmNode'] = $this->make_sequential($RESULT[1]['getRegisteredDeviceReply']['CmNode']);
 
             foreach ($RESULT[1]['getRegisteredDeviceReply']['CmNode'] as $NODE) {
-                if ($NODE["@attributes"]['Name'] == $this->sNODE) {
+                if ( ($NODE["@attributes"]['Name'] == $this->sNODE) || ($NODE["@attributes"]['Name'] == $this->sHOST)) {
                     // We have found our node, return its stats
                     return $NODE;
                 }
