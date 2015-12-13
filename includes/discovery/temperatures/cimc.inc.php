@@ -15,22 +15,37 @@ if ($device['os'] == 'cimc') {
     } else {
         // No Error, lets process things.
 
+        $probes = array();
+
+        // Ambient Temperature
+        $probes[] = array(
+            'name'      => " - Ambient",
+            'baseoid'   => '1.3.6.1.4.1.9.9.719.1.9.44.1.4.'.$index,
+            'index'     => "ambient-",
+        );
+
         // Board Temperatures
-        $indexes = array ();
-        foreach ($temp_board['1.3.6.1.4.1.9.9.719.1.9.44.1.2'] as $k => $v) {
-            $temp = preg_match ('/\/sys\/(rack-unit-[^,]+)\/board\/temp-stats/', $v, $regexp_result);
-            $indexes[$k] = $regexp_result[1];
-        }
+        foreach ($temp_board['1.3.6.1.4.1.9.9.719.1.9.44.1.2'] as $index => $string) {
+            $temp = preg_match ('/\/sys\/(rack-unit-[^,]+)\/board\/temp-stats/', $string, $regexp_result);
+            $name = $regexp_result[1];
 
-        foreach ($indexes as $index => $name) {
-            // Ambient Temperature
-            $oid = '1.3.6.1.4.1.9.9.719.1.9.44.1.4.'.$index;
-            $description = $name." - Ambient";
-            d_echo($oid." - ".$description." - ".$temp_board[$oid][$index]."\n");
-            discover_sensor ($valid['sensor'], 'temperature', $device, $oid, 'ambient', 'cimc', $description, '1', '1', null, null, null, null, $temp_board[$oid][$index]);
+            foreach ($probes as $probe) {
+                d_echo($probe['baseoid'].".".$index." - ".$name.$probe['name']." - ".$temp_board[$probe['baseoid']][$index]."\n");
+                discover_sensor ($valid['sensor'], 'temperature', $device, $probe['baseoid'].".".$index, $probe['index'].$index, 'cimc', $name.$probe['name'], '1', '1', null, null, null, null, $temp_board[$probe['baseoid']][$index]);
+            }
 
+//            // Ambient Temperature
+//            $baseoid = '1.3.6.1.4.1.9.9.719.1.9.44.1.4';
+//            $oid = $baseoid.".".$index;
+//            $value = $temp_board[$baseoid][$index];
+//            $description = $name." - Ambient";
+//            d_echo($oid." - ".$description." - ".$value."\n");
+//            discover_sensor ($valid['sensor'], 'temperature', $device, $oid, 'ambient', 'cimc', $description, '1', '1', null, null, null, null, $value);
+//
             // Front Temperature
-            $oid = '1.3.6.1.4.1.9.9.719.1.9.44.1.8.'.$index;
+            $baseoid = '1.3.6.1.4.1.9.9.719.1.9.44.1.8';
+            $oid = $baseoid.".".$index;
+            $value = $temp_board[$baseoid][$index];
             $description = $name." - Front";
             d_echo($oid." - ".$description." - ".$temp_board[$oid][$index]."\n");
             discover_sensor ($valid['sensor'], 'temperature', $device, $oid, 'front', 'cimc', $description, '1', '1', null, null, null, null, $temp_board[$oid][$index]);
@@ -49,13 +64,10 @@ if ($device['os'] == 'cimc') {
         }
 
         // Memory Temperatures
-        $indexes = array ();
-        foreach ($temp_mem['1.3.6.1.4.1.9.9.719.1.30.12.1.2'] as $k => $v) {
-            $temp = preg_match ('/\/sys\/rack-unit-1\/memarray-1\/(mem-[^,]+)\/dimm-env-stats/', $v, $regexp_result);
-            $indexes[$k] = $regexp_result[1];
-        }
+        foreach ($temp_mem['1.3.6.1.4.1.9.9.719.1.30.12.1.2'] as $index => $string) {
+            $temp = preg_match ('/\/sys\/rack-unit-1\/memarray-1\/(mem-[^,]+)\/dimm-env-stats/', $string, $regexp_result);
+            $name = $regexp_result[1];
 
-        foreach ($indexes as $index => $name) {
             // DIMM Temperature
             $oid = '1.3.6.1.4.1.9.9.719.1.30.12.1.6.'.$index;
             $description = $name;
@@ -64,13 +76,10 @@ if ($device['os'] == 'cimc') {
         }
 
         // CPU Temperatures
-        $indexes = array ();
-        foreach ($temp_cpu['1.3.6.1.4.1.9.9.719.1.41.2.1.2'] as $k => $v) {
-            $temp = preg_match ('/\/sys\/rack-unit-1\/board\/(cpu-[^,]+)\/env-stats/', $v, $regexp_result);
-            $indexes[$k] = $regexp_result[1];
-        }
+        foreach ($temp_cpu['1.3.6.1.4.1.9.9.719.1.41.2.1.2'] as $index => $string) {
+            $temp = preg_match ('/\/sys\/rack-unit-1\/board\/(cpu-[^,]+)\/env-stats/', $string, $regexp_result);
+            $name = $regexp_result[1];
 
-        foreach ($indexes as $index => $name) {
             // CPU Temperature
             $oid = '1.3.6.1.4.1.9.9.719.1.41.2.1.10.'.$index;
             $description = $name;
