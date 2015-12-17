@@ -106,7 +106,10 @@ class component {
 
         // Add the AVP's to the array.
         foreach ($COMPONENTS as $COMPONENT) {
-            $RESULT[$COMPONENT['device_id']][$COMPONENT['id']][$COMPONENT['attribute']] = $COMPONENT['value'];
+            if ($COMPONENT['attribute'] != "") {
+                // if this component has attributes, set them in the array.
+                $RESULT[$COMPONENT['device_id']][$COMPONENT['id']][$COMPONENT['attribute']] = $COMPONENT['value'];
+            }
         }
 
         // Populate our reserved fields into the Array, these cant be used as user attributes.
