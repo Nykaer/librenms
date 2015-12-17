@@ -21,7 +21,7 @@ $COMPONENTS = $COMPONENTS[$device['device_id']];
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
-$rrd_options .= " COMMENT:'VLANs               Now     Avg    Max\\n'";
+$rrd_options .= " COMMENT:'VLANs               Now     Min    Max\\n'";
 $rrd_additions = "";
 
 $COUNT = 0;
@@ -47,9 +47,8 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             $rrd_additions .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":count:AVERAGE ";
             $rrd_additions .= " AREA:DS" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'],0,15),15) . "'" . $STACK;
             $rrd_additions .= " GPRINT:DS" . $COUNT . ":LAST:%4.0lf%s ";
-            $rrd_additions .= " GPRINT:DS" . $COUNT . ":AVERAGE:%4.0lf%s ";
+            $rrd_additions .= " GPRINT:DS" . $COUNT . ":MIN:%4.0lf%s ";
             $rrd_additions .= " GPRINT:DS" . $COUNT . ":MAX:%4.0lf%s\\\l ";
-
             $COUNT++;
         }
     }
