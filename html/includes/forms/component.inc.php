@@ -21,24 +21,27 @@ $OBJCOMP = new component();
 // Go get the component array.
 $COMPONENTS = $OBJCOMP->getComponents($device_id);
 
+// We only care about our device id.
+$COMPONENTS = $COMPONENTS[$device_id];
+
 // Track how many updates we are making.
 $UPDATE = array();
 
-foreach ($COMPONENTS[$device_id] as $ID => $AVP) {
+foreach ($COMPONENTS as $ID => $AVP) {
     // Is the component disabled?
     if (isset($_POST['dis_'.$ID])) {
         // Yes it is, was it disabled before?
-        if ($COMPONENTS[$device_id][$ID]['disabled'] == 0) {
+        if ($COMPONENTS[$ID]['disabled'] == 0) {
             // No it wasn't, best we disable it then..
-            $COMPONENTS[$device_id][$ID]['disabled'] = 1;
+            $COMPONENTS[$ID]['disabled'] = 1;
             $UPDATE[$ID] = true;
         }
     }
     else {
         // No its not, was it disabled before?
-        if ($COMPONENTS[$device_id][$ID]['disabled'] == 1) {
+        if ($COMPONENTS[$ID]['disabled'] == 1) {
             // Yes it was, best we enable it then..
-            $COMPONENTS[$device_id][$ID]['disabled'] = 0;
+            $COMPONENTS[$ID]['disabled'] = 0;
             $UPDATE[$ID] = true;
         }
     }
@@ -46,17 +49,17 @@ foreach ($COMPONENTS[$device_id] as $ID => $AVP) {
     // Is the component ignored?
     if (isset($_POST['ign_'.$ID])) {
         // Yes it is, was it ignored before?
-        if ($COMPONENTS[$device_id][$ID]['ignore'] == 0) {
+        if ($COMPONENTS[$ID]['ignore'] == 0) {
             // No it wasn't, best we ignore it then..
-            $COMPONENTS[$device_id][$ID]['ignore'] = 1;
+            $COMPONENTS[$ID]['ignore'] = 1;
             $UPDATE[$ID] = true;
         }
     }
     else {
         // No its not, was it ignored before?
-        if ($COMPONENTS[$device_id][$ID]['ignore'] == 1) {
+        if ($COMPONENTS[$ID]['ignore'] == 1) {
             // Yes it was, best we un-ignore it then..
-            $COMPONENTS[$device_id][$ID]['ignore'] = 0;
+            $COMPONENTS[$ID]['ignore'] = 0;
             $UPDATE[$ID] = true;
         }
     }
