@@ -2,19 +2,18 @@
 
 // easier to rewrite for Active Directory than to bash it into existing LDAP implementation
 
+// disable certificate checking before connect if required
+if (isset($config['auth_ad_check_certificates']) &&
+          $config['auth_ad_check_certificates'] == 0) {
+    putenv('LDAPTLS_REQCERT=never');
+};
+
 $ds = @ldap_connect($config['auth_ad_url']);
 
 // disable referrals and force ldap version to 3
 
 ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);
 ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
-
-// disable certificate checking if required
-
-if (isset($config['auth_ad_dont_check_certificates']) &&
-          $config['auth_ad_dont_check_certificates'] > 0) {
-    putenv('LDAPTLS_REQCERT=never');
-};
 
 function authenticate($username, $password) {
     global $config, $ds;
@@ -36,6 +35,7 @@ function authenticate($username, $password) {
                     if (isset($config['auth_ad_groups'][$group_cn]['level'])) {
                         // user is in one of the defined groups
                         $user_authenticated = 1;
+                        adduser($username);
                     } 
                 }
 
@@ -44,6 +44,7 @@ function authenticate($username, $password) {
             }
             else {
                 // group membership is not required and user is valid
+                adduser($username);
                 return 1;
             }
         }
@@ -82,11 +83,29 @@ function auth_usermanagement() {
 }
 
 
-function adduser() {
-    // not supported so return 0
-    return 0;
+function adduser($username) {
+    // Check to see if user is already added in the database
+    if (!user_exists_in_db($username)) {
+        $userid = dbInsert(array('username' => $username, 'user_id' => get_userid($username), 'level' => "0", 'can_modify_passwd' => 0, 'twofactor' => 0), 'users');
+        if ($userid == false) {
+            return false;
+        }
+        else {
+            foreach (dbFetchRows('select notifications.* from notifications where not exists( select 1 from notifications_attribs where notifications.notifications_id = notifications_attribs.notifications_id and notifications_attribs.user_id = ?) order by notifications.notifications_id desc',array($userid)) as $notif) {
+                dbInsert(array('notifications_id'=>$notif['notifications_id'],'user_id'=>$userid,'key'=>'read','value'=>1),'notifications_attribs');
+            }
+        }
+        return $userid;
+    }
+    else {
+        return false;
+    }
 }
 
+function user_exists_in_db($username) {
+    $return = dbFetchCell('SELECT COUNT(*) FROM users WHERE username = ?', array($username), true);
+    return $return;
+}
 
 function user_exists($username) {
     global $config, $ds;
