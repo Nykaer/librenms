@@ -127,6 +127,7 @@ $config['page_title_prefix'] = '';
 $config['page_title_suffix'] = $config['project_name'];
 $config['timestamp_format']  = 'd-m-Y H:i:s';
 $config['page_gen']          = 0;
+$config['enable_lazy_load']  = true;
 // display MySqL & PHP stats in footer?
 $config['login_message'] = 'Unauthorised access or use shall render the user liable to criminal and/or civil prosecution.';
 $config['public_status'] = false;
@@ -407,6 +408,8 @@ $config['network_map_vis_options'] = '{
 
 // Device page options
 $config['show_overview_tab'] = true;
+
+$config['cpu_details_overview'] = false; //By default show only average cpu in device overview
 
 // The device overview page options
 $config['overview_show_sysDescr'] = true;
@@ -827,3 +830,9 @@ $config['summary_errors']                               = 0;
 
 // Default width of the availability map's tiles
 $config['availability-map-width']                       = 25;
+
+// Default notifications Feed
+$config['notifications']['LibreNMS']                    = 'http://www.librenms.org/notifications.rss';
+
+// Update channel (Can be 'master' or 'release')
+$config['update_channel']                               = 'master';

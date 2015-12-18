@@ -68,4 +68,11 @@ Contributors to LibreNMS:
 - Robert Gornall <roblnm@khobbits.co.uk (KHobbits)
 - Rob Gormley <robert@gormley.me> (rgormley)
 - Richard Kojedzinszky <krichy@nmdps.net> (rkojedzinszky)
+- Tony Murray <murraytony@gmail.com> (murrant)
+- Peter Lamperud <peter.lamperud@gmail.com> (vizay)
+- Louis Bailleul <louis.bailleul@gmail.com> (alucardfh)
+- Rick Hodger <rick@fuzzi.org.uk> (Tatermen)
+- Eldon Koyle <ekoyle@gmail.com> (ekoyle)
+- Jonathan Bailey <jcbailey@code0.net> (jcbailey2)
+- Ruairi Carroll <ruairi.carroll@gmail.com> (rucarrol) 
 [1]: http://observium.org/ "Observium web site"
