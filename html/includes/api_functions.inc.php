@@ -890,12 +890,14 @@ function get_inventory() {
 
 
 function list_oxidized() {
-    // return details of a single device
+    global $config;
     $app = \Slim\Slim::getInstance();
     $app->response->headers->set('Content-Type', 'application/json');
 
     $devices = array();
-    foreach (dbFetchRows("SELECT hostname,os FROM `devices` LEFT JOIN devices_attribs AS `DA` ON devices.device_id = DA.device_id AND `DA`.attrib_type='override_Oxidized_disable' WHERE `status`='1' AND (DA.attrib_value = 'false' OR DA.attrib_value IS NULL)") as $device) {
+    $device_types = "'".implode("','", $config['oxidized']['ignore_types'])."'";
+    $device_os    = "'".implode("','", $config['oxidized']['ignore_os'])."'";
+    foreach (dbFetchRows("SELECT hostname,os FROM `devices` LEFT JOIN devices_attribs AS `DA` ON devices.device_id = DA.device_id AND `DA`.attrib_type='override_Oxidized_disable' WHERE `status`='1' AND (DA.attrib_value = 'false' OR DA.attrib_value IS NULL) AND (`type` NOT IN ($device_types) AND `os` NOT IN ($device_os))") as $device) {
         $devices[] = $device;
     }
 
@@ -971,6 +973,42 @@ function list_bills() {
         'err-msg' => $err_msg,
         'count' => $count,
         'bills' => $bills
+    );
+    $app->response->setStatus($code);
+    $app->response->headers->set('Content-Type', 'application/json');
+    echo _json_encode($output);
+}
+
+function update_device() {
+    global $config;
+    $app = \Slim\Slim::getInstance();
+    $router = $app->router()->getCurrentRoute()->getParams();
+    $status   = 'error';
+    $code     = 500;
+    $hostname = $router['hostname'];
+    // use hostname as device_id if it's all digits
+    $device_id = ctype_digit($hostname) ? $hostname : getidbyname($hostname);
+    $data = json_decode(file_get_contents('php://input'), true);
+    $bad_fields = array('id','hostname');
+    if (empty($data['field'])) {
+        $message = 'Device field to patch has not been supplied';
+    }
+    elseif (in_array($data['field'], $bad_fields)) {
+        $message = 'Device field is not allowed to be updated';
+    }
+    else {
+        if (dbUpdate(array(mres($data['field']) => mres($data['data'])), 'devices', '`device_id`=?', array($device_id)) >= 0) {
+            $status = 'ok';
+            $message = 'Device ' . mres($data['field']) . ' field has been updated';
+            $code = 200;
+        }
+        else {
+            $message = 'Device ' . mres($data['field']) . ' field failed to be updated';
+        }
+    }
+    $output = array(
+        'status'  => $status,
+        'message' => $message,
     );
     $app->response->setStatus($code);
     $app->response->headers->set('Content-Type', 'application/json');
