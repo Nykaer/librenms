@@ -453,7 +453,6 @@ $os = 'nos';
 $config['os'][$os]['text']             = 'Brocade NOS';
 $config['os'][$os]['type']             = 'network';
 $config['os'][$os]['ifname']           = 1;
-$config['os'][$os]['descr_to_alias']   = 1;
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Device Traffic';
 $config['os'][$os]['over'][1]['graph'] = 'device_processor';
@@ -1381,6 +1380,14 @@ $config['os'][$os]['icon']             = 'riverbed';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
 
+// Ligowave LigoOS
+$os = 'ligoos';
+$config['os'][$os]['text']             = 'LigoWave LigoOS';
+$config['os'][$os]['type']             = 'wireless';
+$config['os'][$os]['icon']             = 'ligowave';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Traffic';
+
 // Appliances
 $os = 'fortios';
 $config['os'][$os]['text']             = 'FortiOS';
@@ -1771,10 +1778,6 @@ if (isset($config['rrdgraph_def_text'])) {
     $config['rrd_opts_array']    = explode(' ', trim($config['rrdgraph_def_text']));
 }
 
-if (!isset($config['log_file'])) {
-    $config['log_file'] = $config['log_dir'].'/'.$config['project_id'].'.log';
-}
-
 if (isset($config['cdp_autocreate'])) {
     $config['dp_autocreate'] = $config['cdp_autocreate'];
 }
@@ -1843,7 +1846,7 @@ if (!isset($config['log_dir'])) {
 }
 
 if (!isset($config['log_file'])) {
-    $config['log_dir'].'/'.$config['project_id'].'.log';
+    $config['log_file'] = $config['log_dir'].'/'.$config['project_id'].'.log';
 }
 
 if (!isset($config['plugin_dir'])) {
