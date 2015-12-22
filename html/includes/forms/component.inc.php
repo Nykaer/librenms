@@ -21,17 +21,6 @@ $OBJCOMP = new component();
 // Go get the component array.
 $COMPONENTS = $OBJCOMP->getComponents($device_id);
 
-// Track how many updates we are making.
-$UPDATE = array();
-
-foreach ($COMPONENTS[$device_id] as $ID => $AVP) {
-    // Is the component disabled?
-    if (isset($_POST['dis_'.$ID])) {
-        // Yes it is, was it disabled before?
-        if ($COMPONENTS[$device_id][$ID]['disabled'] == 0) {
-            // No it wasn't, best we disable it then..
-            $COMPONENTS[$device_id][$ID]['disabled'] = 1;
-
 // We only care about our device id.
 $COMPONENTS = $COMPONENTS[$device_id];
 
