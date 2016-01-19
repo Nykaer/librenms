@@ -519,29 +519,15 @@ function get_components() {
 
     // Do some filtering if the user requests.
     $options = array();
-    if (isset($_GET['type'])) {
-        // set a type = filter
-        $options['filter']['type'] = array('=',$_GET['type']);
-    }
-    if (isset($_GET['id'])) {
-        // set a id = filter
-        $options['filter']['id'] = array('=',$_GET['id']);
-    }
+    // We need to specify the label as this is a LIKE query
     if (isset($_GET['label'])) {
         // set a label like filter
         $options['filter']['label'] = array('LIKE',$_GET['label']);
+        unset ($_GET['label']);
     }
-    if (isset($_GET['status'])) {
-        // set a status = filter
-        $options['filter']['status'] = array('=',$_GET['status']);
-    }
-    if (isset($_GET['disabled'])) {
-        // set a disabled = filter
-        $options['filter']['disabled'] = array('=',$_GET['disabled']);
-    }
-    if (isset($_GET['ignore'])) {
-        // set a ignore = filter
-        $options['filter']['ignore'] = array('=',$_GET['ignore']);
+    // Add the rest of the options with an equals query
+    foreach ($_GET as $k) {
+        $options['filter'][$k] = array('=',$_GET[$k]);
     }
 
     // use hostname as device_id if it's all digits
@@ -845,7 +831,7 @@ function ack_alert() {
         $status = 'ok';
         $code   = 200;
         if (dbUpdate(array('state' => 2), 'alerts', '`id` = ? LIMIT 1', array($alert_id))) {
-            $message = 'Alert has been ackgnowledged';
+            $message = 'Alert has been acknowledged';
         }
         else {
             $message = 'No alert by that ID';
@@ -958,7 +944,27 @@ function list_oxidized() {
     $devices = array();
     $device_types = "'".implode("','", $config['oxidized']['ignore_types'])."'";
     $device_os    = "'".implode("','", $config['oxidized']['ignore_os'])."'";
-    foreach (dbFetchRows("SELECT hostname,os FROM `devices` LEFT JOIN devices_attribs AS `DA` ON devices.device_id = DA.device_id AND `DA`.attrib_type='override_Oxidized_disable' WHERE `status`='1' AND (DA.attrib_value = 'false' OR DA.attrib_value IS NULL) AND (`type` NOT IN ($device_types) AND `os` NOT IN ($device_os))") as $device) {
+    foreach (dbFetchRows("SELECT hostname,os,location FROM `devices` LEFT JOIN devices_attribs AS `DA` ON devices.device_id = DA.device_id AND `DA`.attrib_type='override_Oxidized_disable' WHERE `disabled`='0' AND `ignore` = 0 AND (DA.attrib_value = 'false' OR DA.attrib_value IS NULL) AND (`type` NOT IN ($device_types) AND `os` NOT IN ($device_os))") as $device) {
+        if ($config['oxidized']['group_support'] == "true") {
+            foreach ($config['oxidized']['group']['hostname'] as $host_group) {
+                if (preg_match($host_group['regex'].'i', $device['hostname'])) {
+                    $device['group'] = $host_group['group'];
+                    break;
+                }
+            }
+            if (empty($device['group'])) {
+                foreach ($config['oxidized']['group']['location'] as $host_group) {
+                    if (preg_match($host_group['regex'].'i', $device['location'])) {
+                        $device['group'] = $host_group['group'];
+                        break;
+                    }
+                }
+            }
+            if (empty($device['group']) && !empty($config['oxidized']['default_group'])) {
+                $device['group'] = $config['oxidized']['default_group'];
+            }
+        }
+        unset($device['location']);
         $devices[] = $device;
     }
 
