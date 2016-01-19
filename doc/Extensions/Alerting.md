@@ -81,6 +81,12 @@ Alert when:
 - Any port changes: `%ports.ifOperStatus != 'up'`
 - Root-directory gets too full: `%storage.storage_descr = '/' && %storage.storage_perc >= '75'`
 - Any storage gets fuller than the 'warning': `%storage.storage_perc >= %storage_perc_warn`
+- If device is a server and the used storage is above the warning level, but ignore /boot partitions: `%storage.storage_perc > %storage.storage_perc_warn && %devices.type = "server" && %storage.storage_descr !~ "/boot"`
+- VMware LAG is not using "Source ip address hash" load balancing: `%devices.os = "vmware" && %ports.ifType = "ieee8023adLag" && %ports.ifDescr !~ "Link Aggregation @, load balancing algorithm: Source ip address hash"`
+- Syslog, authentication failure during the last 5m: `%syslog.timestamp >= %macros.past_5m && %syslog.msg ~ "@authentication failure@"`
+- High memory usage: `%macros.device_up = "1" && %mempools.mempool_perc >= "90" && %mempools.mempool_descr = "Virtual@"`
+- High CPU usage(per core usage, not overall): `%macros.device_up = "1" && %processors.processor_usage >= "90"`
+- High port usage, where description is not client & ifType is not softwareLoopback: `%macros.port_usage_perc >= "80" && %port.port_descr_type != "client" && %ports.ifType != "softwareLoopback"`
 
 # <a name="templates">Templates</a>
 
@@ -104,7 +110,7 @@ Placeholders:
 - Time Elapsed, Only available on recovery (`%state == 0`): `%elapsed`
 - Alert-ID: `%id`
 - Unique-ID: `%uid`
-- Faults, Only available on alert (`%state != 0`), must be iterated in a foreach (`{foreach %faults}`). Holds all available information about the Fault, accessable in the format `%value.Column`, for example: `%value.ifDescr`. Special field `%value.string` has most Identification-information (IDs, Names, Descrs) as single string, this is the equivalent of the default used.
+- Faults, Only available on alert (`%state != 0`), must be iterated in a foreach (`{foreach %faults}`). Holds all available information about the Fault, accessible in the format `%value.Column`, for example: `%value.ifDescr`. Special field `%value.string` has most Identification-information (IDs, Names, Descrs) as single string, this is the equivalent of the default used.
 - State: `%state`
 - Severity: `%severity`
 - Rule: `%rule`
@@ -379,7 +385,7 @@ $config['alert']['transports']['pushbullet'] = 'MYFANCYACCESSTOKEN';
 ## <a name="transports-clickatell">Clickatell</a>
 
 Clickatell provides a REST-API requiring an Authorization-Token and at least one Cellphone number.  
-Please consult Clickatell's documentation regarding number formating.  
+Please consult Clickatell's documentation regarding number formatting.
 Here an example using 3 numbers, any amount of numbers is supported:
 
 ~~
