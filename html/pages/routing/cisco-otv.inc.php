@@ -8,7 +8,7 @@ $options['type'] = 'Cisco-OTV';
 $COMPONENTS = $COMPONENT->getComponents(null,$options);
 
 foreach ($COMPONENTS as $DEVICE_ID => $COMP) {
-    $LINK = generate_url(array('page' => 'device', 'device' => $DEVICE_ID, 'tab' => 'apps', 'app' => 'cisco-otv'));
+    $LINK = generate_url(array('page' => 'device', 'device' => $DEVICE_ID, 'tab' => 'routing', 'proto' => 'cisco-otv'));
 ?>
 <div class="panel panel-default" id="overlays-<?=$DEVICE_ID?>">
     <div class="panel-heading">
