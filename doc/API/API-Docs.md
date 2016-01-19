@@ -13,12 +13,17 @@
         - [`get_graphs`](#api-route-5)
         - [`get_graph_generic_by_hostname`](#api-route-6)
         - [`get_port_graphs`](#api-route-7)
+        - [`get_components`](#api-route-25)
         - [`get_port_stats_by_port_hostname`](#api-route-8)
         - [`get_graph_by_port_hostname`](#api-route-9)
         - [`list_devices`](#api-route-10)
         - [`add_device`](#api-route-11)
         - [`list_oxidized`](#api-route-21)
         - [`update_device_field`](#api-route-update_device_field)
+        - [`get_device_groups`](#api-route-get_device_groups)
+    - [`devicegroups`](#api-devicegroups)
+        - [`get_devicegroups`](#api-route-get_devicegroups)
+        - [`get_devices_by_group`](#api-route-get_devices_by_group)
     - [`routing`](#api-routing)
         - [`list_bgp`](#api-route-1)
     - [`switching`](#api-switching)
@@ -267,6 +272,70 @@ Output:
 }
 ```
 
+### <a name="api-route-25">Function: `get_components`</a> [`top`](#top)
+
+Get a list of components for a particular device.
+
+Route: /api/v0/devices/:hostname/components
+
+- hostname can be either the device hostname or id
+
+Input:
+
+ - type: Filter the result by type (Equals).
+ - id: Filter the result by id (Equals).
+ - label: Filter the result by label (Contains).
+ - status: Filter the result by status (Equals).
+ - disabled: Filter the result by disabled (Equals).
+ - ignore: Filter the result by ignore (Equals).
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 3,
+    "components": {
+        "2": {
+            "TestAttribute-1": "Value1",
+            "TestAttribute-2": "Value2",
+            "TestAttribute-3": "Value3",
+            "type": "TestComponent-1",
+            "label": "This is a really cool blue component",
+            "status": "1",
+            "ignore": "0",
+            "disabled": "0"
+        },
+        "20": {
+            "TestAttribute-1": "Value4",
+            "TestAttribute-2": "Value5",
+            "TestAttribute-3": "Value6",
+            "type": "TestComponent-1",
+            "label": "This is a really cool red component",
+            "status": "1",
+            "ignore": "0",
+            "disabled": "0"
+        },
+        "27": {
+            "TestAttribute-1": "Value7",
+            "TestAttribute-2": "Value8",
+            "TestAttribute-3": "Value9",
+            "type": "TestComponent-2",
+            "label": "This is a really cool yellow widget",
+            "status": "1",
+            "ignore": "0",
+            "disabled": "0"
+        }
+    }
+}
+```
+
 ### <a name="api-route-8">Function: `get_port_stats_by_port_hostname`</a> [`top`](#top)
 
 Get information about a particular port for a device.
@@ -316,6 +385,7 @@ Input:
  - to: This is the date you would like the graph to end - See http://oss.oetiker.ch/rrdtool/doc/rrdgraph.en.html for more information.
  - width: The graph width, defaults to 1075.
  - height: The graph height, defaults to 300.
+ - ifDescr: If this is set to true then we will use ifDescr to lookup the port instead of ifName. Pass the ifDescr value you want to search as you would ifName.
 
 Example:
 ```curl
@@ -435,7 +505,7 @@ Output:
 
 ### <a name="api-route-21">Function: `list_oxidized`</a> [`top`](#top)
 
-List devices for use with Oxidized.
+List devices for use with Oxidized. If you have group support enabled then a group will also be returned based on your config.
 
 Route: /api/v0/oxidized
 
@@ -469,6 +539,8 @@ Update devices field in the database.
 
 Route: /api/v0/devices/:hostname
 
+- hostname can be either the device hostname or id
+
 Input (JSON):
 
   - field: The column name within the database
@@ -487,6 +559,154 @@ Output:
         "status": "ok",
         "message": "Device notes has been updated"
     }
+]
+```
+
+### <a name="api-route-get_device_groups">Function `get_device_groups`</a> [`top`](#top)
+
+List the device groups that a device is matched on.
+
+Route: /api/v0/devices/:hostname/groups
+
+- hostname can be either the device hostname or id
+
+Input (JSON):
+
+  -
+
+Examples:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/groups
+```
+
+Output:
+```text
+[
+    {
+        "status": "ok",
+        "message": "Found 1 device groups",
+        "count": 1,
+        "groups": [
+        {
+            "id": "1",
+            "name": "Testing",
+            "desc": "Testing",
+            "pattern": "%devices.status = \"1\" &&"
+        }
+        ]
+    }
+]
+```
+
+## <a name="api-devicegroups">`Device Groups`</a> [`top`](#top)
+
+### <a name="api-route-get_devicegroups">Function `get_devicegroups`</a> [`top`](#top)
+
+List all device groups.
+
+Route: /api/v0/devicegroups
+
+Input (JSON):
+
+  -
+
+Examples:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devicegroups
+```
+
+Output:
+```text
+[
+    {
+        "status": "ok",
+        "message": "Found 1 device groups",
+        "count": 1,
+        "groups": [
+        {
+            "id": "1",
+            "name": "Testing",
+            "desc": "Testing",
+            "pattern": "%devices.status = \"1\" &&"
+        }
+        ]
+    }
+]
+```
+
+### <a name="api-route-get_devices_by_group">Function `get_devices_by_group`</a> [`top`](#top)
+
+List all devices matching the group provided.
+
+Route: /api/v0/devicegroups/:name
+
+- name Is the name of the device group which can be obtained using [`get_devicegroups`](#api-route-get_devicegroups). Please ensure that the name is urlencoded if it needs to be (i.e Linux Servers would need to be urlencoded.
+
+Input (JSON):
+
+  -
+
+Examples:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devicegroups/LinuxServers
+```
+
+Output:
+```text
+[
+     {
+         "status": "error",
+         "message": "Found 1 in group LinuxServers",
+         "count": 1,
+         "devices": [
+             {
+                 "device_id": "1",
+                 "hostname": "localhost",
+                 "sysName": "hostname",
+                 "community": "librenms",
+                 "authlevel": null,
+                 "authname": null,
+                 "authpass": null,
+                 "authalgo": null,
+                 "cryptopass": null,
+                 "cryptoalgo": null,
+                 "snmpver": "v2c",
+                 "port": "161",
+                 "transport": "udp",
+                 "timeout": null,
+                 "retries": null,
+                 "bgpLocalAs": null,
+                 "sysObjectID": ".1.3.6.1.4.1.8072.3.2.10",
+                 "sysDescr": "Linux li1045-133.members.linode.com 4.1.5-x86_64-linode61 #7 SMP Mon Aug 24 13:46:31 EDT 2015 x86_64",
+                 "sysContact": "",
+                 "version": "4.1.5-x86_64-linode61",
+                 "hardware": "Generic x86 64-bit",
+                 "features": "CentOS 7.1.1503",
+                 "location": "",
+                 "os": "linux",
+                 "status": "1",
+                 "status_reason": "",
+                 "ignore": "0",
+                 "disabled": "0",
+                 "uptime": "4615964",
+                 "agent_uptime": "0",
+                 "last_polled": "2015-12-12 13:20:04",
+                 "last_poll_attempted": null,
+                 "last_polled_timetaken": "1.90",
+                 "last_discovered_timetaken": "79.53",
+                 "last_discovered": "2015-12-12 12:34:21",
+                 "last_ping": "2015-12-12 13:20:04",
+                 "last_ping_timetaken": "0.08",
+                 "purpose": null,
+                 "type": "server",
+                 "serial": null,
+                 "icon": null,
+                 "poller_group": "0",
+                 "override_sysLocation": "0",
+                 "notes": "Nope"
+             }
+         ]
+     }
 ]
 ```
 
@@ -616,7 +836,7 @@ Output:
 {
  "status": "ok",
  "err-msg": "",
- "message": "Alert has been ackgnowledged"
+ "message": "Alert has been acknowledged"
 }
 ```
 

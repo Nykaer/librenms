@@ -10,7 +10,12 @@ require 'config.php';
 require_once 'includes/definitions.inc.php';
 require 'includes/functions.php';
 
-$options = getopt('f:');
+$options = getopt('f:d');
+
+if (isset($options['d'])) {
+    echo "DEBUG\n";
+    $debug = true;
+}
 
 if ($options['f'] === 'update') {
     $innodb_buffer = innodb_buffer_check();
@@ -30,7 +35,7 @@ Take a look at https://dev.mysql.com/doc/refman/5.6/en/innodb-buffer-pool.html f
 
 The ' . $config['project_name'] . ' team.';
             send_mail($config['alert']['default_mail'],$subject,$message,$html=false);
-        } 
+        }
         echo warn_innodb_buffer($innodb_buffer);
         exit(2);
     }
@@ -101,7 +106,7 @@ if ($options['f'] === 'callback') {
 
 if ($options['f'] === 'device_perf') {
     if (is_numeric($config['device_perf_purge'])) {
-        if (dbDelete('device_perf', 'timestamp < UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL ? DAY))', array($config['device_perf_purge']))) {
+        if (dbDelete('device_perf', 'timestamp < DATE_SUB(NOW(),INTERVAL ? DAY)', array($config['device_perf_purge']))) {
             echo 'Device performance times cleared for entries over '.$config['device_perf_purge']." days\n";
         }
     }
@@ -109,4 +114,20 @@ if ($options['f'] === 'device_perf') {
 
 if ($options['f'] === 'notifications') {
     include_once 'notifications.php';
+}
+
+if ($options['f'] === 'purgeusers') {
+    $purge = 0;
+    if (is_numeric($config['radius']['users_purge']) && $config['auth_mechanism'] === 'radius') {
+        $purge = $config['radius']['users_purge'];
+    }
+    if ($purge > 0) {
+        foreach (dbFetchRows("SELECT DISTINCT(`user`) FROM `authlog` WHERE `datetime` >= DATE_SUB(NOW(), INTERVAL ? DAY)", array($purge)) as $user) {
+            $users[] = $user['user'];
+        }
+        $del_users = '"'.implode('","',$users).'"';
+        if (dbDelete('users', "username NOT IN ($del_users)",array($del_users))) {
+            echo "Removed users that haven't logged in for $purge days";
+        }
+    }
 }
