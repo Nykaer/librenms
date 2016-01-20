@@ -743,7 +743,6 @@ function round_Nth($val = 0, $round_to) {
 function is_mib_poller_enabled($device)
 {
     if (!is_module_enabled('poller', 'mib')) {
-        d_echo("MIB polling module disabled globally.\n");
         return false;
     }
 
@@ -1040,3 +1039,33 @@ function version_info($remote=true) {
     return $output;
 
 }//end version_info()
+
+/**
+* Convert a MySQL binary v4 (4-byte) or v6 (16-byte) IP address to a printable string.
+* @param string $ip A binary string containing an IP address, as returned from MySQL's INET6_ATON function
+* @return string Empty if not valid.
+*/
+// Fuction is from http://uk3.php.net/manual/en/function.inet-ntop.php
+function inet6_ntop($ip) {
+    $l = strlen($ip);
+    if ($l == 4 or $l == 16) {
+        return inet_ntop(pack('A' . $l, $ip));
+    }
+    return '';
+}
+
+/**
+ * Convert IP to use sysName
+ * @param array device
+ * @param string ip address
+ * @return string
+**/
+function ip_to_sysname($device,$ip) {
+    global $config;
+    if ($config['force_ip_to_sysname'] === true) {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) == true || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == true) {
+            $ip = $device['sysName'];
+        }
+    }
+    return $ip;
+}//end ip_to_sysname
