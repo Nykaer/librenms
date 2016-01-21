@@ -138,6 +138,14 @@ function poll_device($device, $options) {
     $device_start = microtime(true);
     // Start counting device poll time
     echo $device['hostname'].' '.$device['device_id'].' '.$device['os'].' ';
+    $ip = dnslookup($device);
+
+    if (!empty($ip) && $ip != inet6_ntop($device['ip'])) {
+        log_event('Device IP changed to '.$ip, $device, 'system');
+        $db_ip = inet_pton($ip);
+        dbUpdate(array('ip' => $db_ip), 'devices', 'device_id=?', array($device['device_id']));
+    }
+
     if ($config['os'][$device['os']]['group']) {
         $device['os_group'] = $config['os'][$device['os']]['group'];
         echo '('.$device['os_group'].')';
@@ -260,47 +268,30 @@ function poll_device($device, $options) {
         $device_run  = ($device_end - $device_start);
         $device_time = substr($device_run, 0, 5);
 
-        // TODO: These should be easy converts to rrd_create_update()
-        // Poller performance rrd
-        $poller_rrd = $config['rrd_dir'].'/'.$device['hostname'].'/poller-perf.rrd';
-        if (!is_file($poller_rrd)) {
-            rrdtool_create($poller_rrd, 'DS:poller:GAUGE:600:0:U '.$config['rrd_rra']);
-        }
-
+        // Poller performance
         if (!empty($device_time)) {
+            $tags = array(
+                'rrd_def' => 'DS:poller:GAUGE:600:0:U',
+            );
             $fields = array(
                 'poller' => $device_time,
             );
-            rrdtool_update($poller_rrd, $fields);
-
-            $tags = array();
-            influx_update($device,'poller-perf',$tags,$fields);
-
+            data_update($device, 'poller-perf', $tags, $fields);
         }
 
-        // Ping response rrd
-        if (can_ping_device($attribs) === true) {
-            $ping_rrd = $config['rrd_dir'].'/'.$device['hostname'].'/ping-perf.rrd';
-            if (!is_file($ping_rrd)) {
-                rrdtool_create($ping_rrd, 'DS:ping:GAUGE:600:0:65535 '.$config['rrd_rra']);
-            }
-
-            if (!empty($ping_time)) {
-                $fields = array(
-                    'ping' => $ping_time,
-                );
-
-                rrdtool_update($ping_rrd, $fields);
-            }
+        // Ping response
+        if (can_ping_device($attribs) === true  &&  !empty($ping_time)) {
+            $tags = array(
+                'rrd_def' => 'DS:ping:GAUGE:600:0:65535',
+            );
+            $fields = array(
+                'ping' => $ping_time,
+            );
 
             $update_array['last_ping']             = array('NOW()');
             $update_array['last_ping_timetaken']   = $ping_time;
 
-            rrdtool_update($ping_rrd, $fields);
-
-            $tags = array();
-            influx_update($device,'ping-perf',$tags,$fields);
-
+            data_update($device, 'ping-perf', $tags, $fields);
         }
 
         $update_array['last_polled']           = array('NOW()');

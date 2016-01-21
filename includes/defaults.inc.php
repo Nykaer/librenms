@@ -590,6 +590,8 @@ $config['auth_ldap_groups']['pfy']['level']     = 7;
 $config['auth_ldap_groups']['support']['level'] = 1;
 $config['auth_ldap_groupmemberattr']            = 'memberUid';
 $config['auth_ldap_emailattr']                  = 'mail';
+$config['auth_ldap_cache_ttl'] = 300;
+// How long in seconds should ldap* module cache user information in $_SESSION
 
 // Sensors
 $config['allow_entity_sensor']['amperes']     = 1;
@@ -780,6 +782,7 @@ $config['dateformat']['mysql']['time']    = '%H:%i:%s';
 
 $config['enable_clear_discovery'] = 1;
 // Set this to 0 if you want to disable the web option to rediscover devices
+$config['force_ip_to_sysname']    = false;// Set to true if you want to use sysName in place of IPs
 $config['enable_port_relationship'] = true;
 // Set this to false to not display neighbour relationships for ports
 $config['enable_footer'] = 1;
@@ -847,6 +850,7 @@ $config['availability-map-width']                       = 25;
 
 // Default notifications Feed
 $config['notifications']['LibreNMS']                    = 'http://www.librenms.org/notifications.rss';
+$config['notifications']['local']                       = 'misc/notifications.rss';
 
 // Update channel (Can be 'master' or 'release')
 $config['update_channel']                               = 'master';
