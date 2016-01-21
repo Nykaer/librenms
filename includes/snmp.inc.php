@@ -1268,6 +1268,7 @@ function register_mibs($device, $mibs, $included_by)
     }
 
     echo "\n";
+
 } // register_mibs
 
 /**
