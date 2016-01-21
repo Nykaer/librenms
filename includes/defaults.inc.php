@@ -590,6 +590,8 @@ $config['auth_ldap_groups']['pfy']['level']     = 7;
 $config['auth_ldap_groups']['support']['level'] = 1;
 $config['auth_ldap_groupmemberattr']            = 'memberUid';
 $config['auth_ldap_emailattr']                  = 'mail';
+$config['auth_ldap_cache_ttl'] = 300;
+// How long in seconds should ldap* module cache user information in $_SESSION
 
 // Sensors
 $config['allow_entity_sensor']['amperes']     = 1;
@@ -849,6 +851,7 @@ $config['availability-map-width']                       = 25;
 
 // Default notifications Feed
 $config['notifications']['LibreNMS']                    = 'http://www.librenms.org/notifications.rss';
+$config['notifications']['local']                       = 'misc/notifications.rss';
 
 // Update channel (Can be 'master' or 'release')
 $config['update_channel']                               = 'master';

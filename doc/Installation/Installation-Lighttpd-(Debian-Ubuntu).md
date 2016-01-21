@@ -58,7 +58,7 @@ If you see a line that starts `sql-mode` then change this to `sql-mode=""`.
 
 Install necessary software.  The packages listed below are an all-inclusive list of packages that were necessary on a clean install of Debian 7.
 
-    apt-get install lighttpd php5-cli php5-mysql php5-gd php5-snmp php5-cgi php-pear php5-curl snmp graphviz mysql-server mysql-client rrdtool sendmail fping imagemagick whois mtr-tiny nmap ipmitool php5-mcrypt php5-json python-mysqldb snmpd php-net-ipv4 php-net-ipv6 rrdtool git
+    apt-get install lighttpd php5-cli php5-mysql php5-gd php5-snmp php5-cgi php-pear php5-curl snmp graphviz rrdtool sendmail fping imagemagick whois mtr-tiny nmap ipmitool php5-mcrypt php5-json python-mysqldb snmpd php-net-ipv4 php-net-ipv6 rrdtool git
 
 ### Adding the librenms-user ###
 
@@ -127,7 +127,7 @@ Next, add the following to `/etc/lighttpd/librenms.conf`
        "^/([a-z|0-9\-]+)/(.+)/(.+)/(.+)/" => "/?page=$1&$2&$3&$4",
        "^/([a-z|0-9\-]+)/(.+)/(.+)/" => "/?page=$1&$2&$3",
        "^/([a-z|0-9\-]+)/(.+)/" => "/?page=$1&$2",
-       "^/([a-z|0-9]+)/$" => "/?page=$1"
+       "^/([a-z|0-9\-]+)/$" => "/?page=$1"
      )
 
 Next, add the following to `/etc/lighttpd/lighttpd.conf`
