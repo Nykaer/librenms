@@ -21,8 +21,7 @@ include_once("Net/IPv6.php");
 include_once($config['install_dir'] . "/includes/dbFacile.php");
 
 include_once($config['install_dir'] . "/includes/common.php");
-include_once($config['install_dir'] . "/includes/rrdtool.inc.php");
-include_once($config['install_dir'] . "/includes/influxdb.inc.php");
+include_once($config['install_dir'] . "/includes/datastore.inc.php");
 include_once($config['install_dir'] . "/includes/billing.php");
 include_once($config['install_dir'] . "/includes/cisco-entities.php");
 include_once($config['install_dir'] . "/includes/syslog.php");
@@ -236,6 +235,7 @@ function delete_device($id) {
     }
 
     $ret .= "Removed device $host\n";
+    log_event("Device $host has been removed", 0, 'system');
     return $ret;
 }
 
@@ -691,7 +691,7 @@ function log_event($text, $device = NULL, $type = NULL, $reference = NULL) {
         $device = device_by_id_cache($device);
     }
 
-    $insert = array('host' => ($device['device_id'] ? $device['device_id'] : "NULL"),
+    $insert = array('host' => ($device['device_id'] ? $device['device_id'] : 0),
         'reference' => ($reference ? $reference : "NULL"),
         'type' => ($type ? $type : "NULL"),
         'datetime' => array("NOW()"),
@@ -1320,3 +1320,34 @@ function oxidized_reload_nodes() {
         curl_close($ch);
     }
 }
+
+/**
+ * Perform DNS lookup
+ *
+ * @param array $device Device array from database
+ * @param string $type The type of record to lookup
+ *
+ * @return string ip
+ *
+**/
+function dnslookup($device,$type=false,$return=false) {
+    if (filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) == true || filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == truee) {
+        return '';
+    }
+    if (empty($type)) {
+        // We are going to use the transport to work out the record type
+        if ($device['transport'] == 'udp6' || $device['transport'] == 'tcp6') {
+            $type = DNS_AAAA;
+            $return = 'ipv6';
+        }
+        else {
+            $type = DNS_A;
+            $return = 'ip';
+        }
+    }
+    if (empty($return)) {
+        return '';
+    }
+    $record = dns_get_record($device['hostname'],$type);
+    return $record[0][$return];
+}//end dnslookup

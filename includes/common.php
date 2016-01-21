@@ -649,9 +649,9 @@ function is_client_authorized($clientip) {
 
 /*
  * @return an array of all graph subtypes for the given type
- * FIXME not all of these are going to be valid
  */
-function get_graph_subtypes($type) {
+function get_graph_subtypes($type, $device = null)
+{
     global $config;
 
     $types = array();
@@ -669,7 +669,7 @@ function get_graph_subtypes($type) {
     // find the MIB subtypes
     foreach ($config['graph_types'] as $type => $unused1) {
         foreach ($config['graph_types'][$type] as $subtype => $unused2) {
-            if (is_mib_graph($type, $subtype)) {
+            if (is_mib_graph($type, $subtype)  &&  $device != null  &&  is_device_graph($device, $subtype)) {
                 $types[] = $subtype;
             }
         }
@@ -678,6 +678,13 @@ function get_graph_subtypes($type) {
     sort($types);
     return $types;
 } // get_graph_subtypes
+
+
+function is_device_graph($device, $subtype)
+{
+    $query = 'SELECT COUNT(*) FROM `device_graphs` WHERE `device_id` = ? AND `graph` = ?';
+    return dbFetchCell($query, array($device['device_id'], $subtype)) > 0;
+} // is_device_graph
 
 
 function get_smokeping_files($device) {
@@ -743,7 +750,6 @@ function round_Nth($val = 0, $round_to) {
 function is_mib_poller_enabled($device)
 {
     if (!is_module_enabled('poller', 'mib')) {
-        d_echo("MIB polling module disabled globally.\n");
         return false;
     }
 
@@ -1040,3 +1046,33 @@ function version_info($remote=true) {
     return $output;
 
 }//end version_info()
+
+/**
+* Convert a MySQL binary v4 (4-byte) or v6 (16-byte) IP address to a printable string.
+* @param string $ip A binary string containing an IP address, as returned from MySQL's INET6_ATON function
+* @return string Empty if not valid.
+*/
+// Fuction is from http://uk3.php.net/manual/en/function.inet-ntop.php
+function inet6_ntop($ip) {
+    $l = strlen($ip);
+    if ($l == 4 or $l == 16) {
+        return inet_ntop(pack('A' . $l, $ip));
+    }
+    return '';
+}
+
+/**
+ * Convert IP to use sysName
+ * @param array device
+ * @param string ip address
+ * @return string
+**/
+function ip_to_sysname($device,$ip) {
+    global $config;
+    if ($config['force_ip_to_sysname'] === true) {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) == true || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == true) {
+            $ip = $device['sysName'];
+        }
+    }
+    return $ip;
+}//end ip_to_sysname
