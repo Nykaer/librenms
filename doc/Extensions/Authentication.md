@@ -104,6 +104,24 @@ $config['auth_ldap_groupmemberattr'] = "memberUid";
 
 Replace {id} with the unique ID provided by Jumpcloud.
 
+#### HTTP Authentication / LDAP Authorization
+
+Config option: `ldap-authorization`
+
+This module is a combination of ___http-auth___ and ___ldap___
+
+LibreNMS will expect the user to have authenticated via your webservice already (e.g. using Kerberos Authentication in Apache) but will use LDAP to determine and assign the userlevel of a user.
+The userlevel will be calculated by using LDAP group membership information as the ___ldap___ module does.
+
+The configuration is the same as for the ___ldap___ module with one extra option: auth_ldap_cache_ttl.
+This option allows to control how long user information (user_exists, userid, userlevel) are cached within the PHP Session.
+The default value is 300 seconds.
+To disabled this caching (highly discourage) set this option to 0.
+
+```php
+$config['auth_ldap_cache_ttl'] = 300;
+```
+
 #### Active Directory Authentication
 
 Config option: `active_directory`
@@ -116,16 +134,20 @@ If you have issues with secure LDAP try setting `$config['auth_ad_check_certific
 
 If you set ```$config['auth_ad_require_groupmembership']``` to 1, the authenticated user has to be a member of the specific group. Otherwise all users can authenticate, but are limited to user level 0 and only have access to shared dashboards. 
 
+> Cleanup of old accounts is done using the authlog. You will need to set the cleanup date for when old accounts will be purged which will happen AUTOMATICALLY.
+> Please ensure that you set the $config['authlog_purge'] value to be greater than $config['active_directory]['users_purge'] otherwise old users won't be removed.
+
 ##### Sample configuration
 
 ```
-$config['auth_ad_url'] = "ldaps://your-domain.controll.er";
-$config['auth_ad_check_certificates'] = 1; // or 0
-$config['auth_ad_domain'] = "your-domain.com";
-$config['auth_ad_base_dn'] = "dc=your-domain,dc=com";
+$config['auth_ad_url']                      = "ldaps://your-domain.controll.er";
+$config['auth_ad_check_certificates']       = 1; // or 0
+$config['auth_ad_domain']                   = "your-domain.com";
+$config['auth_ad_base_dn']                  = "dc=your-domain,dc=com";
 $config['auth_ad_groups']['admin']['level'] = 10;
-$config['auth_ad_groups']['pfy']['level'] = 7;
-$config['auth_ad_require_groupmembership'] = 0;
+$config['auth_ad_groups']['pfy']['level']   = 7;
+$config['auth_ad_require_groupmembership']  = 0;
+$config['active_directory']['users_purge']  = 14;//Purge users who haven't logged in for 14 days.
 ```
 
 #### Radius Authentication
