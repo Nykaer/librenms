@@ -44,6 +44,7 @@ if ($device['os_group'] == 'cisco') {
     }
     else {
         // No Error, lets process things.
+        d_echo("QoS Objects Found:\n");
 
         foreach ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'] as $spid => $array) {
 
@@ -70,17 +71,29 @@ if ($device['os_group'] == 'cisco') {
                 switch ($type) {
                     case 1:
                         // Policy-map, get data from that table.
+                        d_echo("\nIndex: ".$index."\n");
+                        d_echo("    UID: ".$RESULT['UID']."\n");
+                        d_echo("    SPID.SPOBJ: ".$RESULT['sp-id'].".".$RESULT['sp-obj']."\n");
+                        d_echo("    If-Index: ".$RESULT['ifindex']."\n");
+                        d_echo("    Type: 1 - Policy-Map\n");
                         $RESULT['label'] = $tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.1'][$index];
                         if ($tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.2'][$index] != "") {
                             $RESULT['label'] .= " - ".$tblcbQosPolicyMapCfg['1.3.6.1.4.1.9.9.166.1.6.1.1.2'][$index];
                         }
+                        d_echo("    Label: ".$RESULT['label']."\n");
                         break;
                     case 2:
                         // Class-map, get data from that table.
+                        d_echo("\nIndex: ".$index."\n");
+                        d_echo("    UID: ".$RESULT['UID']."\n");
+                        d_echo("    SPID.SPOBJ: ".$RESULT['sp-id'].".".$RESULT['sp-obj']."\n");
+                        d_echo("    If-Index: ".$RESULT['ifindex']."\n");
+                        d_echo("    Type: 2 - Class-Map\n");
                         $RESULT['label'] = $tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.1'][$index];
                         if($tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.2'][$index] != "") {
                             $RESULT['label'] .= " - ".$tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.2'][$index];
                         }
+                        d_echo("    Label: ".$RESULT['label']."\n");
                         if ($tblcbQosClassMapCfg['1.3.6.1.4.1.9.9.166.1.7.1.1.3'][$index] == 2) {
                             $RESULT['map-type'] = 'Match-All';
                         }
@@ -97,6 +110,7 @@ if ($device['os_group'] == 'cisco') {
                                 // We have our child, import the match
                                 if ($tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.3'][$spid][$ID] == 3) {
                                     $RESULT['match'] = $RESULT['map-type'].": ".$tblcbQosMatchStmtCfg['1.3.6.1.4.1.9.9.166.1.8.1.1.1'][$tblcbQosObjects['1.3.6.1.4.1.9.9.166.1.5.1.1.2'][$spid][$ID]];
+                                    d_echo("    Match: ".$RESULT['match']."\n");
                                 }
                             }
                         }
