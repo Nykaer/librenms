@@ -44,6 +44,14 @@ if ($device['os_group'] == "cisco") {
                     rrdtool_create ($rrd_filename, " DS:postbits:COUNTER:600:0:U DS:bufferdrops:COUNTER:600:0:U DS:qosdrops:COUNTER:600:0:U" . $config['rrd_rra']);
                 }
 
+                // Let's print some debugging info.
+                d_echo("\n\nComponent: ".$KEY."\n");
+                d_echo("    Class-Map: ".$ARRAY['label']."\n");
+                d_echo("    SPID.SPOBJ: ".$ARRAY['sp-id'].".".$ARRAY['sp-obj']."\n");
+                d_echo("    PostBytes:   1.3.6.1.4.1.9.9.166.1.15.1.1.10.".$ARRAY['sp-id'].".".$ARRAY['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$ARRAY['sp-id']][$ARRAY['sp-obj']]."\n");
+                d_echo("    BufferDrops: 1.3.6.1.4.1.9.9.166.1.15.1.1.21.".$ARRAY['sp-id'].".".$ARRAY['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$ARRAY['sp-id']][$ARRAY['sp-obj']]."\n");
+                d_echo("    QOSDrops:    1.3.6.1.4.1.9.9.166.1.15.1.1.17.".$ARRAY['sp-id'].".".$ARRAY['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$ARRAY['sp-id']][$ARRAY['sp-obj']]."\n");
+
                 $RRD['postbytes'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
                 $RRD['bufferdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
                 $RRD['qosdrops'] = $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$ARRAY['sp-id']][$ARRAY['sp-obj']];
