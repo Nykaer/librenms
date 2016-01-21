@@ -4,11 +4,11 @@ require_once "../includes/component.php";
 $COMPONENT = new component();
 $options = array();
 $options['filter']['ignore'] = array('=',0);
-$graph_array['device'] = $device['device_id'];
 $options['type'] = 'Cisco-OTV';
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],$options);
 $COMPONENTS = $COMPONENTS[$device['device_id']];
 
+global $config;
 ?>
 <div class="panel panel-default" id="overlays">
     <div class="panel-heading">
@@ -62,8 +62,13 @@ foreach ($COMPONENTS as $OID => $OVERLAY) {
     <div class="panel-body">
 <?php
 
-$graph_type = 'device_cisco-otv-vlan';
-include 'includes/print-interface-graphs.inc.php';
+$graph_array = array();
+$graph_array['device'] = $device['device_id'];
+$graph_array['height'] = '100';
+$graph_array['width']  = '215';
+$graph_array['to']     = $config['time']['now'];
+$graph_array['type']   = 'device_cisco-otv-vlan';
+require 'includes/print-graphrow.inc.php';
 
 ?>
     </div>
@@ -74,11 +79,16 @@ include 'includes/print-interface-graphs.inc.php';
         <h3 class="panel-title">MAC Addresses</h3>
     </div>
     <div class="panel-body">
-        <?php
+<?php
 
-        $graph_type = 'device_cisco-otv-mac';
-        include 'includes/print-interface-graphs.inc.php';
+$graph_array = array();
+$graph_array['device'] = $device['device_id'];
+$graph_array['height'] = '100';
+$graph_array['width']  = '215';
+$graph_array['to']     = $config['time']['now'];
+$graph_array['type']   = 'device_cisco-otv-mac';
+require 'includes/print-graphrow.inc.php';
 
-        ?>
+?>
     </div>
 </div>
