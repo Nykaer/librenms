@@ -745,7 +745,7 @@ function snmp_cache_portName($device, $array) {
 
 
 function snmp_gen_auth(&$device) {
-    global $debug;
+    global $debug, $vdebug;
 
     $cmd = '';
 
@@ -781,11 +781,11 @@ function snmp_gen_auth(&$device) {
     }
     else {
         if ($debug) {
-            print 'DEBUG: '.$device['snmpver']." : Unsupported SNMP Version (wtf have you done ?)\n";
+            print 'DEBUG: '.$device['snmpver']." : Unsupported SNMP Version (shouldn't be possible to get here)\n";
         }
     }//end if
 
-    if ($debug) {
+    if ($vdebug) {
         print "DEBUG: SNMP Auth options = $cmd\n";
     }
 
@@ -1293,9 +1293,9 @@ function register_mibs($device, $mibs, $included_by)
  * @internal param $string
  * @return array
  */
-function snmpwalk_array_num($device,$OID,$indexes=1) {
+function snmpwalk_array_num($device,$oid,$indexes=1) {
     $array = array();
-    $string = snmp_walk($device, $OID, '-Osqn');
+    $string = snmp_walk($device, $oid, '-Osqn');
 
     if ( $string === false) {
         // False means: No Such Object.

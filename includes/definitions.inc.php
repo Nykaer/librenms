@@ -1190,6 +1190,14 @@ $config['os'][$os]['type']             = 'printer';
 $config['os'][$os]['over'][0]['graph'] = 'device_toner';
 $config['os'][$os]['over'][0]['text']  = 'Toner';
 
+$os ='lexmarkprinter';
+$config['os'][$os]['group']            = 'printer';
+$config['os'][$os]['text']             = 'Lexmark Printer';
+$config['os'][$os]['type']             = 'printer';
+$config['os'][$os]['icon']             = 'lexmark';
+$config['os'][$os]['over'][0]['graph'] = 'device_toner';
+$config['os'][$os]['over'][0]['text']  = 'Toner';
+
 $os = '3com';
 $config['os'][$os]['text']             = '3Com';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
@@ -1439,6 +1447,14 @@ $config['os'][$os]['type']             = 'environment';
 $config['os'][$os]['icon']             = 'generic';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+// EATON PDU
+$os = 'eatonpdu';
+$config['os'][$os]['text']             = 'Eaton PDU';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['icon']             = 'eaton';
+$config['os'][$os]['over'][0]['graph'] = 'device_current';
+$config['os'][$os]['over'][0]['text']  = 'Current';
 
 // Appliances
 $os = 'fortios';
@@ -1779,6 +1795,9 @@ $config['graph_types']['device']['poller_perf']['descr']      = 'Poller Time';
 $config['graph_types']['device']['ping_perf']['section']      = 'poller';
 $config['graph_types']['device']['ping_perf']['order']        = '0';
 $config['graph_types']['device']['ping_perf']['descr']        = 'Ping Response';
+$config['graph_types']['device']['poller_modules_perf']['section']    = 'poller';
+$config['graph_types']['device']['poller_modules_perf']['order']      = '0';
+$config['graph_types']['device']['poller_modules_perf']['descr']      = 'Poller Modules Performance';
 
 $config['graph_types']['device']['vpdn_sessions_l2tp']['section'] = 'vpdn';
 $config['graph_types']['device']['vpdn_sessions_l2tp']['order']   = '0';
