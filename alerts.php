@@ -46,6 +46,9 @@ else {
     file_put_contents($config['install_dir'].'/.alerts.lock', getmypid());
 }
 
+// If Debug to File is enabled, we will log here.
+$config['debug_to_file_file'] = $config['log_dir'] . '/alerts.log';
+
 require_once $config['install_dir'].'/includes/definitions.inc.php';
 require_once $config['install_dir'].'/includes/functions.php';
 require_once $config['install_dir'].'/includes/alerts.inc.php';

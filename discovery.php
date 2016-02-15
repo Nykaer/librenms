@@ -130,6 +130,10 @@ if ($config['distributed_poller'] === true) {
 }
 
 foreach (dbFetch("SELECT * FROM `devices` WHERE status = 1 AND disabled = 0 $where ORDER BY device_id DESC",$sqlparams) as $device) {
+
+    // If Debug to File is enabled, we will log here.
+    $config['debug_to_file_file'] = $config['log_dir'] . '/discovery-'.$device['hostname'].'.log';
+
     discover_device($device, $options);
 }
 

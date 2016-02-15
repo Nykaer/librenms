@@ -68,6 +68,9 @@ require 'includes/functions.inc.php';
 require 'includes/vars.inc.php';
 require 'includes/plugins.inc.php';
 
+// If Debug to File is enabled, we will log here.
+$config['debug_to_file_file'] = $config['log_dir'] . '/html.log';
+
 $config['memcached']['ttl'] = $config['time']['now']+300;
 
 Plugins::start();

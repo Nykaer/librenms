@@ -19,6 +19,9 @@ require 'config.php';
 require 'includes/definitions.inc.php';
 require 'includes/functions.php';
 
+// If Debug to File is enabled, we will log here.
+$config['debug_to_file_file'] = $config['log_dir'] . '/services.log';
+
 foreach (dbFetchRows('SELECT * FROM `devices` AS D, `services` AS S WHERE S.device_id = D.device_id ORDER by D.device_id DESC') as $service) {
     if ($service['status'] = '1') {
         unset($check, $service_status, $time, $status);
@@ -34,6 +37,11 @@ foreach (dbFetchRows('SELECT * FROM `devices` AS D, `services` AS S WHERE S.devi
             $cmd = $config['nagios_plugins'] . "/check_" . $service['service_type'] . " -H " . ($service['service_ip'] ? $service['service_ip'] : $service['hostname']);
             $cmd .= " ".$service['service_param'];
             $check = shell_exec($cmd);
+
+            // Some debugging
+            d_echo($cmd."\n");
+            d_echo($check."\n");
+
             list($check, $time) = split("\|", $check);
             if(stristr($check, "ok -")) {
                 $status = 1;

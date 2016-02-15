@@ -14,7 +14,9 @@
       <div class="modal-body">
       <table class="table table-condensed table-hover">
 <?php
+d_echo("\nSQL Errors:\n");
 foreach ($sql_debug as $sql_error) {
+    d_echo($sql_error);
     echo "
           <tr>
               <td>
@@ -50,7 +52,9 @@ foreach ($sql_debug as $sql_error) {
       <div class="modal-body">
       <table class="table table-condensed table-hover">
 <?php
+d_echo("\nPHP Errors:\n");
 foreach ($php_debug as $php_error) {
+    d_echo($php_error);
     echo '
           <tr>
               <td>

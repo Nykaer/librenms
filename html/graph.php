@@ -44,6 +44,9 @@ require_once 'includes/authenticate.inc.php';
 
 require 'includes/graphs/graph.inc.php';
 
+// If Debug to File is enabled, we will log here.
+$config['debug_to_file_file'] = $config['log_dir'] . '/html.log';
+
 $console_color = new Console_Color2();
 
 $end = microtime(true);

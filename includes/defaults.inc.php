@@ -858,3 +858,8 @@ $config['update_channel']                               = 'master';
 
 // Default port association mode
 $config['default_port_association_mode'] = 'ifIndex';
+
+// Default Debug to File option.
+$config['debug_to_file']                                = true;
+$config['debug_to_file_fh']                             = null;
+$config['debug_to_file_file']                           = 'notyetset.log';

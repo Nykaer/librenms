@@ -134,6 +134,10 @@ if (!isset($query)) {
 
 foreach (dbFetch($query) as $device) {
     $device = dbFetchRow("SELECT * FROM `devices` WHERE `device_id` = '".$device['device_id']."'");
+
+    // If Debug to File is enabled, we will log here.
+    $config['debug_to_file_file'] = $config['log_dir'] . '/poller-'.$device['hostname'].'.log';
+
     poll_device($device, $options);
     RunRules($device['device_id']);
     echo "\r\n";

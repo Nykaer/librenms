@@ -609,18 +609,37 @@ function edit_service($service, $descr, $service_ip, $service_param = "", $servi
 /*
  * convenience function - please use this instead of 'if ($debug) { echo ...; }'
  */
-function d_echo($text, $no_debug_text = null) {
-    global $debug;
-    if ($debug) {
-        if (is_array($text)) {
-            print_r($text);
-        }
-        else {
-            echo "$text";
-        }
+function d_echo($text) {
+    global $debug, $config;
+    if (is_array($text)) {
+        $string = print_r($text,TRUE);
     }
-    elseif ($no_debug_text) {
-        echo "$no_debug_text";
+    else {
+        $string = "$text";
+    }
+
+    // Debug to File
+    if ($config['debug_to_file']) {
+        if ($config['debug_to_file_fh'] == null) {
+            // File handle not yet set
+            if (!$config['debug_to_file_fh'] = fopen($config['debug_to_file_file'], "a")) {
+                // Error, could not open filehandle
+                $string = "Error - Could not open and write to: ".$config['debug_to_file_file']."\n" . $string;
+            }
+            else {
+                fwrite($config['debug_to_file_fh'] , date("Y-m-d H:i:s").": ------------- Begin Logging Instance -------------\n");
+
+            }
+        }
+
+        // Write to the logfile with the date and time as a prefix.
+        fwrite($config['debug_to_file_fh'] , $string);
+    }
+
+    // Debug to STDOUT
+    if ($debug) {
+        // Echo the string
+        echo $string;
     }
 } // d_echo
 
