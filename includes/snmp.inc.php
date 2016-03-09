@@ -745,13 +745,19 @@ function snmp_cache_portName($device, $array) {
 
 
 function snmp_gen_auth(&$device) {
-    global $debug;
+    global $debug, $vdebug;
 
     $cmd = '';
 
     if ($device['snmpver'] === 'v3') {
+	
         $cmd = " -v3 -n '' -l '".$device['authlevel']."'";
-
+		
+		//add context if exist context
+		if(key_exists('context_name', $device)){
+			$cmd = " -v3 -n '".$device['context_name']."' -l '".$device['authlevel']."'";
+		}
+		
         if ($device['authlevel'] === 'noAuthNoPriv') {
             // We have to provide a username anyway (see Net-SNMP doc)
             // FIXME: There are two other places this is set - why are they ignored here?
@@ -776,16 +782,16 @@ function snmp_gen_auth(&$device) {
         }
     }
     else if ($device['snmpver'] === 'v2c' or $device['snmpver'] === 'v1') {
-        $cmd  = ' -'.$device['snmpver'];
-        $cmd .= ' -c '.$device['community'];
+        $cmd  = " -".$device['snmpver'];
+        $cmd .= " -c '".$device['community']."'";
     }
     else {
         if ($debug) {
-            print 'DEBUG: '.$device['snmpver']." : Unsupported SNMP Version (wtf have you done ?)\n";
+            print 'DEBUG: '.$device['snmpver']." : Unsupported SNMP Version (shouldn't be possible to get here)\n";
         }
     }//end if
 
-    if ($debug) {
+    if ($vdebug) {
         print "DEBUG: SNMP Auth options = $cmd\n";
     }
 

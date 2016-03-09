@@ -244,6 +244,10 @@ $mail_conf = array(
           'descr'              => 'From name',
           'type'               => 'text',
     ),
+    array('name'               => 'email_from',
+          'descr'              => 'From email address',
+          'type'               => 'text',
+    ),
     array('name'               => 'email_sendmail_path',
           'descr'              => 'Sendmail path',
           'type'               => 'text',
@@ -303,7 +307,7 @@ echo '
                     </div>';
                     $api_urls = get_config_like_name('alert.transports.api.%.');
 foreach ($api_urls as $api_url) {
-    $api_split  = split('\.', $api_url['config_name']);
+    $api_split  = explode('.', $api_url['config_name']);
     $api_method = $api_split[3];
     echo '<div class="form-group has-feedback" id="'.$api_url['config_id'].'">
                         <label for="api_url" class="col-sm-4 control-label">API URL ('.$api_method.') </label>

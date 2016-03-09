@@ -33,9 +33,25 @@ function format_number_short($number, $sf) {
 }
 
 function external_exec($command) {
-    d_echo($command."\n");
+    global $debug,$vdebug;
+    if ($debug && !$vdebug) {
+        $debug_command = preg_replace('/-c [\S]+/','-c COMMUNITY',$command);
+        $debug_command = preg_replace('/(udp|udp6|tcp|tcp6):(.*):([\d]+)/','\1:HOSTNAME:\3',$debug_command);
+        d_echo($debug_command);
+    }
+    elseif ($vdebug) {
+        d_echo($command."\n");
+    }
+
     $output = shell_exec($command);
-    d_echo($output."\n");
+
+    if ($debug && !$vdebug) {
+        $debug_output = preg_replace('/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/', '*', $output);
+        d_echo("$debug_output\n");
+    }
+    elseif ($vdebug) {
+        d_echo($output."\n");
+    }
 
     return $output;
 }
@@ -98,7 +114,7 @@ function delete_port($int_id) {
     dbDelete('links', "`remote_port_id` =  ?", array($int_id));
     dbDelete('bill_ports', "`port_id` =  ?", array($int_id));
 
-    unlink(trim($config['rrd_dir'])."/".trim($interface['hostname'])."/port-".$interface['ifIndex'].".rrd");
+    unlink(get_port_rrdfile_path ($interface['hostname'], $interface['port_id']));
 }
 
 function sgn($int) {
@@ -125,6 +141,15 @@ function get_sensor_rrd($device, $sensor) {
     }
 
     return($rrd_file);
+}
+
+function get_port_rrdfile_path ($hostname, $port_id, $suffix = '') {
+    global $config;
+
+    if (! empty ($suffix))
+        $suffix = '-' . $suffix;
+
+    return trim ($config['rrd_dir']) . '/' . safename ($hostname) . '/' . 'port-id' . safename($port_id) . safename ($suffix) . '.rrd';
 }
 
 function get_port_by_index_cache($device_id, $ifIndex) {
@@ -290,6 +315,17 @@ function device_by_id_cache($device_id, $refresh = '0') {
     }
     else {
         $device = dbFetchRow("SELECT * FROM `devices` WHERE `device_id` = ?", array($device_id));
+		
+		//order vrf_lite_cisco with context, this will help to get the vrf_name and instance_name all the time
+		$vrfs_lite_cisco = dbFetchRows("SELECT * FROM `vrf_lite_cisco` WHERE `device_id` = ?", array($device_id));
+		$device['vrf_lite_cisco'] = array();
+		if(!empty($vrfs_lite_cisco)){
+			foreach ($vrfs_lite_cisco as $vrf){
+				$device['vrf_lite_cisco'][$vrf['context_name']] = $vrf;
+			}
+		}
+
+        $device['ip'] = inet6_ntop($device['ip']);
         $cache['devices']['id'][$device_id] = $device;
     }
     return $device;
@@ -548,38 +584,6 @@ function is_valid_hostname($hostname) {
 
     return ctype_alnum(str_replace('_','',str_replace('-','',str_replace('.','',$hostname))));
 }
-
-function add_service($device, $service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_array($device)) {
-        $device = device_by_id_cache($device);
-    }
-
-    if (empty($service_ip)) {
-        $service_ip = $device['hostname'];
-    }
-
-    $insert = array('device_id' => $device['device_id'], 'service_ip' => $service_ip, 'service_type' => $service,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'), 'service_desc' => $descr, 'service_param' => $service_param, 'service_ignore' => $service_ignore);
-
-    return dbInsert($insert, 'services');
-}
-
-function edit_service($service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_numeric($service)) {
-        return false;
-    }
-
-    $update = array('service_ip' => $service_ip,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'),
-        'service_desc' => $descr,
-        'service_param' => $service_param,
-        'service_ignore' => $service_ignore);
-    return dbUpdate($update, 'services', '`service_id`=?', array($service));
-
-}
-
 
 /*
  * convenience function - please use this instead of 'if ($debug) { echo ...; }'
@@ -876,7 +880,8 @@ function enable_os_graphs($os, &$graph_enable)
 function enable_graphs($device, &$graph_enable)
 {
     // These are standard graphs we should have for all systems
-    $graph_enable['poller']['poller_perf'] = 'device_poller_perf';
+    $graph_enable['poller']['poller_perf']         = 'device_poller_perf';
+    $graph_enable['poller']['poller_modules_perf'] = 'device_poller_modules_perf';
     if (can_ping_device($device) === true) {
         $graph_enable['poller']['ping_perf'] = 'device_ping_perf';
     }
@@ -1076,3 +1081,155 @@ function ip_to_sysname($device,$ip) {
     }
     return $ip;
 }//end ip_to_sysname
+
+/**
+ * Return valid port association modes
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ * @return array
+ */
+function get_port_assoc_modes ($no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $assoc_modes = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_modes"));
+        if (! empty ($assoc_modes))
+            return $assoc_modes;
+    }
+
+    $assoc_modes = Null;
+        foreach (dbFetchRows ("SELECT `name` FROM `port_association_mode` ORDER BY pom_id") as $row)
+        $assoc_modes[] = $row['name'];
+
+    if ($config['memcached']['enable'] && $no_cache === false)
+        $config['memcached']['resource']->set (hash ('sha512', "port_assoc_modes"), $assoc_modes, $config['memcached']['ttl']);
+
+    return $assoc_modes;
+}
+
+/**
+ * Validate port_association_mode
+ * @param string $port_assoc_mode
+ * @return bool
+ */
+function is_valid_port_assoc_mode ($port_assoc_mode) {
+    return in_array ($port_assoc_mode, get_port_assoc_modes ());
+}
+
+/**
+ * Get DB id of given port association mode name
+ * @param string $port_assoc_mode
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ */
+function get_port_assoc_mode_id ($port_assoc_mode, $no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $id = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_mode_id|$port_assoc_mode"));
+        if (! empty ($id))
+            return $id;
+    }
+
+    $id = Null;
+    $row = dbFetchRow ("SELECT `pom_id` FROM `port_association_mode` WHERE name = ?", array ($port_assoc_mode));
+    if ($row) {
+        $id = $row['pom_id'];
+        if ($config['memcached']['enable'] && $no_cache === false)
+            $config['memcached']['resource']->set (hash ('sha512', "port_assoc_mode_id|$port_assoc_mode"), $id, $config['memcached']['ttl']);
+    }
+
+    return $id;
+}
+
+/**
+ * Get name of given port association_mode ID
+ * @param int $port_assoc_mode_id Port association mode ID
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ * @return bool
+ */
+function get_port_assoc_mode_name ($port_assoc_mode_id, $no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $name = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_mode_name|$port_assoc_mode_id"));
+        if (! empty ($name))
+            return $name;
+    }
+
+    $name = Null;
+    $row = dbFetchRow ("SELECT `name` FROM `port_association_mode` WHERE pom_id = ?", array ($port_assoc_mode_id));
+    if ($row) {
+        $name = $row['name'];
+        if ($config['memcached']['enable'] && $no_cache === false)
+            $config['memcached']['resource']->set (hash ('sha512', "port_assoc_mode_name|$port_assoc_mode_id"), $name, $config['memcached']['ttl']);
+    }
+
+    return $name;
+}
+
+/**
+ * Query all ports of the given device (by ID) and build port array and
+ * port association maps for ifIndex, ifName, ifDescr. Query port stats
+ * if told to do so, too.
+ * @param int $device_id ID of device to query ports for
+ * @param bool $with_statistics Query port statistics, too. (optional, default false)
+ * @return array
+ */
+function get_ports_mapped ($device_id, $with_statistics = false) {
+    $ports = array();
+    $maps = array(
+        'ifIndex' => array(),
+        'ifName'  => array(),
+        'ifDescr' => array(),
+    );
+
+    /* Query all information available for ports for this device ... */
+    $query = 'SELECT * FROM `ports` WHERE `device_id` = ? ORDER BY port_id';
+    if ($with_statistics) {
+        /* ... including any related ports_statistics if requested */
+        $query = 'SELECT *, `ports_statistics`.`port_id` AS `ports_statistics_port_id`, `ports`.`port_id` AS `port_id` FROM `ports` LEFT OUTER JOIN `ports_statistics` ON `ports`.`port_id` = `ports_statistics`.`port_id` WHERE `ports`.`device_id` = ? ORDER BY ports.port_id';
+    }
+
+    // Query known ports in order of discovery to make sure the latest
+    // discoverd/polled port is in the mapping tables.
+    foreach (dbFetchRows ($query, array ($device_id)) as $port) {
+        // Store port information by ports port_id from DB
+        $ports[$port['port_id']] = $port;
+
+        // Build maps from ifIndex, ifName, ifDescr to port_id
+        $maps['ifIndex'][$port['ifIndex']] = $port['port_id'];
+        $maps['ifName'][$port['ifName']]   = $port['port_id'];
+        $maps['ifDescr'][$port['ifDescr']] = $port['port_id'];
+    }
+
+    return array(
+        'ports' => $ports,
+        'maps'  => $maps,
+    );
+}
+
+/**
+ * Calculate port_id of given port using given devices port information and port association mode
+ * @param array $ports_mapped Port information of device queried by get_ports_mapped()
+ * @param array $port Port information as fetched from DB
+ * @param string $port_association_mode Port association mode to use for mapping
+ * @return int port_id (or Null)
+ */
+function get_port_id ($ports_mapped, $port, $port_association_mode) {
+    // Get port_id according to port_association_mode used for this device
+    $port_id = Null;
+
+    /*
+     * Information an all ports is available through $ports_mapped['ports']
+     * This might come in handy sometime in the future to add you nifty new
+     * port mapping schema:
+     *
+     * $ports = $ports_mapped['ports'];
+    */
+    $maps  = $ports_mapped['maps'];
+
+    if (in_array ($port_association_mode, array ('ifIndex', 'ifName', 'ifDescr', 'ifAlias'))) {
+        $port_id = $maps[$port_association_mode][$port[$port_association_mode]];
+    }
+
+    return $port_id;
+}

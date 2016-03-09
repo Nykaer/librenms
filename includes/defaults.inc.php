@@ -438,6 +438,8 @@ $config['enable_pseudowires'] = 1;
 // Enable Pseudowires
 $config['enable_vrfs'] = 1;
 // Enable VRFs
+$config['enable_vrf_lite_cisco'] = 1;
+// Enable VRF lite cisco
 $config['enable_printers'] = 0;
 // Enable Printer support
 $config['enable_sla'] = 0;
@@ -566,7 +568,7 @@ $config['irc_alert']      = false;
 $config['irc_alert_utf8'] = false;
 
 // Authentication
-$config['allow_unauth_graphs'] = 0;
+$config['allow_unauth_graphs'] = false;
 // Allow graphs to be viewed by anyone
 $config['allow_unauth_graphs_cidr'] = array();
 // Allow graphs to be viewed without authorisation from certain IP ranges
@@ -713,6 +715,7 @@ $config['poller_modules']['cisco-voice']                 = 1;
 $config['poller_modules']['cisco-cbqos']                 = 1;
 $config['poller_modules']['stp']                         = 1;
 $config['poller_modules']['cisco-otv']                   = 1;
+$config['poller_modules']['services']                    = 1;
 
 // List of discovery modules. Need to be in this array to be
 // considered for execution.
@@ -722,6 +725,7 @@ $config['discovery_modules']['ports-stack']          = 1;
 $config['discovery_modules']['entity-physical']      = 1;
 $config['discovery_modules']['processors']           = 1;
 $config['discovery_modules']['mempools']             = 1;
+$config['discovery_modules']['cisco-vrf-lite']       = 1;
 $config['discovery_modules']['ipv4-addresses']       = 1;
 $config['discovery_modules']['ipv6-addresses']       = 1;
 $config['discovery_modules']['sensors']              = 1;
@@ -736,7 +740,7 @@ $config['discovery_modules']['vlans']                = 1;
 $config['discovery_modules']['cisco-mac-accounting'] = 1;
 $config['discovery_modules']['cisco-pw']             = 1;
 $config['discovery_modules']['cisco-vrf']            = 1;
-// $config['discovery_modules']['cisco-cef']                 = 1;
+//$config['discovery_modules']['cisco-cef']            = 1;
 $config['discovery_modules']['cisco-sla']      = 1;
 $config['discovery_modules']['vmware-vminfo']  = 1;
 $config['discovery_modules']['libvirt-vminfo'] = 1;
@@ -859,3 +863,9 @@ $config['notifications']['local']                       = 'misc/notifications.rs
 
 // Update channel (Can be 'master' or 'release')
 $config['update_channel']                               = 'master';
+
+// Default port association mode
+$config['default_port_association_mode'] = 'ifIndex';
+// Ignore ports which can't be mapped using a devices port_association_mode
+// See include/polling/ports.inc.php for a lenghty explanation.
+$config['ignore_unmapable_port'] = False;

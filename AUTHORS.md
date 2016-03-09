@@ -72,6 +72,7 @@ LibreNMS contributors:
 - Louis Bailleul <louis.bailleul@gmail.com> (alucardfh)
 - Rick Hodger <rick@fuzzi.org.uk> (Tatermen)
 - Eldon Koyle <ekoyle@gmail.com> (ekoyle)
+- Jay McEntire <jay.mcentire@gmail.com> (jmacul2)
 - Jonathan Bailey <jcbailey@code0.net> (jcbailey2)
 - Ruairi Carroll <ruairi.carroll@gmail.com> (rucarrol)
 - Maxim Tsyplakov <maxim.tsyplakov@gmail.com> (tsypa)
@@ -81,6 +82,14 @@ LibreNMS contributors:
 - Jurrian van Iersel <jurrian@vaniersel.net> (jviersel)
 - Adam Winberg <adam.winberg@gmail.com> (wiad)
 - Maximilian Wilhelm <max@rfc2324.org> (BarbarossaTM)
+- Jameson Finney <jameson.finney@gmail.com> (JamesonFinney)
+- John Wells <john.wells@greatworx.com> (jbwiv)
+- Henoc Khouilla <henoc.khouilla@gmail.com> (henocKA)
+- Paul Blasquez <pblasquez@gmail.com> (pblasquez)
+- Paul Heinrichs <pdheinrichs@gmail.com> (pheinrichs)
+- Georges Dick <georges.dick@gmail.com> (GeorgesDick)
+- Richard Lawley <richard@richardlawley.com> (richardlawley)
+- Marco Di Cerbo <marco@dottoremoe.com> (marcodc)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
@@ -88,3 +97,4 @@ Observium was written by:
 - Tom Laermans
 - various others as indicated in the file contents and commit logs
 
+ 

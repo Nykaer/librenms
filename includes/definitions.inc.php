@@ -228,6 +228,18 @@ $config['os'][$os]['over'][1]['text']  = 'Processor Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
+$os = 'pktj';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['group']            = 'unix';
+$config['os'][$os]['text']             = 'Gandi Packet Journey';
+$config['os'][$os]['icon']             = 'gandi';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'Processor Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
 // Other Unix-based OSes here please.
 $os = 'freebsd';
 $config['os'][$os]['type']  = 'server';
@@ -310,6 +322,23 @@ $config['os'][$os]['type']             = 'loadbalancer';
 $config['os'][$os]['icon']             = 'barracuda';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+$os = 'barracudaspamfirewall';
+$config['os'][$os]['text']             = 'Barracuda Spam Firewall';
+$config['os'][$os]['type']             = 'firewall';
+$config['os'][$os]['icon']             = 'barracuda';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+// Calix
+$os = 'calix';
+$config['os'][$os]['text']             = 'Calix E7';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['ifname']           = 1;
+$config['os'][$os]['empty_ifdescr']    = 1;
+$config['os'][$os]['icon']             = 'calix';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
 
 // Cisco OSes
 $os = 'ios';
@@ -494,6 +523,19 @@ $config['os'][$os]['icon']              = "cisco";
 $os = 'nos';
 $config['os'][$os]['text']             = 'Brocade NOS';
 $config['os'][$os]['type']             = 'network';
+$config['os'][$os]['ifname']           = 1;
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+$config['os'][$os]['icon']             = 'brocade';
+
+// Brocade/Foundry ServerIron
+$os = 'serveriron';
+$config['os'][$os]['text']             = 'Brocade ServerIron';
+$config['os'][$os]['type']             = 'loadbalancer';
 $config['os'][$os]['ifname']           = 1;
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Device Traffic';
@@ -1036,6 +1078,13 @@ $config['os'][$os]['type']             = 'power';
 $config['os'][$os]['over'][0]['graph'] = 'device_current';
 $config['os'][$os]['over'][0]['text']  = 'Current';
 
+$os = 'avtech';
+$config['os'][$os]['text']             = 'Avtech Environment Sensor';
+$config['os'][$os]['type']             = 'environment';
+$config['os'][$os]['icon']             = 'avtech';
+$config['os'][$os]['over'][0]['graph'] = 'device_temperature';
+$config['os'][$os]['over'][0]['text']  = 'Temperature';
+
 $os = 'netbotz';
 $config['os'][$os]['text']             = 'Netbotz Environment sensor';
 $config['os'][$os]['type']             = 'environment';
@@ -1215,6 +1264,14 @@ $config['os'][$os]['type']             = 'printer';
 $config['os'][$os]['over'][0]['graph'] = 'device_toner';
 $config['os'][$os]['over'][0]['text']  = 'Toner';
 
+$os ='lexmarkprinter';
+$config['os'][$os]['group']            = 'printer';
+$config['os'][$os]['text']             = 'Lexmark Printer';
+$config['os'][$os]['type']             = 'printer';
+$config['os'][$os]['icon']             = 'lexmark';
+$config['os'][$os]['over'][0]['graph'] = 'device_toner';
+$config['os'][$os]['over'][0]['text']  = 'Toner';
+
 $os = '3com';
 $config['os'][$os]['text']             = '3Com';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
@@ -1302,6 +1359,12 @@ $config['os'][$os]['text']  = 'Synology DSM';
 $config['os'][$os]['group'] = 'unix';
 $config['os'][$os]['type']  = 'storage';
 $config['os'][$os]['icon']  = 'synology';
+$config['os'][$os]['over'][0]['graph'] = 'device_processor';
+$config['os'][$os]['over'][0]['text']  = 'Processor Usage';
+$config['os'][$os]['over'][1]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][1]['text']  = 'Memory Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_storage';
+$config['os'][$os]['over'][2]['text']  = 'Storage Usage';
 
 $os = 'hikvision';
 $config['os'][$os]['text'] = 'Hikvision';
@@ -1464,6 +1527,14 @@ $config['os'][$os]['type']             = 'environment';
 $config['os'][$os]['icon']             = 'generic';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+// EATON PDU
+$os = 'eatonpdu';
+$config['os'][$os]['text']             = 'Eaton PDU';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['icon']             = 'eaton';
+$config['os'][$os]['over'][0]['graph'] = 'device_current';
+$config['os'][$os]['over'][0]['text']  = 'Current';
 
 // Appliances
 $os = 'fortios';
@@ -1804,6 +1875,9 @@ $config['graph_types']['device']['poller_perf']['descr']      = 'Poller Time';
 $config['graph_types']['device']['ping_perf']['section']      = 'poller';
 $config['graph_types']['device']['ping_perf']['order']        = '0';
 $config['graph_types']['device']['ping_perf']['descr']        = 'Ping Response';
+$config['graph_types']['device']['poller_modules_perf']['section']    = 'poller';
+$config['graph_types']['device']['poller_modules_perf']['order']      = '0';
+$config['graph_types']['device']['poller_modules_perf']['descr']      = 'Poller Modules Performance';
 
 $config['graph_types']['device']['vpdn_sessions_l2tp']['section'] = 'vpdn';
 $config['graph_types']['device']['vpdn_sessions_l2tp']['order']   = '0';
