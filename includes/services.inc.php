@@ -108,6 +108,102 @@ function service_discover($device, $service) {
     echo "$service ";
 }
 
+function service_poll($service) {
+    global $config, $device;
+    $update = array();
+    $old_status = $service['service_status'];
+
+    // if we have a script for this check, use it.
+    $check_script = $config['install_dir'].'/includes/services/check_'.strtolower($service['service_type']).'.inc.php';
+    if (is_file($check_script)) {
+        include $check_script;
+    }
+
+    // If we do not have a cmd from the check script, build one.
+    if (!isset($check_cmd)) {
+        $check_cmd = $config['nagios_plugins'] . "/check_" . $service['service_type'] . " -H " . ($service['service_ip'] ? $service['service_ip'] : $service['hostname']);
+        $check_cmd .= " " . $service['service_param'];
+    }
+
+    // Some debugging
+    d_echo("\nNagios Service - ".$service['service_id']."\n");
+    d_echo("Request:  ".$check_cmd."\n");
+    list($status, $msg, $perf) = service_check($check_cmd);
+    d_echo("Response: ".$msg."\n");
+
+    // TODO: Use proper Nagios service status. 0=Ok,1=Warning,2=Critical,Else=Unknown
+    // Not now because we dont want to break existing alerting rules.
+    if ($status == 0) {
+        // Nagios 0 = Libre 1 - Ok
+        $new_status = 1;
+    }
+    elseif ($status == 1) {
+        // Nagios 1 = Libre 2 - Warning
+        $new_status = 2;
+    }
+    elseif ($status == 2) {
+        // Nagios 2 = Libre 0 - Critical
+        $new_status = 0;
+    }
+    else {
+        // Unknown
+        $new_status = 2;
+    }
+
+    // If we have performance data we will store it.
+    if (count($perf) > 0) {
+        // Yes, We have perf data.
+        $filename = "services-".$service['service_id'].".rrd";
+        $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
+
+        // Set the DS in the DB if it is blank.
+        $DS = array();
+        foreach ($perf as $k => $v) {
+            $DS[$k] = $v['uom'];
+        }
+        d_echo("Service DS: "._json_encode($DS)."\n");
+        if ($service['service_ds'] == "") {
+            $update['service_ds'] = json_encode($DS);
+        }
+
+        // Create the RRD
+        if (!file_exists ($rrd_filename)) {
+            $rra = "";
+            foreach ($perf as $k => $v) {
+                if ($v['uom'] == 'c') {
+                    // This is a counter, create the DS as such
+                    $rra .= " DS:".$k.":COUNTER:600:0:U";
+                }
+                else {
+                    // Not a counter, must be a gauge
+                    $rra .= " DS:".$k.":GAUGE:600:0:U";
+                }
+            }
+            rrdtool_create ($rrd_filename, $rra . $config['rrd_rra']);
+        }
+
+        // Update RRD
+        $rrd = array();
+        foreach ($perf as $k => $v) {
+            $rrd[$k] = $v['value'];
+        }
+        rrdtool_update ($rrd_filename, $rrd);
+    }
+
+    if ($old_status != $new_status) {
+        // Status has changed, update.
+        $update['service_changed'] = time();
+        $update['service_status'] = $new_status;
+        $update['service_message'] = $msg;
+    }
+
+    if (count($update) > 0) {
+        service_edit($update,$service['service_id']);
+    }
+
+    return true;
+}
+
 function service_check($command) {
     // This array is used to test for valid UOM's to be used for graphing.
     // Valid values from: https://nagios-plugins.org/doc/guidelines.html#AEN200
@@ -161,7 +257,7 @@ function service_check($command) {
         }
         else {
             // No DS. Don't add an entry to the array.
-            d_echo("No DS.\n");
+            d_echo("Perf Data - None.\n");
         }
     }
 

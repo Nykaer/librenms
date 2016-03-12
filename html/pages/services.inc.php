@@ -9,39 +9,21 @@ echo "<span style='font-weight: bold;'>Services</span> &#187; ";
 $menu_options = array(
     'basic'   => 'Basic',
 );
-
 if (!$vars['view']) {
     $vars['view'] = 'basic';
 }
 
-$sql_param = array();
-if (isset($vars['state'])) {
-    if ($vars['state'] == 'ok') {
-        $state = '1';
-    }
-    elseif ($vars['state'] == 'critical') {
-        $state = '0';
-    }
-    elseif ($vars['state'] == 'warning') {
-        $state = '2';
-    }
+$status_options = array(
+    'all'       => 'All',
+    'ok'        => 'Ok',
+    'warning'   => 'Warning',
+    'critical'  => 'Critical',
+);
+if (!$vars['state']) {
+    $vars['state'] = 'all';
 }
 
-if ($vars['state']) {
-    $where      .= " AND service_status= ? AND service_disabled='0' AND `service_ignore`='0'";
-    $sql_param[] = $state;
-}
-
-if ($vars['disabled']) {
-    $where      .= ' AND service_disabled= ?';
-    $sql_param[] = $vars['disabled'];
-}
-
-if ($vars['ignore']) {
-    $where      .= ' AND `service_ignore`= ?';
-    $sql_param[] = $vars['ignore'];
-}
-
+// The menu option - on the left
 $sep = '';
 foreach ($menu_options as $option => $text) {
     if (empty($vars['view'])) {
@@ -62,7 +44,47 @@ foreach ($menu_options as $option => $text) {
 }
 unset($sep);
 
+// The status option - on the right
+echo '<div class="pull-right">';
+$sep = '';
+foreach ($status_options as $option => $text) {
+    if (empty($vars['state'])) {
+        $vars['state'] = $option;
+    }
+
+    echo $sep;
+    if ($vars['state'] == $option) {
+        echo "<span class='pagemenu-selected'>";
+    }
+
+    echo generate_link($text, $vars, array('state' => $option));
+    if ($vars['state'] == $option) {
+        echo '</span>';
+    }
+
+    $sep = ' | ';
+}
+unset($sep);
+echo '</div>';
 print_optionbar_end();
+
+$sql_param = array();
+if (isset($vars['state'])) {
+    if ($vars['state'] == 'ok') {
+        $state = '1';
+    }
+    elseif ($vars['state'] == 'critical') {
+        $state = '0';
+    }
+    elseif ($vars['state'] == 'warning') {
+        $state = '2';
+    }
+}
+if (isset($state)) {
+    $where      .= " AND service_status= ? AND service_disabled='0' AND `service_ignore`='0'";
+    $sql_param[] = $state;
+}
+
 ?>
 <div class="row col-sm-12" id="nagios-services">
     <table class="table table-hover table-condensed table-striped">
