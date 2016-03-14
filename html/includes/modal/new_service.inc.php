@@ -13,7 +13,7 @@
 
 if(is_admin() !== false) {
 
-    // Build the types list, selecting the active one.
+    // Build the types list.
     if ($handle = opendir($config['nagios_plugins'])) {
         while (false !== ($file = readdir($handle))) {
             if ($file != '.' && $file != '..' && !strstr($file, '.') && strstr($file, 'check_')) {
