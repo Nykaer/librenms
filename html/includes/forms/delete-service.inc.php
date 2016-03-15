@@ -2,7 +2,7 @@
 /*
  * LibreNMS
  *
- * Copyright (c) 2015 Aaron Daniels
+ * Copyright (c) 2016 Aaron Daniels <aaron@daniels.id.au>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

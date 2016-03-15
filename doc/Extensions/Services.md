@@ -31,7 +31,7 @@ However for some modules it would be better if some of this information was cons
 An example is the ICMP check. This check returns: Round Trip Average (rta), Round Trip Min (rtmin) and Round Trip Max (rtmax).
 These have been combined onto a single graph.
 
-If you find a check script that would benifit from having some datasources graphed together, please log an issue on GitHub with the debug information from the poller, and let us know which DS's should go together. Example below:
+If you find a check script that would benefit from having some datasources graphed together, please log an issue on GitHub with the debug information from the poller, and let us know which DS's should go together. Example below:
 
     Nagios Service - 26
     Request:  /usr/lib/nagios/plugins/check_icmp localhost
