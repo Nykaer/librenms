@@ -350,7 +350,7 @@ Route: /api/v0/devices/:hostname/components/:type
 
 Example:
 ```curl
-curl -X POST -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/TESTTESTTEST
+curl -X POST -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/APITEST
 ```
 
 Output:
@@ -362,7 +362,7 @@ Output:
     "count": 1,
     "components": {
         "4459": {
-            "type": "TESTTESTTEST",
+            "type": "APITEST",
             "label": "",
             "status": 1,
             "ignore": 0,
@@ -381,9 +381,9 @@ Route: /api/v0/devices/:hostname/components
 
 - hostname can be either the device hostname or id
 
-In this example we set the label to: "This is a test label" and add a new field: "TestField" set to "TestData":
+In this example we set the label and add a new field: TestField:
 ```curl
-curl -X PUT -d '{"4459": {"type": "TESTTESTTEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components
+curl -X PUT -d '{"4459": {"type": "APITEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components
 ```
 
 Output:
