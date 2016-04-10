@@ -26,6 +26,11 @@ class component {
         'error'     => '',
     );
 
+    private $counter_rrd = array(
+        'counter'   => 'COUNTER',
+        'gauge'     => 'GAUGE',
+    );
+
     public function getComponentType($TYPE=null) {
         if (is_null($TYPE)) {
             $SQL = "SELECT DISTINCT `type` as `name` FROM `component` ORDER BY `name`";
@@ -256,4 +261,145 @@ class component {
         return true;
     }
 
+    // Write one or more statistics to the database for a component.
+    public function setStatistic($device,$component,&$statistics) {
+        global $config;
+
+        /*
+         * $component = id of component
+         * $statistics = array(
+         *      DS_NAME = array(
+         *          type => gauge/counter/etc
+         *          rrd => 'filename.rrd'
+         *          value => statistic to write
+         *      ),
+         * );
+         */
+
+        // Turn the device ID into a hostname
+        $hostname = gethostbyid($device);
+        if ($hostname == "") {
+            // No hostname was returned.
+            d_echo("The device (".$device.") supplied is invalid.\n");
+            return false;
+        }
+
+        /*
+         *
+         */
+        if (is_array($statistics)) {
+            if (count($statistics) == 0) {
+                // No Statistics have been supplied
+                d_echo("The Statistics array contains no items.\n");
+                return false;
+            }
+            $rrd = array();
+            foreach ($statistics as $name => $v) {
+                // How about we sanity check the supplied data
+                if (!isset($v['type'])) {
+                    d_echo("Type is not set for the DS: ".$name.".\n");
+                    return false;
+                }
+                if (!isset($v['rrd'])) {
+                    d_echo("RRD is not set for the DS:".$name.".\n");
+                    return false;
+                }
+                if (!isset($v['value'])) {
+                    d_echo("Value is not set for the DS:".$name.".\n");
+                    return false;
+                }
+
+                // Error checking done, let's build an RRD array.
+                // Produces: array('filename.rrd'=>array(dsname=>type));
+                $rrd[$v['rrd']][$name] = $v['type'];
+            }
+        }
+        else {
+            // Statistics is not an array.
+            d_echo("Statistics is not an array.\n");
+            return false;
+        }
+
+        // Let's print some debugging info.
+        d_echo("\n\nComponent: ".$component."\n");
+        d_echo("    Host:    ".$hostname."\n");
+        $stats = array();
+
+        foreach($rrd as $filename => $v) {
+            $rrd_filename = $config['rrd_dir'] . "/" . $hostname . "/" . safename ($filename);
+
+            // Here we build 2 vars, 1 in case we need to create the RRD, and 2 to write the data.
+            $rrd_create = "";
+            $rrd_data = array();
+            foreach($v as $ds => $type) {
+                // Make sure the counter type is correct.
+                if (isset($this->counter_rrd[$type])) {
+                    $type = $this->counter_rrd[$type];
+                }
+                else {
+                    d_echo("Error: RRD Counter Type (".$type.") is not known.\n");
+                    return false;
+                }
+                $rrd_create .= " DS:".$ds.":".$type.":600:0:U";
+                $rrd_data[$ds] = $statistics[$ds]['value'];
+                d_echo("    DS: ".$ds.", Value: ".$rrd_data[$ds].", RRD: ".$filename);
+            }
+
+            // Does this RRD's exist, or do we need to create it.
+            if (!file_exists ($rrd_filename)) {
+                // RRD doesn't exist, we need to create it.
+                rrdtool_create ($rrd_filename, $rrd_create . $config['rrd_rra']);
+                d_echo("RRD: ".$rrd_filename." has been created\n");
+            }
+
+            // Ok, now that the file exists, let's write some data.
+            rrdtool_update ($rrd_filename, $rrd_data);
+
+            // Fetch the last update
+            $curr = rrdtool_lastupdate($rrd_filename);
+
+            // Loop through each DS again, this time to retrieve averages from the RRD.
+            foreach($v as $ds => $type) {
+                $rrd_options  = '--start end-1d --step 60 DEF:raw='.$rrd_filename.':'.$ds.':LAST ';
+                $rrd_options .= 'CDEF:15m=raw,900,TRENDNAN XPORT:15m ';
+                $rrd_options .= 'CDEF:1h=raw,3600,TRENDNAN XPORT:1h ';
+                $rrd_options .= 'CDEF:1d=raw,86400,TRENDNAN XPORT:1d ';
+                $rrd_options .= 'XPORT:raw ';
+                $json = rrdtool_xport1($rrd_options);
+
+                if ($json === false) {
+                    // bad JSON.
+                    return false;
+                }
+
+                // Add the latest result to the array.
+                $stats[$ds]['curr'] = $curr[$ds];
+
+                foreach($json['data'] as $v) {
+                    // Is 15 Min populated.
+                    if(!is_null($v[0])) {
+                        $stats[$ds]['15m'] = $v[0];
+                    }
+                    // Is 1 Hour populated.
+                    if(!is_null($v[1])) {
+                        $stats[$ds]['1h'] = $v[1];
+                    }
+                    // Is 24 Hour populated.
+                    if(!is_null($v[2])) {
+                        $stats[$ds]['1d'] = $v[2];
+                    }
+                    // Is Current populated.
+                    if(!is_null($v[3])) {
+                        $stats[$ds]['rrdcurr'] = $v[3];
+                    }
+                }
+            }
+
+        }
+
+        // We should write these statistics to the database.
+        logfile("Stats: ".print_r($stats,1));
+
+        return true;
+    }
 }

@@ -271,11 +271,168 @@ function rrdtool_last($filename, $options)
 } // rrdtool_last
 
 
-function rrdtool_lastupdate($filename, $options)
+function rrdtool_lastupdate($filename)
 {
-    return rrdtool('lastupdate', $filename, $options);
+    global $config, $rrd_process, $rrd_pipes;
+    rrdtool_pipe_open($rrd_process, $rrd_pipes);
+
+    $command = "lastupdate ";
+
+    if ($config['rrdcached']) {
+        if (isset($config['rrdcached_dir']) && $config['rrdcached_dir'] !== false) {
+            $filename = str_replace($config['rrd_dir'].'/', './'.$config['rrdcached_dir'].'/', $filename);
+        }
+        $command .= $filename." --daemon ".$config['rrdcached'];
+    }
+    else {
+        $command .= $filename;
+    }
+
+    d_echo("Command: ".$command);
+    fwrite($rrd_pipes[0], $command);
+    fclose($rrd_pipes[0]);
+
+    $output = array();
+    $end = false;
+    $start = false;
+    while ($end === false) {
+        $buffer = fgets($rrd_pipes[1], 1024);
+        if ($buffer != "") {
+            $output[] = $buffer;
+        }
+
+        // Do we still need to be in this loop?
+        if (strlen($buffer) > 0) {
+            // We have content, so yes.
+            $start = true;
+        }
+        else {
+            // No content, so are we waiting for it to start or has it finished.
+            if ($start === true) {
+                // We started, but now the buffer is empty again, we must be finished.
+                $end = true;
+            }
+        }
+    }
+
+    $return_value = rrdtool_pipe_close($rrd_process, $rrd_pipes);
+
+    // Lets process the output into an array.
+    $array = array();
+    $ds = explode(' ', trim($output[0]));
+    $val = explode(' ', trim($output[2]));
+    foreach ($ds as $k => $v) {
+        $array[$v] = $val[$k+1];
+    }
+
+    if (count($array) > 0) {
+        return $array;
+    }
+    else {
+        return false;
+    }
 } // rrdtool_lastupdate
 
+function rrdtool_xport1($options) {
+    global $config, $rrd_process, $rrd_pipes;
+    rrdtool_pipe_open($rrd_process, $rrd_pipes);
+
+    $command = "";
+
+    if ($config['rrdcached']) {
+        if (isset($config['rrdcached_dir']) && $config['rrdcached_dir'] !== false) {
+            $options = str_replace($config['rrd_dir'].'/', './'.$config['rrdcached_dir'].'/', $options);
+            $options = str_replace($config['rrd_dir'], './'.$config['rrdcached_dir'].'/', $options);
+        }
+
+        $command .= "xport --daemon ".$config['rrdcached']." --json ".$options;
+    }
+    else {
+        $command .= "xport --json " .$options;
+    }
+
+    d_echo("Command: ".$command);
+    fwrite($rrd_pipes[0], $command);
+    fclose($rrd_pipes[0]);
+
+    $output = "";
+    $end = false;
+    $start = false;
+    while ($end === false) {
+        $buffer = fgets($rrd_pipes[1], 1024);
+        $output .= $buffer;
+
+        // Do we still need to be in this loop?
+        if (strlen($buffer) > 0) {
+            // We have content, so yes.
+            $start = true;
+        }
+        else {
+            // No content, so are we waiting for it to start or has it finished.
+            if ($start === true) {
+                // We started, but now the buffer is empty again, we must be finished.
+                $end = true;
+            }
+        }
+    }
+
+    $return_value = rrdtool_pipe_close($rrd_process, $rrd_pipes);
+
+    // The output contains some non json output at the end, lets strip it off.
+    preg_match('/^({.*}).*/is', $output, $matches);
+    $output = $matches[1];
+
+    // The output is not proper JSON, lets quote some bare strings and replace some single(') quotes with double(")
+    $output = str_replace('about', '"about"', $output);
+    $output = str_replace('meta', '"meta"', $output);
+    $output = str_replace('\'', '"', $output);
+
+    // As JSON please!
+    $json = json_decode($output,TRUE);
+
+    // Do we have json to return or an error?
+    if (json_last_error() == 0) {
+        return $json;
+    }
+    else {
+        d_echo(json_last_error_msg());
+        return false;
+    }
+} // rrdtool_xport1
+
+function rrdtool_xport($options) {
+    global $config;
+
+    $command = $config['rrdtool'] ." ";
+
+    if ($config['rrdcached']) {
+        if (isset($config['rrdcached_dir']) && $config['rrdcached_dir'] !== false) {
+            $options = str_replace($config['rrd_dir'].'/', './'.$config['rrdcached_dir'].'/', $options);
+            $options = str_replace($config['rrd_dir'], './'.$config['rrdcached_dir'].'/', $options);
+        }
+
+        $command .= "xport --daemon ".$config['rrdcached']." --json ".$options;
+    }
+    else {
+        $command .= "xport --json " .$options;
+    }
+
+    logfile("Command: ".$command."\n");
+
+    $output = shell_exec($command);
+    $output = str_replace('about', '"about"', $output);
+    $output = str_replace('meta', '"meta"', $output);
+    $output = str_replace('\'', '"', $output);
+    $json = json_decode($output,TRUE);
+
+    // Do we have json to return or an error?
+    if (json_last_error() == 0) {
+        return $json;
+    }
+    else {
+        return false;
+    }
+} // rrdtool_xport
 
 /**
  * Escapes strings for RRDtool,
