@@ -323,7 +323,6 @@ class component {
         // Let's print some debugging info.
         d_echo("\n\nComponent: ".$component."\n");
         d_echo("    Host:    ".$hostname."\n");
-        $stats = array();
 
         foreach($rrd as $filename => $v) {
             $rrd_filename = $config['rrd_dir'] . "/" . $hostname . "/" . safename ($filename);
@@ -373,24 +372,24 @@ class component {
                 }
 
                 // Add the latest result to the array.
-                $stats[$ds]['curr'] = $curr[$ds];
+                $statistics[$ds]['stats']['curr'] = $curr[$ds];
 
                 foreach($json['data'] as $v) {
                     // Is 15 Min populated.
                     if(!is_null($v[0])) {
-                        $stats[$ds]['15m'] = $v[0];
+                        $statistics[$ds]['stats']['15m'] = $v[0];
                     }
                     // Is 1 Hour populated.
                     if(!is_null($v[1])) {
-                        $stats[$ds]['1h'] = $v[1];
+                        $statistics[$ds]['stats']['1h'] = $v[1];
                     }
                     // Is 24 Hour populated.
                     if(!is_null($v[2])) {
-                        $stats[$ds]['1d'] = $v[2];
+                        $statistics[$ds]['stats']['1d'] = $v[2];
                     }
                     // Is Current populated.
                     if(!is_null($v[3])) {
-                        $stats[$ds]['rrdcurr'] = $v[3];
+                        $statistics[$ds]['stats']['rrdcurr'] = $v[3];
                     }
                 }
             }
@@ -398,7 +397,22 @@ class component {
         }
 
         // We should write these statistics to the database.
-        logfile("Stats: ".print_r($stats,1));
+        foreach($statistics as $ds => $v) {
+            $ROW = array();
+            $ROW['last'] = 'curr';
+            $ROW['curr'] = $v['stats']['curr'];
+            $ROW['15min'] = $v['stats']['15m'];
+            $ROW['1hour'] = $v['stats']['1h'];
+            $ROW['1day'] = $v['stats']['1d'];
+            if (!dbUpdate($ROW, 'component_datasource', '`component` = ?', array($component))) {
+                // No record to update, let's insert.
+                $ROW['componenet'] = $component;
+                $ROW['ds'] = $ds;
+//                $ROW['rrd'] = $v['rrd'];
+                dbInsert($ROW, 'component_datastore');
+            }
+        }
+        logfile("Stats: ".print_r($statistics,1));
 
         return true;
     }
