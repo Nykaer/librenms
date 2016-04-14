@@ -324,13 +324,13 @@ class component {
         d_echo("\n\nComponent: ".$component."\n");
         d_echo("    Host:    ".$hostname."\n");
 
-        foreach($rrd as $filename => $v) {
+        foreach($rrd as $filename => $array) {
             $rrd_filename = $config['rrd_dir'] . "/" . $hostname . "/" . safename ($filename);
 
             // Here we build 2 vars, 1 in case we need to create the RRD, and 2 to write the data.
             $rrd_create = "";
             $rrd_data = array();
-            foreach($v as $ds => $type) {
+            foreach($array as $ds => $type) {
                 // Make sure the counter type is correct.
                 if (isset($this->counter_rrd[$type])) {
                     $type = $this->counter_rrd[$type];
@@ -358,7 +358,7 @@ class component {
             $curr = rrdtool_lastupdate($rrd_filename);
 
             // Loop through each DS again, this time to retrieve averages from the RRD.
-            foreach($v as $ds => $type) {
+            foreach($array as $ds => $type) {
                 $rrd_options  = '--start end-1d --step 60 DEF:raw='.$rrd_filename.':'.$ds.':LAST ';
                 $rrd_options .= 'CDEF:15m=raw,900,TRENDNAN XPORT:15m ';
                 $rrd_options .= 'CDEF:1h=raw,3600,TRENDNAN XPORT:1h ';
@@ -398,22 +398,86 @@ class component {
 
         // We should write these statistics to the database.
         foreach($statistics as $ds => $v) {
-            $ROW = array();
-            $ROW['last'] = 'curr';
-            $ROW['curr'] = $v['stats']['curr'];
-            $ROW['15min'] = $v['stats']['15m'];
-            $ROW['1hour'] = $v['stats']['1h'];
-            $ROW['1day'] = $v['stats']['1d'];
-            if (!dbUpdate($ROW, 'component_datasource', '`component` = ?', array($component))) {
+            // extract current from the last write
+            $current = $this->getStatistic($component,$ds,$v['rrd']);
+
+            $row = array();
+            $row['last'] = $current[0]['current'];
+            $row['current'] = $v['stats']['curr'];
+            $row['15min'] = $v['stats']['15m'];
+            $row['1hour'] = $v['stats']['1h'];
+            $row['1day'] = $v['stats']['1d'];
+            $row['updated'] = time();
+
+            $result = dbUpdate($row, 'component_datasource', '`component` = ? AND `ds` = ? AND `rrd` = ?', array($component,$ds,$v['rrd']));
+            if ($result == 0) {
                 // No record to update, let's insert.
-                $ROW['componenet'] = $component;
-                $ROW['ds'] = $ds;
-//                $ROW['rrd'] = $v['rrd'];
-                dbInsert($ROW, 'component_datastore');
+                $row['rrd'] = $v['rrd'];
+                $row['last'] = 0;
+                $row['component'] = $component;
+                $row['ds'] = $ds;
+                dbInsert($row, 'component_datasource');
             }
         }
-        logfile("Stats: ".print_r($statistics,1));
+
+        // Run the component threshold rules engine.
 
         return true;
+    }
+
+    public function getStatistic($component=null, $ds=null, $rrd=null, $filter_sql=null) {
+        $SQL = "SELECT `current`,`last`,`15min`,`1hour`,`1day` FROM `component_datasource` WHERE ";
+        $filter = 0;
+        $param = array();
+
+        if (!is_null($filter_sql)) {
+            // If SQL is supplied it overrides filters.
+            $SQL .= $filter_sql;
+        }
+        else {
+            // Do we need a component filter?
+            if (!is_null($component)) {
+                $SQL .= "`component` = ? AND ";
+                $param[] = $component;
+                $filter++;
+            }
+
+            // Do we need a ds filter?
+            if (!is_null($ds)) {
+                $SQL .= "`ds` = ? AND ";
+                $param[] = $ds;
+                $filter++;
+            }
+
+            // Do we need a ds filter?
+            if (!is_null($rrd)) {
+                $SQL .= "`rrd` = ? AND ";
+                $param[] = $rrd;
+                $filter++;
+            }
+
+            if ($filter == 0) {
+                // No filters, remove " WHERE "
+                $SQL = substr($SQL, 0, strlen($SQL)-7);
+            }
+            else {
+                // Filters, remove " AND "
+                $SQL = substr($SQL, 0, strlen($SQL)-5);
+            }
+        }
+        $result = dbFetchRows($SQL, $param);
+        return $result;
+    }
+
+    private function processThreshold() {
+
+    }
+
+    public function addThreshold() {
+
+    }
+
+    public function delThreshold() {
+
     }
 }
