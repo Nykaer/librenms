@@ -779,6 +779,8 @@ $config['perf_times_purge'] = 30;
 // Number in days of how long to keep performace polling stats  entries for.
 $config['device_perf_purge'] = 7;
 // Number in days of how long to keep device performance data for.
+$config['alert_log_purge'] = 365;
+// Number in days of how long to keep alert log data for.
 
 // Date format for PHP date()s
 $config['dateformat']['long'] = 'r';
@@ -846,7 +848,8 @@ $config['map']['engine']                                = 'leaflet';
 $config['mapael']['default_map']                        = 'maps/world_countries.js';
 $config['leaflet']['default_lat']                       = '51.4800';
 $config['leaflet']['default_lng']                       = '0';
-$config['leaflet']['default_zoom']                       = 2;
+$config['leaflet']['default_zoom']                      = 2;
+$config['leaflet']['tile_url']                          = "{s}.tile.openstreetmap.org";
 
 // General GUI options
 $config['gui']['network-map']['style']                  = 'new';//old is also valid
