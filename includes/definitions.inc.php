@@ -358,6 +358,15 @@ $config['os'][$os]['icon']             = 'barracuda';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
 
+$os = 'barracudangfirewall';
+$config['os'][$os]['text']             = 'Barracuda NG Firewall';
+$config['os'][$os]['type']             = 'firewall';
+$config['os'][$os]['icon']             = 'barracuda';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+
+
 // Calix
 $os = 'calix';
 $config['os'][$os]['text']             = 'Calix E7';
@@ -959,6 +968,8 @@ $config['os'][$os]['text']             = 'Dell EqualLogic';
 $config['os'][$os]['icon']             = 'dell';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_storage';
+$config['os'][$os]['over'][1]['text']  = 'Storage Usage';
 
 $os = 'drac';
 $config['os'][$os]['text'] = 'Dell DRAC';
