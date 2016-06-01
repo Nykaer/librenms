@@ -147,39 +147,46 @@ function interface_errors($rrd_file, $period = '-1d') {
 }
 
 function getImage($device) {
-    global $config;
-
     return '<img src="' . getImageSrc($device) . '" />';
 }
 
 function getImageSrc($device) {
     global $config;
 
+    return 'images/os/' . getImageName($device) . '.png';
+}
+
+function getImageName($device, $use_database=true) {
+    global $config;
+
     $device['os'] = strtolower($device['os']);
 
-    if (!empty($device['icon']) && file_exists($config['html_dir'] . "/images/os/" . $device['icon'] . ".png")) {
-        $image = $config['base_url'] . '/images/os/' . $device['icon'] . '.png';
+    // fetch from the database
+    if ($use_database && !empty($device['icon']) && file_exists($config['html_dir'] . "/images/os/" . $device['icon'] . ".png")) {
+        return $device['icon'];
     }
-    elseif (!empty($config['os'][$device['os']]['icon']) && file_exists($config['html_dir'] . "/images/os/" . $config['os'][$device['os']]['icon'] . ".png")) {
-        $image = $config['base_url'] . '/images/os/' . $config['os'][$device['os']]['icon'] . '.png';
-    }
-    else {
-        if (file_exists($config['html_dir'] . '/images/os/' . $device['os'] . '.png')) {
-            $image = $config['base_url'] . '/images/os/' . $device['os'] . '.png';
-        }
-        if ($device['os'] == "linux") {
-            $features = strtolower(trim($device['features']));
-            list($distro) = explode(" ", $features);
-            if (file_exists($config['html_dir'] . "/images/os/$distro" . ".png")) {
-                $image = $config['base_url'] . '/images/os/' . $distro . '.png';
-            }
-        }
-        if (empty($image)) {
-            $image = $config['base_url'] . '/images/os/generic.png';
+
+    // linux specific handling, distro icons
+    if ($device['os'] == "linux") {
+        $features = strtolower(trim($device['features']));
+        list($distro) = explode(" ", $features);
+        if (file_exists($config['html_dir'] . "/images/os/$distro" . ".png")) {
+            return $distro;
         }
     }
 
-    return $image;
+    // use the icon from os config
+    if (!empty($config['os'][$device['os']]['icon']) && file_exists($config['html_dir'] . "/images/os/" . $config['os'][$device['os']]['icon'] . ".png")) {
+        return $config['os'][$device['os']]['icon'];
+    }
+
+    // guess the icon has the same name as the os
+    if (file_exists($config['html_dir'] . '/images/os/' . $device['os'] . '.png')) {
+        return $device['os'];
+    }
+
+    // fallback to the generic icon
+    return 'generic';
 }
 
 function renamehost($id, $new, $source = 'console') {
@@ -292,7 +299,7 @@ function addHost($host, $snmpver, $port = '161', $transport = 'udp', $quiet = '0
                         if ($force_add == 1 || isSNMPable($device)) {
                             $snmphost = snmp_get($device, "sysName.0", "-Oqv", "SNMPv2-MIB");
                             if (empty($snmphost) or ($snmphost == $host || $hostshort = $host)) {
-                                $device_id = createHost ($host, NULL, $snmpver, $port, $transport, $v3, $poller_group, $port_assoc_mode);
+                                $device_id = createHost ($host, NULL, $snmpver, $port, $transport, $v3, $poller_group, $port_assoc_mode, $snmphost);
                                 return $device_id;
                             }
                             else {
@@ -318,7 +325,7 @@ function addHost($host, $snmpver, $port = '161', $transport = 'udp', $quiet = '0
                         if ($force_add == 1 || isSNMPable($device)) {
                             $snmphost = snmp_get($device, "sysName.0", "-Oqv", "SNMPv2-MIB");
                             if (empty($snmphost) || ($snmphost && ($snmphost == $host || $hostshort = $host))) {
-                                $device_id = createHost ($host, $community, $snmpver, $port, $transport,array(),$poller_group, $port_assoc_mode);
+                                $device_id = createHost ($host, $community, $snmpver, $port, $transport,array(),$poller_group, $port_assoc_mode, $snmphost);
                                 return $device_id;
                             }
                             else {
@@ -568,11 +575,16 @@ function getpollergroup($poller_group='0') {
     }
 }
 
-function createHost($host, $community = NULL, $snmpver, $port = 161, $transport = 'udp', $v3 = array(), $poller_group='0', $port_assoc_mode = 'ifIndex') {
+function createHost($host, $community = NULL, $snmpver, $port = 161, $transport = 'udp', $v3 = array(), $poller_group='0', $port_assoc_mode = 'ifIndex', $snmphost) {
     global $config;
     $host = trim(strtolower($host));
 
     $poller_group=getpollergroup($poller_group);
+
+    /* Get port_assoc_mode id if neccessary
+     * We can work with names of IDs here */
+    if (! is_int ($port_assoc_mode))
+        $port_assoc_mode = get_port_assoc_mode_id ($port_assoc_mode);
 
     $device = array('hostname' => $host,
         'sysName' => $host,
@@ -592,7 +604,7 @@ function createHost($host, $community = NULL, $snmpver, $port = 161, $transport 
 
     if ($device['os']) {
 
-        if (host_exists($host) === false) {
+        if (host_exists($host, $snmphost) === false) {
             $device_id = dbInsert($device, 'devices');
             if ($device_id) {
                 oxidized_reload_nodes();
@@ -861,6 +873,8 @@ function is_port_valid($port, $device) {
     else {
         $valid = 1;
         $if = strtolower($port['ifDescr']);
+        $ifname = strtolower($port['ifName']);
+        $ifalias = strtolower($port['ifAlias']);
         $fringe = $config['bad_if'];
         if( is_array($config['os'][$device['os']]['bad_if']) ) {
             $fringe = array_merge($config['bad_if'],$config['os'][$device['os']]['bad_if']);
@@ -883,6 +897,30 @@ function is_port_valid($port, $device) {
                 }
             }
         }
+        if (is_array($config['bad_ifname_regexp'])) {
+            $fringe = $config['bad_ifname_regexp'];
+            if( is_array($config['os'][$device['os']]['bad_ifname_regexp']) ) {
+                $fringe = array_merge($config['bad_ifname_regexp'],$config['os'][$device['os']]['bad_ifname_regexp']);
+            }
+            foreach ($fringe as $bi) {
+                if (preg_match($bi ."i", $ifname)) {
+                    $valid = 0;
+                    d_echo("ignored : $bi : ".$ifname);
+                }
+            }
+        }
+        if (is_array($config['bad_ifalias_regexp'])) {
+            $fringe = $config['bad_ifalias_regexp'];
+            if( is_array($config['os'][$device['os']]['bad_ifalias_regexp']) ) {
+                $fringe = array_merge($config['bad_ifalias_regexp'],$config['os'][$device['os']]['bad_ifalias_regexp']);
+            }
+            foreach ($fringe as $bi) {
+                if (preg_match($bi ."i", $ifalias)) {
+                    $valid = 0;
+                    d_echo("ignored : $bi : ".$ifalias);
+                }
+            }
+        }
         if (is_array($config['bad_iftype'])) {
             $fringe = $config['bad_iftype'];
             if( is_array($config['os'][$device['os']]['bad_iftype']) ) {
@@ -895,7 +933,7 @@ function is_port_valid($port, $device) {
                 }
             }
         }
-        if (empty($port['ifDescr'])) {
+        if (empty($port['ifDescr']) && !$config['os'][$device['os']]['empty_ifdescr']) {
             $valid = 0;
         }
         if ($device['os'] == "catos" && strstr($if, "vlan")) {
@@ -1240,10 +1278,30 @@ function function_check($function) {
     return function_exists($function);
 }
 
-function force_influx_data($type,$data) {
-    if ($type == 'f' || $type == 'float') {
-        return(sprintf("%.1f",$data));
+function force_influx_data($data) {
+   /*
+    * It is not trivial to detect if something is a float or an integer, and
+    * therefore may cause breakages on inserts.
+    * Just setting every number to a float gets around this, but may introduce
+    * inefficiencies.
+    * I've left the detection statement in there for a possible change in future,
+    * but currently everything just gets set to a float.
+    */
+
+    if (is_numeric($data)) {
+        // If it is an Integer
+        if (ctype_digit($data)) {
+            return floatval($data);
+        // Else it is a float
+        }
+        else {
+            return floatval($data);
+        }
+    } 
+    else {
+        return $data;
     }
+
 }// end force_influx_data
 
 /**
@@ -1281,12 +1339,22 @@ function snmpTransportToAddressFamily($transport) {
  * @return bool true if hostname already exists
  *              false if hostname doesn't exist
 **/
-function host_exists($hostname) {
+function host_exists($hostname, $snmphost='') {
+    global $config;
     $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `hostname` = ?", array($hostname));
     if ($count > 0) {
         return true;
     }
     else {
+        if ($config['allow_duplicate_sysName'] === false && !empty($snmphost)) {
+            $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            if ($count > 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
         return false;
     }
 }
@@ -1324,7 +1392,7 @@ function oxidized_reload_nodes() {
     global $config;
 
     if ($config['oxidized']['enabled'] === TRUE && $config['oxidized']['reload_nodes'] === TRUE && isset($config['oxidized']['url'])) {
-        $oxidized_reload_url = $config['oxidized']['url'] . '/reload';
+        $oxidized_reload_url = $config['oxidized']['url'] . '/reload?format=json';
         $ch = curl_init($oxidized_reload_url);
 
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
@@ -1366,3 +1434,103 @@ function dnslookup($device,$type=false,$return=false) {
     $record = dns_get_record($device['hostname'],$type);
     return $record[0][$return];
 }//end dnslookup
+
+
+/**
+ * Reursive Filter Iterator to iterate directories and locate .rrd files.
+ *
+ * @method boolean isDir()
+ *
+**/
+
+class RRDRecursiveFilterIterator extends \RecursiveFilterIterator {
+
+    public function accept() {
+        $filename = $this->current()->getFilename();
+        if ($filename[0] === '.') {
+            // Ignore hidden files and directories
+            return false;
+        }
+        if ($this->isDir()) {
+            // We want to search into directories
+            return true;
+        }
+        // Matches files with .rrd in the filename.
+        // We are only searching rrd folder, but there could be other files and we don't want to cause a stink.
+        return strpos($filename, '.rrd') !== false;
+    }
+}
+
+/**
+ * Run rrdtool info on a file path
+ *
+ * @param string $path Path to pass to rrdtool info
+ * @param string $stdOutput Variable to recieve the output of STDOUT
+ * @param string $stdError Variable to recieve the output of STDERR
+ *
+ * @return int exit code
+ *
+**/
+
+function rrdtest($path, &$stdOutput, &$stdError) {
+    global $config;
+    //rrdtool info <escaped rrd path>
+    $command = $config['rrdtool'].' info '.escapeshellarg($path);
+    $process = proc_open(
+        $command,
+        array (
+            0 => array('pipe', 'r'),
+            1 => array('pipe', 'w'),
+            2 => array('pipe', 'w'),
+        ),
+        $pipes
+    );
+
+    if (!is_resource($process)) {
+        throw new \RuntimeException('Could not create a valid process');
+    }
+
+    $status = proc_get_status($process);
+    while($status['running']) {
+        usleep(2000); // Sleep 2000 microseconds or 2 milliseconds
+        $status = proc_get_status($process);
+    }
+
+    $stdOutput = stream_get_contents($pipes[1]);
+    $stdError  = stream_get_contents($pipes[2]);
+    proc_close($process);
+    return $status['exitcode'];
+}
+
+function create_state_index($state_name) {
+    if (dbFetchRow('SELECT * FROM state_indexes WHERE state_name = ?', array($state_name)) !== true) {
+        $insert = array('state_name' => $state_name);
+        return dbInsert($insert, 'state_indexes');
+    }
+}
+
+function create_sensor_to_state_index($device, $state_name, $index)
+{
+    $sensor_entry = dbFetchRow('SELECT sensor_id FROM `sensors` WHERE `sensor_class` = ? AND `device_id` = ? AND `sensor_type` = ? AND `sensor_index` = ?', array(
+        'state',
+        $device['device_id'],
+        $state_name,
+        $index
+    ));
+    $state_indexes_entry = dbFetchRow('SELECT state_index_id FROM `state_indexes` WHERE `state_name` = ?', array(
+        $state_name
+    ));
+    if (!empty($sensor_entry['sensor_id']) && !empty($state_indexes_entry['state_index_id'])) {
+        $insert = array(
+            'sensor_id' => $sensor_entry['sensor_id'],
+            'state_index_id' => $state_indexes_entry['state_index_id'],
+        );
+        foreach($insert as $key => $val_check) {
+            if (!isset($val_check)) {
+                unset($insert[$key]);
+            }
+        }
+
+        dbInsert($insert, 'sensors_to_state_indexes');
+    }
+}

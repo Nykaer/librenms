@@ -13,6 +13,7 @@
  - [How do I debug the poller process?](#faq12)
  - [Why do I get a lot apache or rrdtool zombies in my process list?](#faq14)
  - [Why do I see traffic spikes in my graphs?](#faq15)
+ - [How do I change the IP / hostname of a device?](#faq16)
 
 ### Developing
  - [How do I add support for a new OS?](#faq8)
@@ -73,6 +74,8 @@ If the page you are trying to load has a substantial amount of data in it then i
 
 This is usually due to there being blank spaces outside of the `<?php ?>` php tags within config.php. Remove these and retry.
 It's also worth removing the final `?>` at the end of config.php as this is not required.
+Another reason why it might not be working is if you disabled functions needed by LibreNMS, which include `allow_url_fopen`
+and `exec,passthru,shell_exec,escapeshellarg,escapeshellcmd,proc_close,proc_open,popen`.
 
 #### <a name="faq7"> How do I debug pages not loading correctly?</a>
 
@@ -101,6 +104,14 @@ This occurs either when a counter resets or the device sends back bogus data mak
 Before this all rrd files were set to 100G max values, now you can enable support to limit this to the actual port speed.
 
 rrdtool tune will change the max value when the interface speed is detected as being changed (min value will be set for anything 10M or over) or when you run the included script (scripts/tune_port.php).
+
+#### <a name="faq16"> How do I change the IP / hostname of a device?</a>
+
+There is a host rename tool called renamehost.php in your librenms root directory. When renaming you are also changing the device's IP / hostname address for monitoring.
+Usage:
+```bash
+./renamehost.php <old hostname> <new hostname>
+```
 
 #### <a name="faq8"> How do I add support for a new OS?</a>
 
@@ -153,7 +164,7 @@ If you see `nothing to commit, working directory clean` then let's go for it :)
 Let's say that you want to test a users (f0o) new development branch (issue-1337) then you can do the following:
 
 ```bash
-git remote add f0o https://github.com/librenms/librenms.git
+git remote add f0o https://github.com/f0o/librenms.git
 git remote update f0o
 git checkout issue-1337
 ```

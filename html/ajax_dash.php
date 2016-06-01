@@ -35,6 +35,7 @@ if ($type == 'placeholder') {
 elseif (is_file('includes/common/'.$type.'.inc.php')) {
 
     $results_limit     = 10;
+    $typeahead_limit   = $config['webui']['global_search_result_limit'];
     $no_form           = true;
     $title             = ucfirst($type);
     $unique_id         = str_replace(array("-","."),"_",uniqid($type,true));
@@ -55,5 +56,5 @@ $response = array(
                   'html' => $output,
                   'title' => $title,
                  );
-
+header('Content-type: application/json');
 echo _json_encode($response);

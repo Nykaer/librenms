@@ -315,6 +315,17 @@ function device_by_id_cache($device_id, $refresh = '0') {
     }
     else {
         $device = dbFetchRow("SELECT * FROM `devices` WHERE `device_id` = ?", array($device_id));
+		
+		//order vrf_lite_cisco with context, this will help to get the vrf_name and instance_name all the time
+		$vrfs_lite_cisco = dbFetchRows("SELECT * FROM `vrf_lite_cisco` WHERE `device_id` = ?", array($device_id));
+		$device['vrf_lite_cisco'] = array();
+		if(!empty($vrfs_lite_cisco)){
+			foreach ($vrfs_lite_cisco as $vrf){
+				$device['vrf_lite_cisco'][$vrf['context_name']] = $vrf;
+			}
+		}
+
+        $device['ip'] = inet6_ntop($device['ip']);
         $cache['devices']['id'][$device_id] = $device;
     }
     return $device;
@@ -477,7 +488,7 @@ function get_dev_attrib($device, $attrib_type, $attrib_value='') {
 
 function is_dev_attrib_enabled($device, $attrib, $default = true) {
     $val = get_dev_attrib($device, $attrib);
-    if ($val != NULL) {
+    if ($val != null) {
         // attribute is set
         return ($val != 0);
     }
@@ -573,38 +584,6 @@ function is_valid_hostname($hostname) {
 
     return ctype_alnum(str_replace('_','',str_replace('-','',str_replace('.','',$hostname))));
 }
-
-function add_service($device, $service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_array($device)) {
-        $device = device_by_id_cache($device);
-    }
-
-    if (empty($service_ip)) {
-        $service_ip = $device['hostname'];
-    }
-
-    $insert = array('device_id' => $device['device_id'], 'service_ip' => $service_ip, 'service_type' => $service,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'), 'service_desc' => $descr, 'service_param' => $service_param, 'service_ignore' => $service_ignore);
-
-    return dbInsert($insert, 'services');
-}
-
-function edit_service($service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_numeric($service)) {
-        return false;
-    }
-
-    $update = array('service_ip' => $service_ip,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'),
-        'service_desc' => $descr,
-        'service_param' => $service_param,
-        'service_ignore' => $service_ignore);
-    return dbUpdate($update, 'services', '`service_id`=?', array($service));
-
-}
-
 
 /*
  * convenience function - please use this instead of 'if ($debug) { echo ...; }'
@@ -720,8 +699,8 @@ function get_smokeping_files($device) {
         if ($handle = opendir($smokeping_dir)) {
             while (false !== ($file = readdir($handle))) {
                 if ($file != '.' && $file != '..') {
-                    if (eregi('.rrd', $file)) {
-                        if (eregi('~', $file)) {
+                    if (stripos($file, '.rrd') !== false) {
+                        if (strpos($file, '~') !== false) {
                             list($target,$slave) = explode('~', str_replace('.rrd', '', $file));
                             $target = str_replace('_', '.', $target);
                             $smokeping_files['in'][$target][$slave] = $file;
@@ -774,16 +753,11 @@ function round_Nth($val = 0, $round_to) {
  */
 function is_mib_poller_enabled($device)
 {
-    if (!is_module_enabled('poller', 'mib')) {
-        return false;
+    $val = get_dev_attrib($device, 'poll_mib');
+    if ($val == null) {
+        return is_module_enabled('poller', 'mib');
     }
-
-    if (!is_dev_attrib_enabled($device, 'poll_mib')) {
-        d_echo('MIB module disabled for '.$device['hostname']."\n");
-        return false;
-    }
-
-    return true;
+    return $val;
 } // is_mib_poller_enabled
 
 
@@ -1062,7 +1036,13 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']   = chop(`git rev-parse HEAD`);
+    $output['local_sha']    = rtrim(`git rev-parse HEAD`);
+    $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
+
+    exec('git diff --name-only --exit-code', $cmdoutput, $code);
+    $output['git_modified'] = ($code !== 0);
+    $output['git_modified_files'] = $cmdoutput;
+
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');
     $output['php_ver']     = phpversion();
     $output['mysql_ver']   = dbFetchCell('SELECT version()');
@@ -1248,7 +1228,7 @@ function get_port_id ($ports_mapped, $port, $port_association_mode) {
     */
     $maps  = $ports_mapped['maps'];
 
-    if (in_array ($port_association_mode, array ('ifIndex', 'ifName', 'ifDescr'))) {
+    if (in_array ($port_association_mode, array ('ifIndex', 'ifName', 'ifDescr', 'ifAlias'))) {
         $port_id = $maps[$port_association_mode][$port[$port_association_mode]];
     }
 

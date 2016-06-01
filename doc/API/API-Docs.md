@@ -13,7 +13,11 @@
         - [`get_graphs`](#api-route-5)
         - [`get_graph_generic_by_hostname`](#api-route-6)
         - [`get_port_graphs`](#api-route-7)
+        - [`get_port_stack`](#api-route-29)
         - [`get_components`](#api-route-25)
+        - [`add_components`](#api-route-26)
+        - [`edit_components`](#api-route-27)
+        - [`delete_components`](#api-route-28)
         - [`get_port_stats_by_port_hostname`](#api-route-8)
         - [`get_graph_by_port_hostname`](#api-route-9)
         - [`list_devices`](#api-route-10)
@@ -26,6 +30,7 @@
         - [`get_devices_by_group`](#api-route-get_devices_by_group)
     - [`routing`](#api-routing)
         - [`list_bgp`](#api-route-1)
+        - [`list_ipsec`](#list_ipsec)
     - [`switching`](#api-switching)
         - [`get_vlans`](#api-route-4)
     - [`alerts`](#api-alerts)
@@ -272,6 +277,47 @@ Output:
 }
 ```
 
+### <a name="api-route-29">Function: `get_port_stack`</a> [`top`](#top)
+
+Get a list of port mappings for a device.  This is useful for showing physical ports that are in a virtual port-channel.
+
+Route: /api/v0/devices/:hostname/port_stack
+
+- hostname can be either the device hostname or id
+
+Input:
+
+ - valid_mappings: Filter the result by only showing valid mappings ("0" values not shown).
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/port_stack?valid_mappings
+```
+
+Output:
+
+```text
+{
+  "status": "ok",
+  "err-msg": "",
+  "count": 2,
+  "mappings": [
+    {
+      "device_id": "3742",
+      "port_id_high": "1001000",
+      "port_id_low": "51001",
+      "ifStackStatus": "active"
+    },
+    {
+      "device_id": "3742",
+      "port_id_high": "1001000",
+      "port_id_low": "52001",
+      "ifStackStatus": "active"
+    }
+  ]
+}
+```
+
 ### <a name="api-route-25">Function: `get_components`</a> [`top`](#top)
 
 Get a list of components for a particular device.
@@ -333,6 +379,88 @@ Output:
             "disabled": "0"
         }
     }
+}
+```
+
+### <a name="api-route-26">Function: `add_components`</a> [`top`](#top)
+
+Create a new component of a type on a particular device.
+
+Route: /api/v0/devices/:hostname/components/:type
+
+- hostname can be either the device hostname or id
+- type is the type of component to add
+
+Example:
+```curl
+curl -X POST -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/APITEST
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1,
+    "components": {
+        "4459": {
+            "type": "APITEST",
+            "label": "",
+            "status": 1,
+            "ignore": 0,
+            "disabled": 0,
+            "error": ""
+        }
+    }
+}
+```
+
+### <a name="api-route-27">Function: `edit_components`</a> [`top`](#top)
+
+Edit an existing component on a particular device.
+
+Route: /api/v0/devices/:hostname/components
+
+- hostname can be either the device hostname or id
+
+In this example we set the label and add a new field: TestField:
+```curl
+curl -X PUT -d '{"4459": {"type": "APITEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1
+}
+```
+
+Just take the JSON array from add_components or edit_components, edit as you wish and submit it back to edit_components.
+
+### <a name="api-route-28">Function: `delete_components`</a> [`top`](#top)
+
+Delete an existing component on a particular device.
+
+Route: /api/v0/devices/:hostname/components/:component
+
+- hostname can be either the device hostname or id
+- component is the component ID to be deleted.
+
+Example:
+```curl
+curl -X DELETE -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/4459
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": ""
 }
 ```
 
@@ -738,6 +866,43 @@ Output:
  ]
 }
 ```
+
+### <a name="list_ipsec">Function: `list_ipsec`</a> [`top`](#top)
+
+List the current IPSec tunnels which are active.
+
+Route: /api/v0/routing/ipsec/data/:hostname
+
+- hostname can be either the device hostname or id
+
+Input:
+
+ -
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/routing/ipsec/data/localhost
+```
+
+Output:
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 0,
+    "ipsec": [
+        "tunnel_id": "1",
+        "device_id": "1",
+        "peer_port": "0",
+        "peer_addr": "127.0.0.1",
+        "local_addr": "127.0.0.2",
+        "local_port": "0",
+        "tunnel_name": "",
+        "tunnel_status": "active"
+    ]
+}
+```
+> Please note, this will only show active VPN sessions not all configured.
 
 ## <a name="api-switching">`Switching`</a> [`top`](#top)
 

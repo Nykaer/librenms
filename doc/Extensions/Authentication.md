@@ -137,6 +137,7 @@ If you set ```$config['auth_ad_require_groupmembership']``` to 1, the authentica
 > Cleanup of old accounts is done using the authlog. You will need to set the cleanup date for when old accounts will be purged which will happen AUTOMATICALLY.
 > Please ensure that you set the $config['authlog_purge'] value to be greater than $config['active_directory]['users_purge'] otherwise old users won't be removed.
 
+
 ##### Sample configuration
 
 ```
@@ -144,11 +145,13 @@ $config['auth_ad_url']                      = "ldaps://your-domain.controll.er";
 $config['auth_ad_check_certificates']       = 1; // or 0
 $config['auth_ad_domain']                   = "your-domain.com";
 $config['auth_ad_base_dn']                  = "dc=your-domain,dc=com";
-$config['auth_ad_groups']['admin']['level'] = 10;
-$config['auth_ad_groups']['pfy']['level']   = 7;
+$config['auth_ad_groups']['<ad-admingroup>']['level'] = 10;
+$config['auth_ad_groups']['<ad-usergroup>']['level']   = 7;
 $config['auth_ad_require_groupmembership']  = 0;
 $config['active_directory']['users_purge']  = 14;//Purge users who haven't logged in for 14 days.
 ```
+
+Replace `<ad-admingroup>` with your Active Directory admin-user group and `<ad-usergroup>` with your standard user group.
 
 #### Radius Authentication
 
@@ -164,4 +167,28 @@ $config['radius']['secret']     = 'testing123';
 $config['radius']['timeout']    = 3;
 $config['radius']['users_purge'] = 14;//Purge users who haven't logged in for 14 days.
 $config['radius']['default_level'] = 1;//Set the default user level when automatically creating a user.
+```
+
+#### HTTP Authentication / AD Authorization
+
+Config option: `ad-authorization`
+
+This module is a combination of ___http-auth___ and ___active_directory___
+
+LibreNMS will expect the user to have authenticated via your webservice already (e.g. using Kerberos Authentication in Apache) but will use Active Directory lookups to determine and assign the userlevel of a user.
+The userlevel will be calculated by using AD group membership information as the ___active_directory___ module does.
+
+The configuration is the same as for the ___active_directory___ module with two extra, optional options: auth_ad_binduser and auth_ad_bindpassword.
+These should be set to a AD user with read capabilities in your AD Domain in order to be able to perform searches. 
+If these options are omitted, the module will attempt an anonymous bind (which then of course must be allowed by your Active Directory server(s)).
+
+There is also one extra option for controlling user information caching: auth_ldap_cache_ttl.
+This option allows to control how long user information (user_exists, userid, userlevel) are cached within the PHP Session.
+The default value is 300 seconds.
+To disable this caching (highly discourage) set this option to 0.
+
+```php
+$config['auth_ad_binduser']     = "ad_binduser";
+$config['auth_ad_bindpassword'] = "ad_bindpassword";
+$config['auth_ldap_cache_ttl']  = 300;
 ```

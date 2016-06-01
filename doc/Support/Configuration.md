@@ -220,6 +220,12 @@ $config['addhost_alwayscheckip']   = FALSE; #TRUE - check for duplicate ips even
                                             #FALSE- only check when adding host by ip.
 ```
 
+By default we allow hosts to be added with duplicate sysName's, you can disable this with the following config:
+
+```php
+$config['allow_duplicate_sysName'] = false;
+```
+
 #### SNMP Settings
 
 ```php
@@ -379,10 +385,15 @@ NFSen integration support.
 
 #### Location mapping
 
+Exact Matching:
 ```php
 $config['location_map']['Under the Sink'] = "Under The Sink, The Office, London, UK";
 ```
-The above is an example, this will rewrite basic snmp locations so you don't need to configure full location within snmp.
+Regex Matching:
+```php
+$config['location_map_regex']['/Sink/'] = "Under The Sink, The Office, London, UK";
+```
+The above are examples, these will rewrite device snmp locations so you don't need to configure full location within snmp.
 
 #### Interfaces to be ignored
 
@@ -395,6 +406,8 @@ by continuing the array.
 `bad_if` is matched against the ifDescr value.
 `bad_iftype` is matched against the ifType value.
 `bad_if_regexp` is matched against the ifDescr value as a regular expression.
+`bad_ifname_regexp` is matched against the ifName value as a regular expression.
+`bad_ifalias_regexp` is matched against the ifAlias value as a regular expression.
 
 #### Interfaces to be rewritten
 
@@ -405,6 +418,17 @@ $config['rewrite_if_regexp']['/cpu /'] = 'Management ';
 Entries defined in `rewrite_if` are being replaced completely.
 Entries defined in `rewrite_if_regexp` only replace the match.
 Matches are compared case-insensitive.
+
+#### Entity sensors to be ignored
+
+Some devices register bogus sensors as they are returned via SNMP but either don't exist or just don't return data.
+This allows you to ignore those based on the descr field in the database. You can either ignore globally or on a per 
+os basis.
+
+```php
+$config['bad_entity_sensor_regex'][] = '/Physical id [0-9]+/';
+$config['os']['cisco']['bad_entity_sensor_regex'] = '/Physical id [0-9]+/';
+```
 
 #### Storage configuration
 
