@@ -937,8 +937,6 @@ $config['os'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text'] = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text'] = 'Memory Usage';   
-$config['os'][$os]['over'][3]['graph'] = 'device_storage';
-$config['os'][$os]['over'][3]['text'] = 'Storage Usage';  
 
 $os = 'equallogic';
 $config['os'][$os]['text']             = 'Dell EqualLogic';
