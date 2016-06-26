@@ -48,35 +48,35 @@ foreach ($sla_types as $sla_type => $text) {
 }
 
 unset($sep);
-
 print_optionbar_end();
+?>
 
-echo '<table>';
+<table id='table' class='table table-condensed table-responsive table-striped'>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Tag</th>
+        <th>Owner</th>
+    </tr>
+    </thead>
+<?php
+
 
 foreach ($slas as $sla) {
     if ($vars['view'] != 'all' && $vars['view'] != $sla['rtt_type']) {
         continue;
     }
 
-    $name = 'SLA #'.$sla['sla_nr'].' - '.$sla_types[$sla['rtt_type']];
-    if ($sla['tag']) {
-        $name .= ': '.$sla['tag'];
-    }
-
-    if ($sla['owner']) {
-        $name .= ' (Owner: '.$sla['owner'].')';
-    }
-
-    $graph_array['type'] = 'device_sla';
-    $graph_array['id']   = $sla['sla_id'];
-    echo '<tr><td>';
-    echo '<h3>'.htmlentities($name).'</h3>';
-
-    include 'includes/print-graphrow.inc.php';
-
-    echo '</td></tr>';
+?>
+  <tr onclick="window.document.location='<?php echo generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_nr'])); ?>';" style="cursor: pointer;">
+    <td><?php echo $sla['sla_nr']; ?></td>
+    <td><?php echo $sla_types[$sla['rtt_type']]; ?></td>
+    <td><?php echo $sla['tag']; ?></td>
+    <td><?php echo $sla['owner']; ?></td>
+  </tr>
+<?php
 }
 
 echo '</table>';
-
 $pagetitle[] = 'SLAs';
