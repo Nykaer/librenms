@@ -4,6 +4,7 @@ Table of Content:
 - [Rules](#rules)
     - [Syntax](#rules-syntax)
     - [Examples](#rules-examples)
+    - [Procedure](#rules-procedure)
 - [Templates](#templates)
     - [Syntax](#templates-syntax)
     - [Examples](#templates-examples)
@@ -21,6 +22,7 @@ Table of Content:
     - [Clickatell](#transports-clickatell)
     - [PlaySMS](#transports-playsms)
     - [VictorOps](#transports-victorops)
+    - [Canopsis](#transports-canopsis)
 - [Entities](#entities)
     - [Devices](#entity-devices)
     - [BGP Peers](#entity-bgppeers)
@@ -88,6 +90,9 @@ Alert when:
 - High CPU usage(per core usage, not overall): `%macros.device_up = "1" && %processors.processor_usage >= "90"`
 - High port usage, where description is not client & ifType is not softwareLoopback: `%macros.port_usage_perc >= "80" && %port.port_descr_type != "client" && %ports.ifType != "softwareLoopback"`
 
+## <a name="rules-procedure">Procedure</a>
+You can associate a rule to a procedure by giving the URL of the procedure when creating the rule. Only links like "http://" are supported, otherwise an error will be returned. Once configured, procedure can be opened from the Alert widget through the "Open" button, which can be shown/hidden from the widget configuration box.
+
 # <a name="templates">Templates</a>
 
 Templates can be assigned to a single or a group of rules.
@@ -106,6 +111,8 @@ Controls:
 Placeholders:
 
 - Hostname of the Device: `%hostname`
+- sysName of the Device: `%sysName`
+- location of the Device: `%location`
 - Title for the Alert: `%title`
 - Time Elapsed, Only available on recovery (`%state == 0`): `%elapsed`
 - Alert-ID: `%id`
@@ -440,6 +447,28 @@ $config['alert']['transports']['victorops']['url'] = 'https://alert.victorops.co
 ```
 ~~
 
+## <a name="transports-canopsis">Canopsis</a>
+
+Canopsis is a hypervision tool. LibreNMS can send alerts to Canopsis which are then converted to canopsis events. To configure the transport, go to:
+
+Global Settings -> Alerting Settings -> Canopsis Transport.
+
+You will need to fill this paramaters :
+
+~~
+```php
+$config['alert']['transports']['canopsis']['host'] = 'www.xxx.yyy.zzz';
+$config['alert']['transports']['canopsis']['port'] = '5672';
+$config['alert']['transports']['canopsis']['user'] = 'admin';
+$config['alert']['transports']['canopsis']['passwd'] = 'my_password';
+$config['alert']['transports']['canopsis']['vhost'] = 'canopsis';
+```
+~~
+
+For more information about canopsis and its events, take a look here :
+ http://www.canopsis.org/
+ http://www.canopsis.org/wp-content/themes/canopsis/doc/sakura/user-guide/event-spec.html
+
 # <a name="entities">Entities
 
 Entities as described earlier are based on the table and column names within the database, if you are unsure of what the entity is you want then have a browse around inside MySQL using `show tables` and `desc <tablename>`.
@@ -541,6 +570,12 @@ All macros that are not unary should return Boolean.
 
 You can only apply _Equal_ or _Not-Equal_ Operations on Boolean-macros where `True` is represented by `"1"` and `False` by `"0"`.
 
+Note, if using a /, spaces must be inserted around it.
+
+Example 
+```php
+((%ports.ifInOctets_rate*8) / %ports.ifSpeed)*100
+```
 
 ## <a name="macros-device">Device</a> (Boolean)
 
@@ -604,7 +639,7 @@ Entity: `%macros.port_usage_perc`
 
 Description: Return port-usage in percent.
 
-Source: `((%ports.ifInOctets_rate*8)/%ports.ifSpeed)*100`
+Source: `((%ports.ifInOctets_rate*8) / %ports.ifSpeed)*100`
 
 ## <a name="macros-time">Time</a>
 

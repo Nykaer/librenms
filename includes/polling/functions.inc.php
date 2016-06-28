@@ -1,5 +1,6 @@
 <?php
 
+require_once $config['install_dir'].'/includes/device-groups.inc.php';
 
 function poll_sensor($device, $class, $unit) {
     global $config, $memcache, $agent_sensors;
@@ -19,6 +20,9 @@ function poll_sensor($device, $class, $unit) {
             if ($class == 'temperature') {
                 if ($device['os'] == 'netapp') {
                     include 'includes/polling/temperatures/netapp.inc.php';
+                }
+                else if ($device['os'] == 'canopy') {
+                    include 'includes/polling/temperatures/canopy.inc.php';
                 }
                 else {
                     // Try 5 times to get a valid temp reading
@@ -41,7 +45,19 @@ function poll_sensor($device, $class, $unit) {
             }
             else if ($class == 'state') {
                 $sensor_value = trim(str_replace('"', '', snmp_walk($device, $sensor['sensor_oid'], '-Oevq', 'SNMPv2-MIB')));
+                if (!is_numeric($sensor_value)) {
+                    $state_value = dbFetchCell('SELECT `state_value` FROM `state_translations` LEFT JOIN `sensors_to_state_indexes` ON `state_translations`.`state_index_id` = `sensors_to_state_indexes`.`state_index_id` WHERE `sensors_to_state_indexes`.`sensor_id` = ? AND `state_translations`.`state_descr` LIKE ?', array($sensor['sensor_id'], $sensor_value));
+                    d_echo('State value of ' . $sensor_value . ' is ' . $state_value . "\n");
+                    if (is_numeric($state_value)) {
+                        $sensor_value = $state_value;
+                    }
+                }
             }
+            else if ($class == 'signal') {
+               $currentOS = $device['os'];
+               include "includes/polling/signal/$currentOS.inc.php";
+               $sensor_value = trim(str_replace('"', '', snmp_get($device, $sensor['sensor_oid'], '-OUqnv', "SNMPv2-MIB$mib")));
+           }
             else if ($class == 'dbm') {
                 $sensor_value = trim(str_replace('"', '', snmp_get($device, $sensor['sensor_oid'], '-OUqnv', "SNMPv2-MIB$mib")));
                 //iosxr does not expose dbm values through SNMP so we convert Watts to dbm to have a nice graph to show
@@ -113,11 +129,11 @@ function poll_sensor($device, $class, $unit) {
         influx_update($device,'sensor',$tags,$fields);
 
         // FIXME also warn when crossing WARN level!!
-        if ($sensor['sensor_limit_low'] != '' && $sensor['sensor_current'] > $sensor['sensor_limit_low'] && $sensor_value <= $sensor['sensor_limit_low'] && $sensor['sensor_alert'] == 1) {
+        if ($sensor['sensor_limit_low'] != '' && $sensor['sensor_current'] > $sensor['sensor_limit_low'] && $sensor_value < $sensor['sensor_limit_low'] && $sensor['sensor_alert'] == 1) {
             echo 'Alerting for '.$device['hostname'].' '.$sensor['sensor_descr']."\n";
             log_event(ucfirst($class).' '.$sensor['sensor_descr'].' under threshold: '.$sensor_value." $unit (< ".$sensor['sensor_limit_low']." $unit)", $device, $class, $sensor['sensor_id']);
         }
-        else if ($sensor['sensor_limit'] != '' && $sensor['sensor_current'] < $sensor['sensor_limit'] && $sensor_value >= $sensor['sensor_limit'] && $sensor['sensor_alert'] == 1) {
+        else if ($sensor['sensor_limit'] != '' && $sensor['sensor_current'] < $sensor['sensor_limit'] && $sensor_value > $sensor['sensor_limit'] && $sensor['sensor_alert'] == 1) {
             echo 'Alerting for '.$device['hostname'].' '.$sensor['sensor_descr']."\n";
             log_event(ucfirst($class).' '.$sensor['sensor_descr'].' above threshold: '.$sensor_value." $unit (> ".$sensor['sensor_limit']." $unit)", $device, $class, $sensor['sensor_id']);
         }
@@ -219,45 +235,51 @@ function poll_device($device, $options) {
         include 'includes/polling/core.inc.php';
 
         if ($options['m']) {
+            $config['poller_modules'] = array();
             foreach (explode(',', $options['m']) as $module) {
                 if (is_file('includes/polling/'.$module.'.inc.php')) {
-                    include 'includes/polling/'.$module.'.inc.php';
+                    $config['poller_modules'][$module] = 1;
                 }
             }
         }
-        else {
-            foreach ($config['poller_modules'] as $module => $module_status) {
-                if ($attribs['poll_'.$module] || ( $module_status && !isset($attribs['poll_'.$module]))) {
-                    $module_start = microtime(true);
-                    include 'includes/polling/'.$module.'.inc.php';
-                    $module_time = microtime(true) - $module_start;
-                    echo "Runtime for polling module '$module': $module_time\n";
+        foreach ($config['poller_modules'] as $module => $module_status) {
+            if ($attribs['poll_'.$module] || ( $module_status && !isset($attribs['poll_'.$module]))) {
+                $module_start = 0;
+                $module_time  = 0;
+                $module_start = microtime(true);
+                echo "\n#### Load poller module $module ####\n";
+                include "includes/polling/$module.inc.php";
+                $module_time = microtime(true) - $module_start;
+                echo "\n>> Runtime for poller module '$module': $module_time seconds\n";
+                echo "#### Unload poller module $module ####\n\n";
 
-                    // save per-module poller stats
-                    $tags = array(
-                        'module'      => $module,
-                        'rrd_def'     => 'DS:poller:GAUGE:600:0:U',
-                        'rrd_name'    => array('poller-perf', $module),
-                    );
-                    $fields = array(
-                        'poller' => $module_time,
-                    );
-                    data_update($device, 'poller-perf', $tags, $fields);
+                // save per-module poller stats
+                $tags = array(
+                    'module'      => $module,
+                    'rrd_def'     => 'DS:poller:GAUGE:600:0:U',
+                    'rrd_name'    => array('poller-perf', $module),
+                );
+                $fields = array(
+                    'poller' => $module_time,
+                );
+                data_update($device, 'poller-perf', $tags, $fields);
 
-                    // remove old rrd
-                    $oldrrd = rrd_name($device['hostname'], array('poller', $module, 'perf'));
-                    if (is_file($oldrrd)) {
-                        unlink($oldrrd);
-                    }
-                }
-                else if (isset($attribs['poll_'.$module]) && $attribs['poll_'.$module] == '0') {
-                    echo "Module [ $module ] disabled on host.\n";
-                }
-                else {
-                    echo "Module [ $module ] disabled globally.\n";
-                }
+                // remove old rrd
+                $oldrrd = rrd_name($device['hostname'], array('poller', $module, 'perf'));
+                if (is_file($oldrrd)) {
+                    unlink($oldrrd);
+                 }
             }
-        }//end if
+            else if (isset($attribs['poll_'.$module]) && $attribs['poll_'.$module] == '0') {
+                echo "Module [ $module ] disabled on host.\n";
+            }
+            else {
+                echo "Module [ $module ] disabled globally.\n";
+            }
+        }
+
+        // Update device_groups
+        UpdateGroupsForDevice($device['device_id']);
 
         if (!$options['m']) {
             // FIXME EVENTLOGGING -- MAKE IT SO WE DO THIS PER-MODULE?
@@ -511,3 +533,4 @@ function location_to_latlng($device) {
         }
     }
 }// end location_to_latlng()
+

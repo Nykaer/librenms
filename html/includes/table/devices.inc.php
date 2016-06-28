@@ -87,7 +87,7 @@ if (!empty($_POST['group'])) {
     $sql .= ' AND ( ';
     foreach (GetDevicesFromGroup($_POST['group']) as $dev) {
         $sql    .= '`devices`.`device_id` = ? OR ';
-        $param[] = $dev['device_id'];
+        $param[] = $dev;
     }
 
     $sql  = substr($sql, 0, (strlen($sql) - 3));
@@ -207,6 +207,7 @@ foreach (dbFetchRows($sql, $param) as $device) {
         $hostname .= '<br />'.$device['sysName'];
         if (empty($port_count)) {
             $port_count = 0;
+            $col_port = '';
         }
         if ($port_count) {
             $col_port = ' <img src="images/icons/port.png" align=absmiddle /> '.$port_count.'<br />';

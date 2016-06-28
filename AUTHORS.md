@@ -27,7 +27,7 @@ LibreNMS contributors:
 - Mohammad Al-Shami <mohammad@al-shami.net> (mohshami)
 - Rudy Hardeman <zarya@gigafreak.net> (zarya)
 - Freddie Cash <fjwcash@gmail.com> (fjwcash)
-- Thom Seddon <thom@seddonmedia.co.uk> (thomseddon) 
+- Thom Seddon <thom@seddonmedia.co.uk> (thomseddon)
 - Vitali Kari <vitali.kari@gmail.com> (vitalisator)
 - James Campbell <neokjames@gmail.com> (neokjames)
 - Steve Calvário <calvario.steve@gmail.com> (Calvario)
@@ -92,11 +92,26 @@ LibreNMS contributors:
 - Marco Di Cerbo <marco@dottoremoe.com> (marcodc)
 - David Bell <me@geordish.org> (geordish)
 - Ibrahim Tachijian <barhom@netsat.se> (barhom)
+- Guillaume Coeugnet <aliasprotect-git@yahoo.fr> (gcoeugnet)
+- Jared Newell <jared.newell@gmail.com> (Jaredn)
+- Karsten Nerdinger <karsten-git-librenms@nerdinger.net> (piratonym)
+- Michael Nguyen <mnguyen1289@gmail.com> (mnguyen1289)
+- Casey Schoonover <casey.schoonover@llcc.edu> (cschoonover91)
+- Chris A. Evans <thecityofguanyu@outlook.com> (thecityofguanyu)
+- Rainer Schüler <github@layer3.de> (rschueler)
+- Jussi Sorjonen <mieleton@mieleton.net> (mieleton)
+- Jens Langhammer <jens@beryju.org> (BeryJu)
+- Robert Verspuy <robert@exa.nl> (exarv)
+- Peter Tkatchenko <peter@flytrace.com> (Peter2121)
+- Marc Runkel <marc@runkel.org> (mrunkel)
+- Josh Driver <keeperofdakeys@gmail.com> (keeperofdakeys)
+- Felix Eckhofer <felix@eckhofer.com> (tribut)
+- Vikram Adukia <adukia@dropbox.com> (justmedude) 
+- Tijmen de Mes <tijmen@ag-projects.com> (tijmenNL)
+- Benjamin Busche <benjamin.busche@gmail.com> (optic00)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
 - Adam Armstrong
 - Tom Laermans
 - various others as indicated in the file contents and commit logs
-
- 

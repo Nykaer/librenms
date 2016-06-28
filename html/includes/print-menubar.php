@@ -3,8 +3,9 @@ require $config['install_dir'].'/includes/object-cache.inc.php';
 
 // FIXME - this could do with some performance improvements, i think. possible rearranging some tables and setting flags at poller time (nothing changes outside of then anyways)
 
-$service_alerts = dbFetchCell("SELECT COUNT(service_id) FROM services WHERE service_status = '0'");
-$if_alerts      = dbFetchCell("SELECT COUNT(port_id) FROM `ports` WHERE `ifOperStatus` = 'down' AND `ifAdminStatus` = 'up' AND `ignore` = '0'");
+$service_status   = get_service_status();
+$typeahead_limit  = $config['webui']['global_search_result_limit'];
+$if_alerts        = dbFetchCell("SELECT COUNT(port_id) FROM `ports` WHERE `ifOperStatus` = 'down' AND `ifAdminStatus` = 'up' AND `ignore` = '0'");
 
 if ($_SESSION['userlevel'] >= 5) {
     $links['count']        = dbFetchCell("SELECT COUNT(*) FROM `links`");
@@ -219,18 +220,20 @@ if ($config['show_services']) {
 
 <?php
 
-if ($service_alerts) {
-    echo('
-            <li role="presentation" class="divider"></li>
-            <li><a href="services/state=down/"><i class="fa fa-bell-o fa-fw fa-lg"></i> Alerts ('.$service_alerts.')</a></li>');
+if (($service_status[1] > 0) || ($service_status[2] > 0)) {
+    echo '            <li role="presentation" class="divider"></li>';
+    if ($service_status[1] > 0) {
+        echo '            <li><a href="services/state=warning/"><i class="fa fa-bell-o fa-col-warning fa-fw fa-lg"></i> Warning ('.$service_status[1].')</a></li>';
+    }
+    if ($service_status[2] > 0) {
+        echo '            <li><a href="services/state=critical/"><i class="fa fa-bell-o fa-col-danger fa-fw fa-lg"></i> Critical ('.$service_status[2].')</a></li>';
+    }
 }
 
 if ($_SESSION['userlevel'] >= '10') {
     echo('
             <li role="presentation" class="divider"></li>
-            <li><a href="addsrv/"><i class="fa fa-cog fa-col-success fa-fw fa-lg"></i> Add Service</a></li>
-            <li><a href="editsrv/"><i class="fa fa-cog fa-col-primary fa-fw fa-lg"></i> Edit Service</a></li>
-            <li><a href="delsrv/"><i class="fa fa-cog fa-col-danger fa-fw fa-lg"></i> Delete Service</a></li>');
+            <li><a href="addsrv/"><i class="fa fa-cog fa-col-success fa-fw fa-lg"></i> Add Service</a></li>');
 }
 ?>
           </ul>
@@ -359,8 +362,8 @@ if ($menu_sensors) {
     echo('            <li role="presentation" class="divider"></li>');
 }
 
-$icons = array('fanspeed'=>'tachometer','humidity'=>'tint','temperature'=>'fire','current'=>'bolt','frequency'=>'line-chart','power'=>'power-off','voltage'=>'bolt','charge'=>'plus-square','dbm'=>'sun-o', 'load'=>'spinner','state'=>'bullseye');
-foreach (array('fanspeed','humidity','temperature') as $item) {
+$icons = array('fanspeed'=>'tachometer','humidity'=>'tint','temperature'=>'fire','current'=>'bolt','frequency'=>'line-chart','power'=>'power-off','voltage'=>'bolt','charge'=>'plus-square','dbm'=>'sun-o', 'load'=>'spinner','state'=>'bullseye','signal'=>'wifi');
+foreach (array('fanspeed','humidity','temperature','signal') as $item) {
     if (isset($menu_sensors[$item])) {
         echo('            <li><a href="health/metric='.$item.'/"><i class="fa fa-'.$icons[$item].' fa-fw fa-lg"></i> '.nicecase($item).'</a></li>');
         unset($menu_sensors[$item]);$sep++;
@@ -715,6 +718,7 @@ $('#gsearch').typeahead({
 },
 {
   source: devices.ttAdapter(),
+  limit: '<?php echo($typeahead_limit); ?>',
   async: true,
   display: 'name',
   valueKey: 'name',
@@ -725,6 +729,7 @@ $('#gsearch').typeahead({
 },
 {
   source: ports.ttAdapter(),
+  limit: '<?php echo($typeahead_limit); ?>',
   async: true,
   display: 'name',
   valueKey: 'name',
@@ -735,6 +740,7 @@ $('#gsearch').typeahead({
 },
 {
   source: bgp.ttAdapter(),
+  limit: '<?php echo($typeahead_limit); ?>',
   async: true,
   display: 'name',
   valueKey: 'name',
@@ -747,3 +753,4 @@ $('#gsearch').bind('typeahead:open', function(ev, suggestion) {
     $('#gsearch').addClass('search-box');
 });
 </script>
+

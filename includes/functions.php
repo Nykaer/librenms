@@ -153,7 +153,7 @@ function getImage($device) {
 function getImageSrc($device) {
     global $config;
 
-    return $config['base_url'] . '/images/os/' . getImageName($device) . '.png';
+    return 'images/os/' . getImageName($device) . '.png';
 }
 
 function getImageName($device, $use_database=true) {
@@ -299,7 +299,7 @@ function addHost($host, $snmpver, $port = '161', $transport = 'udp', $quiet = '0
                         if ($force_add == 1 || isSNMPable($device)) {
                             $snmphost = snmp_get($device, "sysName.0", "-Oqv", "SNMPv2-MIB");
                             if (empty($snmphost) or ($snmphost == $host || $hostshort = $host)) {
-                                $device_id = createHost ($host, NULL, $snmpver, $port, $transport, $v3, $poller_group, $port_assoc_mode);
+                                $device_id = createHost ($host, NULL, $snmpver, $port, $transport, $v3, $poller_group, $port_assoc_mode, $snmphost);
                                 return $device_id;
                             }
                             else {
@@ -325,7 +325,7 @@ function addHost($host, $snmpver, $port = '161', $transport = 'udp', $quiet = '0
                         if ($force_add == 1 || isSNMPable($device)) {
                             $snmphost = snmp_get($device, "sysName.0", "-Oqv", "SNMPv2-MIB");
                             if (empty($snmphost) || ($snmphost && ($snmphost == $host || $hostshort = $host))) {
-                                $device_id = createHost ($host, $community, $snmpver, $port, $transport,array(),$poller_group, $port_assoc_mode);
+                                $device_id = createHost ($host, $community, $snmpver, $port, $transport,array(),$poller_group, $port_assoc_mode, $snmphost);
                                 return $device_id;
                             }
                             else {
@@ -575,7 +575,7 @@ function getpollergroup($poller_group='0') {
     }
 }
 
-function createHost($host, $community = NULL, $snmpver, $port = 161, $transport = 'udp', $v3 = array(), $poller_group='0', $port_assoc_mode = 'ifIndex') {
+function createHost($host, $community = NULL, $snmpver, $port = 161, $transport = 'udp', $v3 = array(), $poller_group='0', $port_assoc_mode = 'ifIndex', $snmphost) {
     global $config;
     $host = trim(strtolower($host));
 
@@ -604,7 +604,7 @@ function createHost($host, $community = NULL, $snmpver, $port = 161, $transport 
 
     if ($device['os']) {
 
-        if (host_exists($host) === false) {
+        if (host_exists($host, $snmphost) === false) {
             $device_id = dbInsert($device, 'devices');
             if ($device_id) {
                 oxidized_reload_nodes();
@@ -719,6 +719,7 @@ function log_event($text, $device = NULL, $type = NULL, $reference = NULL) {
     }
 
     $insert = array('host' => ($device['device_id'] ? $device['device_id'] : 0),
+        'device_id' => ($device['device_id'] ? $device['device_id'] : 0),
         'reference' => ($reference ? $reference : "NULL"),
         'type' => ($type ? $type : "NULL"),
         'datetime' => array("NOW()"),
@@ -873,6 +874,8 @@ function is_port_valid($port, $device) {
     else {
         $valid = 1;
         $if = strtolower($port['ifDescr']);
+        $ifname = strtolower($port['ifName']);
+        $ifalias = strtolower($port['ifAlias']);
         $fringe = $config['bad_if'];
         if( is_array($config['os'][$device['os']]['bad_if']) ) {
             $fringe = array_merge($config['bad_if'],$config['os'][$device['os']]['bad_if']);
@@ -892,6 +895,30 @@ function is_port_valid($port, $device) {
                 if (preg_match($bi ."i", $if)) {
                     $valid = 0;
                     d_echo("ignored : $bi : ".$if);
+                }
+            }
+        }
+        if (is_array($config['bad_ifname_regexp'])) {
+            $fringe = $config['bad_ifname_regexp'];
+            if( is_array($config['os'][$device['os']]['bad_ifname_regexp']) ) {
+                $fringe = array_merge($config['bad_ifname_regexp'],$config['os'][$device['os']]['bad_ifname_regexp']);
+            }
+            foreach ($fringe as $bi) {
+                if (preg_match($bi ."i", $ifname)) {
+                    $valid = 0;
+                    d_echo("ignored : $bi : ".$ifname);
+                }
+            }
+        }
+        if (is_array($config['bad_ifalias_regexp'])) {
+            $fringe = $config['bad_ifalias_regexp'];
+            if( is_array($config['os'][$device['os']]['bad_ifalias_regexp']) ) {
+                $fringe = array_merge($config['bad_ifalias_regexp'],$config['os'][$device['os']]['bad_ifalias_regexp']);
+            }
+            foreach ($fringe as $bi) {
+                if (preg_match($bi ."i", $ifalias)) {
+                    $valid = 0;
+                    d_echo("ignored : $bi : ".$ifalias);
                 }
             }
         }
@@ -1252,10 +1279,30 @@ function function_check($function) {
     return function_exists($function);
 }
 
-function force_influx_data($type,$data) {
-    if ($type == 'f' || $type == 'float') {
-        return(sprintf("%.1f",$data));
+function force_influx_data($data) {
+   /*
+    * It is not trivial to detect if something is a float or an integer, and
+    * therefore may cause breakages on inserts.
+    * Just setting every number to a float gets around this, but may introduce
+    * inefficiencies.
+    * I've left the detection statement in there for a possible change in future,
+    * but currently everything just gets set to a float.
+    */
+
+    if (is_numeric($data)) {
+        // If it is an Integer
+        if (ctype_digit($data)) {
+            return floatval($data);
+        // Else it is a float
+        }
+        else {
+            return floatval($data);
+        }
+    } 
+    else {
+        return $data;
     }
+
 }// end force_influx_data
 
 /**
@@ -1293,12 +1340,22 @@ function snmpTransportToAddressFamily($transport) {
  * @return bool true if hostname already exists
  *              false if hostname doesn't exist
 **/
-function host_exists($hostname) {
+function host_exists($hostname, $snmphost='') {
+    global $config;
     $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `hostname` = ?", array($hostname));
     if ($count > 0) {
         return true;
     }
     else {
+        if ($config['allow_duplicate_sysName'] === false && !empty($snmphost)) {
+            $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            if ($count > 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
         return false;
     }
 }
