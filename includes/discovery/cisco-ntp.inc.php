@@ -1,8 +1,8 @@
 <?php
 /*
- * LibreNMS module to capture Cisco Class-Based QoS Details
+ * LibreNMS module to capture statistics from the CISCO-NTP-MIB
  *
- * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
+ * Copyright (c) 2016 Aaron Daniels <aaron@daniels.id.au>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,7 +21,6 @@ if ($device['os_group'] == 'cisco') {
 
     // We only care about our device id.
     $components = $components[$device['device_id']];
-
 
     // Begin our master array, all other values will be processed into this array.
     $tblComponents = array();
@@ -44,10 +43,10 @@ if ($device['os_group'] == 'cisco') {
         // Let's grab the index for each NTP peer
         foreach ($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][2] as $index => $value) {
             $result = array();
-            $result['UID'] = $index;
+            $result['UID'] = (string)$index;    // This is cast as a string so it can be compared with the database value.
             $result['peer'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][3][$index].":".$cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][4][$index];
             $result['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$index];
-            $result['peerref'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][15][$index];
+            $result['peerref'] = hex_to_ip($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][15][$index]);
 
             // Set the status, 16 = Bad
             if ($result['stratum'] == 16) {
