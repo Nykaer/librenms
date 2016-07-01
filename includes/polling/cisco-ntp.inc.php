@@ -32,7 +32,7 @@ if ($device['os_group'] == "cisco") {
         $cntpPeersVarEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.168.1.2.1.1', 2);
 
         // Loop through the components and extract the data.
-        foreach ($components as $key => $array) {
+        foreach ($components as $key => &$array) {
 
             // Let's make sure the rrd is setup for this class.
             $filename = "ntp-".$array['peer'].".rrd";
@@ -42,8 +42,19 @@ if ($device['os_group'] == "cisco") {
                 rrdtool_create ($rrd_filename, " DS:stratum:COUNTER:600:0:U DS:offset:COUNTER:600:0:U DS:delay:COUNTER:600:0:U DS:dispersion:COUNTER:600:0:U" . $config['rrd_rra']);
             }
 
+            $array['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$array['UID']];
+            // Set the status, 16 = Bad
+            if ($array['stratum'] == 16) {
+                $array['status'] = 2;
+                $array['error'] = 'NTP Stratum is Insane';
+            }
+            else {
+                $array['status'] = 0;
+                $array['error'] = '';
+            }
+
             // Extract the statistics and update rrd
-            $rrd['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$array['UID']];
+            $rrd['stratum'] = $array['stratum'];
             $rrd['offset'] = hexdec($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][23][$array['UID']]);
             $rrd['delay'] = hexdec($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][24][$array['UID']]);
             $rrd['dispersion'] = hexdec($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][25][$array['UID']]);
@@ -52,7 +63,7 @@ if ($device['os_group'] == "cisco") {
             // Let's print some debugging info.
             d_echo("\n\nComponent: ".$key."\n");
             d_echo("    Index:      ".$array['UID']."\n");
-            d_echo("    Peer:       ".$array['peer']."\n");
+            d_echo("    Peer:       ".$array['peer'].":".$array['port']."\n");
             d_echo("    Stratum:    1.3.6.1.4.1.9.9.168.1.2.1.1.9.".$array['UID']."  = ".$rrd['stratum']."\n");
             d_echo("    Offset:     1.3.6.1.4.1.9.9.168.1.2.1.1.23.".$array['UID']." = ".$rrd['offset']."\n");
             d_echo("    Delay:      1.3.6.1.4.1.9.9.168.1.2.1.1.24.".$array['UID']." = ".$rrd['delay']."\n");
@@ -61,6 +72,9 @@ if ($device['os_group'] == "cisco") {
             // Clean-up after yourself!
             unset($filename, $rrd_filename, $rrd);
         } // End foreach components
+
+        // Write the Components back to the DB.
+        $component->setComponentPrefs($device['device_id'],$components);
 
     } // end if count components
 

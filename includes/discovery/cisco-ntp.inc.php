@@ -44,16 +44,19 @@ if ($device['os_group'] == 'cisco') {
         foreach ($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][2] as $index => $value) {
             $result = array();
             $result['UID'] = (string)$index;    // This is cast as a string so it can be compared with the database value.
-            $result['peer'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][3][$index].":".$cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][4][$index];
+            $result['peer'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][3][$index];
+            $result['port'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][4][$index];
             $result['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$index];
             $result['peerref'] = hex_to_ip($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][15][$index]);
 
             // Set the status, 16 = Bad
             if ($result['stratum'] == 16) {
                 $result['status'] = 2;
+                $result['error'] = 'NTP Stratum is Insane';
             }
             else {
                 $result['status'] = 0;
+                $result['error'] = '';
             }
 
             d_echo("NTP Peer found: ");
