@@ -39,7 +39,7 @@ foreach ($components as $id => $array) {
         }
 
         $rrd_additions .= " DEF:DS" . $count . "=" . $rrd_filename . ":dispersion:AVERAGE ";
-        $rrd_additions .= " AREA:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['peer'],0,15),15) . "'" . $stack;
+        $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['peer'],0,15),15) . "'" . $stack;
         $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%4.0lf%s ";
         $rrd_additions .= " GPRINT:DS" . $count .    ":MIN:%4.0lf%s ";
         $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%4.0lf%s\\\l ";

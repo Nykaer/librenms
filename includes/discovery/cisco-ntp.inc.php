@@ -122,4 +122,12 @@ if ($device['os_group'] == 'cisco') {
 
     } // End if not error
 
+    if (count($components) > 0) {
+        if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], $module)) == '0') {
+            dbInsert(array('device_id' => $device['device_id'], 'app_type' => $module), 'applications');
+        }
+    } else {
+        dbDelete('applications', '`device_id` = ? AND `app_type` = ?', array($device['device_id'], $module));
+    }
+
 }
