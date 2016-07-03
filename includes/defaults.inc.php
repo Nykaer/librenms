@@ -715,6 +715,7 @@ $config['poller_modules']['cisco-voice']                 = 1;
 $config['poller_modules']['cisco-cbqos']                 = 1;
 $config['poller_modules']['stp']                         = 1;
 $config['poller_modules']['cisco-otv']                   = 1;
+$config['poller_modules']['cisco-ntp']                   = 1;
 $config['poller_modules']['services']                    = 1;
 $config['poller_modules']['ldap_usersperou']             = 0;
 
@@ -756,6 +757,7 @@ $config['discovery_modules']['cisco-voice']    = 1;
 $config['discovery_modules']['stp']            = 1;
 $config['discovery_modules']['cisco-otv']      = 1;
 $config['discovery_modules']['ldap_usersperou']= 0;
+$config['discovery_modules']['cisco-ntp']      = 1;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;
