@@ -39,7 +39,7 @@ if ($device['os_group'] == "cisco") {
             $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
 
             if (!file_exists ($rrd_filename)) {
-                rrdtool_create ($rrd_filename, " DS:stratum:COUNTER:600:0:U DS:offset:COUNTER:600:0:U DS:delay:COUNTER:600:0:U DS:dispersion:COUNTER:600:0:U" . $config['rrd_rra']);
+                rrdtool_create ($rrd_filename, " DS:stratum:GAUGE:600:0:U DS:offset:GAUGE:600:0:U DS:delay:GAUGE:600:0:U DS:dispersion:GAUGE:600:0:U" . $config['rrd_rra']);
             }
 
             $array['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$array['UID']];
