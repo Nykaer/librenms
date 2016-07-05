@@ -16,39 +16,34 @@ $component = new component();
 $options = array();
 $options['filter']['ignore'] = array('=',0);
 $options['type'] = 'Cisco-NTP';
-$components = $component->getComponents($device['device_id'],$options);
-$components = $components[$device['device_id']];
-
-global $config;
+$components = $component->getComponents(null,$options);
 ?>
 <table id='table' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
+        <th>Device</th>
         <th>Peer</th>
         <th>Stratum</th>
-        <th>Peer Reference</th>
-        <th>Status</th>
+        <th>Error</th>
     </tr>
     </thead>
 <?php
-    foreach ($components as $peer) {
-        $string = $peer['peer'].":".$peer['port'];
-        if ($peer['status'] == 2) {
-            $status = $peer['error'];
-            $error = 'class="danger"';
-        }
-        else {
-            $status = 'Ok';
-            $error = '';
-        }
+    foreach ($components as $devid => $comp) {
+        $device = device_by_id_cache($devid);
+        foreach ($comp as $compid => $array) {
+            if ($array['error'] == '') {
+                $array['error'] = '-';
+                $status = 'danger';
+            }
 ?>
-    <tr <?php echo $error; ?>>
-        <td><?php echo $string; ?></td>
-        <td><?php echo $peer['stratum']; ?></td>
-        <td><?php echo $peer['peerref']; ?></td>
-        <td><?php echo $status; ?></td>
+    <tr>
+        <td><?php echo $device['hostname']; ?></td>
+        <td><?php echo $array['peer']; ?></td>
+        <td><?php echo $array['stratum']; ?></td>
+        <td><?php echo $array['error']; ?></td>
     </tr>
 <?php
+        }
     }
 ?>
 </table>
@@ -58,17 +53,16 @@ global $config;
         <h3 class="panel-title">NTP Stratum</h3>
     </div>
     <div class="panel-body">
-        <?php
+<?php
 
         $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_cisco-ntp-stratum';
+//        $graph_array['to']     = $config['time']['now'];
+        $graph_array['type']   = 'cisco-ntp_stratum';
         require 'includes/print-graphrow.inc.php';
 
-        ?>
+?>
     </div>
 </div>
 
@@ -77,17 +71,16 @@ global $config;
         <h3 class="panel-title">Offset</h3>
     </div>
     <div class="panel-body">
-        <?php
+<?php
 
         $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
         $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_cisco-ntp-offset';
+        $graph_array['type']   = 'cisco-ntp_offset';
         require 'includes/print-graphrow.inc.php';
 
-        ?>
+?>
     </div>
 </div>
 
@@ -96,17 +89,16 @@ global $config;
         <h3 class="panel-title">Delay</h3>
     </div>
     <div class="panel-body">
-        <?php
+<?php
 
         $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
         $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_cisco-ntp-delay';
+        $graph_array['type']   = 'cisco-ntp_delay';
         require 'includes/print-graphrow.inc.php';
 
-        ?>
+?>
     </div>
 </div>
 
@@ -115,16 +107,15 @@ global $config;
         <h3 class="panel-title">Dispersion</h3>
     </div>
     <div class="panel-body">
-        <?php
+<?php
 
         $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
         $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_cisco-ntp-dispersion';
+        $graph_array['type']   = 'cisco-ntp_dispersion';
         require 'includes/print-graphrow.inc.php';
 
-        ?>
+?>
     </div>
 </div>
