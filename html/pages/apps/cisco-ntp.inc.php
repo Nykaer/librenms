@@ -17,6 +17,69 @@ $options = array();
 $options['filter']['ignore'] = array('=',0);
 $options['type'] = 'Cisco-NTP';
 $components = $component->getComponents(null,$options);
+
+print_optionbar_start();
+
+$view_options = array(
+    'all'       => 'All',
+    'error'     => 'Error',
+);
+if (!$vars['view']) {
+    $vars['view'] = 'all';
+}
+
+$graph_options = array(
+    'none'          => 'No Graphs',
+    'stratum'       => 'Stratum',
+    'offset'        => 'Offset',
+    'delay'         => 'Delay',
+    'dispersion'    => 'Dispersion',
+);
+if (!$vars['graph']) {
+    $vars['graph'] = 'none';
+}
+
+echo '<span style="font-weight: bold;">NTP Peers</span> &#187; ';
+
+// The menu option - on the left
+$sep = '';
+foreach ($view_options as $option => $text) {
+    if (empty($vars['view'])) {
+        $vars['view'] = $option;
+    }
+    echo $sep;
+    if ($vars['view'] == $option) {
+        echo "<span class='pagemenu-selected'>";
+    }
+    echo generate_link($text, $vars, array('view' => $option));
+    if ($vars['view'] == $option) {
+        echo '</span>';
+    }
+    $sep = ' | ';
+}
+
+// The status option - on the right
+echo '<div class="pull-right">';
+$sep = '';
+foreach ($graph_options as $option => $text) {
+    if (empty($vars['graph'])) {
+        $vars['graph'] = $option;
+    }
+    echo $sep;
+    if ($vars['graph'] == $option) {
+        echo "<span class='pagemenu-selected'>";
+    }
+
+    echo generate_link($text, $vars, array('graph' => $option));
+    if ($vars['graph'] == $option) {
+        echo '</span>';
+    }
+    $sep = ' | ';
+}
+unset($sep);
+echo '</div>';
+print_optionbar_end();
+
 ?>
 <table id='table' class='table table-condensed table-responsive table-striped'>
     <thead>
@@ -28,94 +91,76 @@ $components = $component->getComponents(null,$options);
     </tr>
     </thead>
 <?php
+    $count = 0;
     foreach ($components as $devid => $comp) {
         $device = device_by_id_cache($devid);
         foreach ($comp as $compid => $array) {
-            if ($array['error'] == '') {
-                $array['error'] = '-';
-                $status = 'danger';
+            $display = true;
+            if ($vars['view'] == 'error') {
+                // Only display peers with errors
+                if ($array['status'] != 2) {
+                    $display = false;
+                }
             }
+            if ($array['status'] == 2) {
+                $status = 'class="danger"';
+            }
+            else {
+                $status = '';
+            }
+
+            if ($display === true) {
+                $link = generate_device_link($device,null,array('tab' => 'apps', 'app' => 'cisco-ntp'));
+                $count++;
 ?>
-    <tr>
-        <td><?php echo $device['hostname']; ?></td>
+    <tr <?php echo $status; ?>>
+        <td><?php echo $link; ?></td>
         <td><?php echo $array['peer']; ?></td>
         <td><?php echo $array['stratum']; ?></td>
         <td><?php echo $array['error']; ?></td>
     </tr>
 <?php
-        }
+                $graph_array = array();
+                $graph_array['device'] = 10;
+                $graph_array['height'] = '100';
+                $graph_array['width']  = '215';
+                $graph_array['to']     = $config['time']['now'];
+                if ($vars['graph'] == "stratum") {
+                    $graph_array['type']   = 'device_cisco-ntp-stratum';
+                }
+                elseif ($vars['graph'] == "offset") {
+                    $graph_array['type']   = 'device_cisco-ntp-offset';
+                }
+                elseif ($vars['graph'] == "delay") {
+                    $graph_array['type']   = 'device_cisco-ntp-delay';
+                }
+                elseif ($vars['graph'] == "dispersion") {
+                    $graph_array['type']   = 'device_cisco-ntp-dispersion';
+                }
+                else {
+                    unset($graph_array);
+                }
+
+                if (is_array($graph_array)) {
+                    echo '<tr>';
+                    echo '<td colspan="4">';
+                    require 'includes/print-graphrow.inc.php';
+                    echo '</td>';
+                    echo '</tr>';
+                }
+
+
+            } // End if display
+        } // End foreach component
+    } // End foreach device
+
+    // If there are no results, let the user know.
+    if ($count == 0) {
+?>
+        <tr>
+            <td colspan="4" align="center">No Matching NTP Peers</td>
+        </tr>
+<?php
     }
 ?>
 </table>
-
-<div class="panel panel-default" id="stratum">
-    <div class="panel-heading">
-        <h3 class="panel-title">NTP Stratum</h3>
-    </div>
-    <div class="panel-body">
-<?php
-
-        $graph_array = array();
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-//        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'cisco-ntp_stratum';
-        require 'includes/print-graphrow.inc.php';
-
-?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="offset">
-    <div class="panel-heading">
-        <h3 class="panel-title">Offset</h3>
-    </div>
-    <div class="panel-body">
-<?php
-
-        $graph_array = array();
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'cisco-ntp_offset';
-        require 'includes/print-graphrow.inc.php';
-
-?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="delay">
-    <div class="panel-heading">
-        <h3 class="panel-title">Delay</h3>
-    </div>
-    <div class="panel-body">
-<?php
-
-        $graph_array = array();
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'cisco-ntp_delay';
-        require 'includes/print-graphrow.inc.php';
-
-?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="dispersion">
-    <div class="panel-heading">
-        <h3 class="panel-title">Dispersion</h3>
-    </div>
-    <div class="panel-body">
-<?php
-
-        $graph_array = array();
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'cisco-ntp_dispersion';
-        require 'includes/print-graphrow.inc.php';
-
-?>
-    </div>
-</div>
