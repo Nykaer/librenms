@@ -26,6 +26,9 @@ if ($device['os_group'] == 'cisco') {
     $tblComponents = array();
 
     // Let's gather some data..
+    // For Reference:
+    //      http://www.oidview.com/mibs/9/CISCO-NTP-MIB.html
+    //      http://www.cisco.com/c/en/us/support/docs/availability/high-availability/19643-ntpm.html
     $cntpPeersVarEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.168.1.2.1.1', 2);
 
     /*
