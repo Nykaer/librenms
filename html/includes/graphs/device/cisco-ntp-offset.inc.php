@@ -40,9 +40,9 @@ foreach ($components as $id => $array) {
 
         $rrd_additions .= " DEF:DS" . $count . "=" . $rrd_filename . ":offset:AVERAGE ";
         $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['peer'].' (s)',0,15),15) . "'" . $stack;
-        $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%4.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count .    ":MIN:%4.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%4.0lf%s\\\l ";
+        $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%4.0lf ";
+        $rrd_additions .= " GPRINT:DS" . $count .    ":MIN:%4.0lf ";
+        $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%4.0lf\\\l ";
         $count++;
     }
 }
