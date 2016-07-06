@@ -22,7 +22,7 @@ $components = $components[$device['device_id']];
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
-$rrd_options .= " COMMENT:'Stratum       Now    Min     Max\\n'";
+$rrd_options .= " COMMENT:'Stratum             Now  Min  Max\\n'";
 $rrd_additions = "";
 
 $count = 0;
@@ -40,9 +40,9 @@ foreach ($components as $id => $array) {
 
         $rrd_additions .= " DEF:DS" . $count . "=" . $rrd_filename . ":stratum:AVERAGE ";
         $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['peer'],0,15),15) . "'" . $stack;
-        $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%4.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count .    ":MIN:%4.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%4.0lf%s\\\l ";
+        $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%2.0lf ";
+        $rrd_additions .= " GPRINT:DS" . $count .    ":MIN:%2.0lf ";
+        $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%2.0lf\\\l ";
         $count++;
     }
 }

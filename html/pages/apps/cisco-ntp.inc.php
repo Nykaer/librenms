@@ -121,10 +121,12 @@ print_optionbar_end();
     </tr>
 <?php
                 $graph_array = array();
-                $graph_array['device'] = 10;
+                $graph_array['device'] = $device['device_id'];
                 $graph_array['height'] = '100';
                 $graph_array['width']  = '215';
                 $graph_array['to']     = $config['time']['now'];
+
+                // Which graph type do we want?
                 if ($vars['graph'] == "stratum") {
                     $graph_array['type']   = 'device_cisco-ntp-stratum';
                 }
@@ -138,9 +140,11 @@ print_optionbar_end();
                     $graph_array['type']   = 'device_cisco-ntp-dispersion';
                 }
                 else {
+                    // No Graph
                     unset($graph_array);
                 }
 
+                // Do we want a graph.
                 if (is_array($graph_array)) {
                     echo '<tr>';
                     echo '<td colspan="4">';
@@ -148,7 +152,6 @@ print_optionbar_end();
                     echo '</td>';
                     echo '</tr>';
                 }
-
 
             } // End if display
         } // End foreach component
