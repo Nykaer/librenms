@@ -250,7 +250,6 @@ class component {
 
     public function setComponentPrefs ($device_id,$ARRAY) {
         // Compare the arrays. Update/Insert where necessary.
-        global $database_link;
 
         $OLD = $this->getComponents($device_id);
         // Loop over each component.
