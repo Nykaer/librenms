@@ -48,6 +48,7 @@ if ($device['os_group'] == 'cisco') {
             $result['port'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][4][$index];
             $result['stratum'] = $cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][9][$index];
             $result['peerref'] = hex_to_ip($cntpPeersVarEntry['1.3.6.1.4.1.9.9.168.1.2.1.1'][15][$index]);
+            $result['label'] = $result['peer'].":".$result['port'];
 
             // Set the status, 16 = Bad
             if ($result['stratum'] == 16) {
