@@ -161,10 +161,10 @@ $config['show_services']           = 0;  # Enable Services on menu
 $config['int_customers']           = 1;  # Enable Customer Port Parsing
 $config['summary_errors']          = 0;  # Show Errored ports in summary boxes on the dashboard
 $config['customers_descr']         = 'cust'; // The description to look for in ifDescr. Can be an array as well array('cust','cid');
-$config['transit_descr']           = ""; // Add custom transit descriptions (can be an array)
-$config['peering_descr']           = ""; // Add custom peering descriptions (can be an array)
-$config['core_descr']              = ""; // Add custom core descriptions (can be an array)
-$config['custom_descr']            = ""; // Add custom interface descriptions (can be an array)
+$config['transit_descr']           = 'transit'; // Add custom transit descriptions (can be an array)
+$config['peering_descr']           = 'peering'; // Add custom peering descriptions (can be an array)
+$config['core_descr']              = 'core'; // Add custom core descriptions (can be an array)
+$config['custom_descr']            = ''; // Add custom interface descriptions (can be an array)
 $config['int_transit']             = 1;  # Enable Transit Types
 $config['int_peering']             = 1;  # Enable Peering Types
 $config['int_core']                = 1;  # Enable Core Port Types
@@ -210,7 +210,7 @@ Disable the footer of the WebUI by setting `enable_footer` to 0.
 You can enable the old style network map (only available for individual devices with links discovered via xDP) by setting:
 ```php
 $config['gui']['network-map']['style'] = 'old';
-````
+```
 
 #### Add host settings
 The following setting controls how hosts are added.  If a host is added as an ip address it is checked to ensure the ip is not already present.  If the ip is present the host is not added.

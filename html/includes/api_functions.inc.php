@@ -495,19 +495,10 @@ function get_graph_by_portgroup() {
     $vars['width']  = $_GET['width'] ?: 1075;
     $vars['height'] = $_GET['height'] ?: 300;
     $auth           = '1';
-    $type_where     = ' (';
-    $or             = '';
-    $type_param     = array();
-    foreach (explode(',', $group) as $type) {
-        $type_where  .= " $or `port_descr_type` = ?";
-        $or           = 'OR';
-        $type_param[] = $type;
-    }
 
-    $type_where .= ') ';
+    $ports = get_ports_from_type(explode(',', $group));
     $if_list     = '';
     $seperator   = '';
-    $ports       = dbFetchRows("SELECT * FROM `ports` as I, `devices` AS D WHERE $type_where AND I.device_id = D.device_id ORDER BY I.ifAlias", $type_param);
     foreach ($ports as $port) {
         $if_list  .= $seperator.$port['port_id'];
         $seperator = ',';
@@ -1271,7 +1262,7 @@ function get_devices_by_group() {
     }
     else {
         $group_id = dbFetchCell("SELECT `id` FROM `device_groups` WHERE `name`=?",array($name));
-        $devices = GetDevicesFromGroup($group_id);
+        $devices = GetDevicesFromGroup($group_id, true);
         $count = count($devices);
         if (empty($devices)) {
             $message = 'No devices found in group ' . $name;
