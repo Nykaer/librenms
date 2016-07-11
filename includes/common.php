@@ -318,14 +318,16 @@ function device_by_id_cache($device_id, $refresh = '0') {
 		
 		//order vrf_lite_cisco with context, this will help to get the vrf_name and instance_name all the time
 		$vrfs_lite_cisco = dbFetchRows("SELECT * FROM `vrf_lite_cisco` WHERE `device_id` = ?", array($device_id));
-		$device['vrf_lite_cisco'] = array();
 		if(!empty($vrfs_lite_cisco)){
+			$device['vrf_lite_cisco'] = array();
 			foreach ($vrfs_lite_cisco as $vrf){
 				$device['vrf_lite_cisco'][$vrf['context_name']] = $vrf;
 			}
 		}
 
-        $device['ip'] = inet6_ntop($device['ip']);
+        if(!empty($device['ip'])) {
+            $device['ip'] = inet6_ntop($device['ip']);
+        }
         $cache['devices']['id'][$device_id] = $device;
     }
     return $device;
@@ -1036,7 +1038,9 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']    = rtrim(`git rev-parse HEAD`);
+    list($local_sha, $local_date) = explode('|', rtrim(`git show --pretty='%H|%ci' -s HEAD`));
+    $output['local_sha']    = $local_sha;
+    $output['local_date']   = $local_date;
     $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
 
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');

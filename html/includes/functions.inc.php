@@ -64,6 +64,9 @@ function nicecase($item) {
     case 'bind':
         return 'BIND';
 
+    case 'nfs-stats':
+        return 'NFS Stats';
+
     default:
         return ucfirst($item);
     }
@@ -891,14 +894,6 @@ function generate_ap_url($ap, $vars=array()) {
     return generate_url(array('page' => 'device', 'device' => $ap['device_id'], 'tab' => 'accesspoint', 'ap' => $ap['accesspoint_id']), $vars);
 
 }//end generate_ap_url()
-
-
-function report_this($message) {
-    global $config;
-    return '<h2>'.$message.' Please <a href="'.$config['project_issues'].'">report this</a> to the '.$config['project_name'].' developers.</h2>';
-
-}//end report_this()
-
 
 function report_this_text($message) {
     global $config;

@@ -76,7 +76,9 @@ $versions = version_info();
 echo "Version info:\n";
 $cur_sha = $versions['local_sha'];
 if ($config['update_channel'] == 'master' && $cur_sha != $versions['github']['sha']) {
-    print_warn("Your install is out of date: $cur_sha");
+    $commit_date = new DateTime($versions['local_date']);
+    $commit_date->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    print_warn("Your install is out of date: $cur_sha " . $commit_date->format('(r)'));
 }
 else {
     echo "Commit SHA: $cur_sha\n";
@@ -156,7 +158,7 @@ else {
 // Test for MySQL Strict mode
 $strict_mode = dbFetchCell("SELECT @@global.sql_mode");
 if(strstr($strict_mode, 'STRICT_TRANS_TABLES')) {
-    print_warn('You have MySQL STRICT_TRANS_TABLES enabled, it is advisable to disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
+    print_fail('You have MySQL STRICT_TRANS_TABLES enabled, please disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
 }
 
 $tz = ini_get('date.timezone');
