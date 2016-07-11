@@ -616,7 +616,7 @@ $config['os'][$os]['over'][3]['text']	= 'Storage Usage';
 
 $os = 'tpconductor';
 $config['os'][$os]['text']		= 'TelePresence Conductor';
-$config['os'][$os]['type']		= 'voice';
+$config['os'][$os]['type']		= 'collaboration';
 $config['os'][$os]['icon']		= 'cisco';
 $config['os'][$os]['over'][0]['graph']	= 'device_bits';
 $config['os'][$os]['over'][0]['text']	= 'Device Traffic';
