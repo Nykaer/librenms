@@ -1,7 +1,7 @@
 <?php
 
 // Gather our SLA's from the DB.
-$slas = dbFetchRows('SELECT * FROM `slas` WHERE `device_id` = ? AND `deleted` = 0 AND `status` = 1', array($device['device_id']));
+$slas = dbFetchRows('SELECT * FROM `slas` WHERE `device_id` = ? AND `deleted` = 0', array($device['device_id']));
 
 if (count($slas > 0)) {
     // We have SLA's, lets go!!!
@@ -17,13 +17,19 @@ if (count($slas > 0)) {
         // Lets process each SLA
         $unixtime = intval(($rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.5'][$sla['sla_nr']] / 100 + $time_offset));
         $time  = strftime('%Y-%m-%d %H:%M:%S', $unixtime);
+        $update = array();
 
         // Use Nagios Status codes.
-        $status = $rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.2'][$sla['sla_nr']];
-        if ($status == 4) {
-            $status = 0;        // 0=Good
+        $opstatus = $rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.2'][$sla['sla_nr']];
+        if ($opstatus == 4) {
+            $opstatus = 0;        // 0=Good
         } else {
-            $status = 2;        // 2=Critical
+            $opstatus = 2;        // 2=Critical
+        }
+
+        // Populating the update array means we need to update the DB.
+        if ($opstatus != $sla['opstatus']) {
+            $update['opstatus'] = $opstatus;
         }
 
         $rtt = $rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.1'][$sla['sla_nr']];
@@ -74,10 +80,9 @@ if (count($slas > 0)) {
         $tags = array('sla_nr' => $sla['sla_nr']);
         influx_update($device,'sla',$tags,$metrics);
 
-        // Update the status if necessary
-        if ($sla['status'] != $status) {
-            $update = array('status' => $status);
-//            $updated = dbUpdate($update, 'slas', '`sla_id` = ?', array($sla['sla_nr']));
+        // Update the DB if necessary
+        if (count($update) > 0) {
+            $updated = dbUpdate($update, 'slas', '`sla_id` = ?', array($sla['sla_nr']));
         }
     }
 }
