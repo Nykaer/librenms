@@ -48,35 +48,51 @@ foreach ($sla_types as $sla_type => $text) {
 }
 
 unset($sep);
+
 print_optionbar_end();
-?>
-
-<table id='table' class='table table-condensed table-responsive table-striped'>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Type</th>
-        <th>Tag</th>
-        <th>Owner</th>
-    </tr>
-    </thead>
-<?php
-
 
 foreach ($slas as $sla) {
     if ($vars['view'] != 'all' && $vars['view'] != $sla['rtt_type']) {
         continue;
     }
 
-?>
-  <tr onclick="window.document.location='<?php echo generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_nr'])); ?>';" style="cursor: pointer;">
-    <td><?php echo $sla['sla_nr']; ?></td>
-    <td><?php echo $sla_types[$sla['rtt_type']]; ?></td>
-    <td><?php echo $sla['tag']; ?></td>
-    <td><?php echo $sla['owner']; ?></td>
-  </tr>
-<?php
+    $name = 'SLA #'.$sla['sla_nr'].' - '.$sla_types[$sla['rtt_type']];
+    if ($sla['tag']) {
+        $name .= ': '.$sla['tag'];
+    }
+
+    if ($sla['owner']) {
+        $name .= ' (Owner: '.$sla['owner'].')';
+    }
+
+    // Jitter has more graphs. Display a sub-page
+    if ($sla['rtt_type'] == 'jitter') {
+        $name = '<a href="'.generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_nr'])).'">'.$name.'</a>';
+    }
+    else {
+        $name = htmlentities($name);
+    }
+
+    // If we have an error highlight the row.
+    if ($sla['opstatus'] == 2) {
+        $danger = "panel-danger";
+    }
+    else {
+        $danger = '';
+    }
+
+    $graph_array['type'] = 'device_sla';
+    $graph_array['id']   = $sla['sla_id'];
+    echo '<div class="panel panel-default '.$danger.'">
+    <div class="panel-heading">
+        <h3 class="panel-title">'.$name.'</h3>
+    </div>
+    <div class="panel-body">';
+    echo "<div class='row'>";
+    include 'includes/print-graphrow.inc.php';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
 }
 
-echo '</table>';
 $pagetitle[] = 'SLAs';
