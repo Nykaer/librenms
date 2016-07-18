@@ -13,12 +13,7 @@
 
 /*
  * TODO:
- *  Check: Operability vs OperState
- *  Attach faults to chassis ???
  *  Size of Disks (BOM: 4x500gb) and LUN
- *  Presence = 10 - does this indicate populated?
- *  Does the ID field provide any use - map to stats - no
- *  Memory stats to not map to components
  */
 
 if ($device['os'] == 'cimc') {
@@ -57,15 +52,14 @@ if ($device['os'] == 'cimc') {
             $fobj = preg_replace('/^sys/','/sys',$fobj);
             $faults[$fobj] = $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'][3][$fid] ." - ". $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'][11][$fid];
         }
-        // Unset the faults array so it isn't reported as an error later.
-        unset ($tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1']);
+        // Unset the faults and stats array so it isn't reported as an error later.
+        unset ($tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.14.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.44.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.30.12.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.41.2.1']);
 
        foreach ($tblUCSObjects as $tbl => $array) {
 
            switch ($tbl) {
                // Chassis - /sys/rack-unit-1
                case "1.3.6.1.4.1.9.9.719.1.9.35.1":
-//                   d_echo("Chassis (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'chassis';
@@ -103,7 +97,6 @@ if ($device['os'] == 'cimc') {
 
                // System Board - /sys/rack-unit-1/board
                case "1.3.6.1.4.1.9.9.719.1.9.6.1":
-//                   d_echo("System Board (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'board';
@@ -132,7 +125,6 @@ if ($device['os'] == 'cimc') {
 
                // Memory Modules - /sys/rack-unit-1/board/memarray-1/mem-0
                case "1.3.6.1.4.1.9.9.719.1.30.11.1":
-//                   d_echo("Memory Modules (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        // If there is no memory module present, continue.
@@ -166,11 +158,9 @@ if ($device['os'] == 'cimc') {
 
                // CPU's - /sys/rack-unit-1/board/cpu-1
                case "1.3.6.1.4.1.9.9.719.1.41.9.1":
-//                   d_echo("CPU's (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'cpu';
-                       // There is an ID in 7 - 0 and 1
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[15][$key];
@@ -196,11 +186,9 @@ if ($device['os'] == 'cimc') {
 
                // SAS Storage Module - /sys/rack-unit-1/board/storage-SAS-2
                case "1.3.6.1.4.1.9.9.719.1.45.1.1":
-//                   d_echo("SAS Modules (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'sas-controller';
-                       // There is an ID in 4 - 1
                        $result['id'] = substr($array[3][$key],12);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[14][$key];
@@ -226,11 +214,9 @@ if ($device['os'] == 'cimc') {
 
                // SAS Disks - /sys/rack-unit-1/board/storage-SAS-2/disk-1
                case "1.3.6.1.4.1.9.9.719.1.45.4.1":
-//                   d_echo("SAS Disks (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'sas-disk';
-                       // There is an ID in 6 - 1,2,3,4
                        $result['id'] = substr($array[3][$key],5);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[12][$key];
@@ -256,11 +242,9 @@ if ($device['os'] == 'cimc') {
 
                // LUN's - /sys/rack-unit-1/board/storage-SAS-2/lun-0
                case "1.3.6.1.4.1.9.9.719.1.45.8.1":
-//                   d_echo("LUN's (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'lun';
-                       // There is an ID in 6 - 0
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
@@ -286,11 +270,9 @@ if ($device['os'] == 'cimc') {
 
                // RAID Battery - /sys/rack-unit-1/board/storage-SAS-2/raid-battery
                case "1.3.6.1.4.1.9.9.719.1.45.11.1":
-//                   d_echo("RAID Battery (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'raid-battery';
-                       // There is an ID in 6 - 1
                        $result['id'] = $array[3][$key];
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
@@ -316,11 +298,9 @@ if ($device['os'] == 'cimc') {
 
                // Fan's - /sys/rack-unit-1/fan-module-1-1/fan-1
                case "1.3.6.1.4.1.9.9.719.1.15.12.1":
-//                   d_echo("System Fan's (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'fan';
-                       // There is an ID in 5 - all 1's
                        $result['id'] = $array[8][$key] ."-". substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
@@ -346,11 +326,9 @@ if ($device['os'] == 'cimc') {
 
                // PSU's - /sys/rack-unit-1/psu-1
                case "1.3.6.1.4.1.9.9.719.1.15.56.1":
-//                   d_echo("System PSU's (".$tbl."): ".print_r($array, true)."\n");
                    $result = array();
                    foreach ($array[3] as $key => $item) {
                        $result['type'] = 'psu';
-                       // There is an ID in 5 - 1
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[13][$key];
@@ -374,26 +352,6 @@ if ($device['os'] == 'cimc') {
                    }
                    break;
 
-               // Power Stats - /sys/rack-unit-1/board/power-stats
-               case "1.3.6.1.4.1.9.9.719.1.9.14.1":
-//                   d_echo("Power Stats (".$tbl."): ".print_r($array, true)."\n");
-                   break;
-
-               // Temperature Stats - /sys/rack-unit-1/board/temp-stats
-               case "1.3.6.1.4.1.9.9.719.1.9.44.1":
-//                   d_echo("Temperature Stats (".$tbl."): ".print_r($array, true)."\n");
-                   break;
-
-               // Memory Stats - /sys/rack-unit-1/memarray-1/mem-1/dimm-env-stats
-               case "1.3.6.1.4.1.9.9.719.1.30.12.1":
-//                   d_echo("Memory Statistics (".$tbl."): ".print_r($array, true)."\n");
-                   break;
-
-               // CPU Stats - /sys/rack-unit-1/board/cpu-1/env-stats
-               case "1.3.6.1.4.1.9.9.719.1.41.2.1":
-//                   d_echo("CPU Stats (".$tbl."): ".print_r($array, true)."\n");
-                   break;
-
                // Unknown Table, ask the user to log an issue so this can be identified.
                default:
                    d_echo("Cisco-CIMC Error...\n");
@@ -415,7 +373,7 @@ if ($device['os'] == 'cimc') {
 
             // Loop over our components to determine if the component exists, or we need to add it.
         foreach ($components as $compid => $child) {
-                if ($child['UID'] === $array['UID']) {
+                if ($child['label'] === $array['label']) {
                     $component_key = $compid;
                 }
             }
@@ -443,7 +401,7 @@ if ($device['os'] == 'cimc') {
             $found = false;
 
             foreach ($tblCIMC as $k => $v) {
-                if ($array['UID'] == $v['UID']) {
+                if ($array['label'] == $v['label']) {
                     // Yay, we found it...
                     $found = true;
                 }
