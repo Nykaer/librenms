@@ -758,6 +758,7 @@ $config['discovery_modules']['stp']            = 1;
 $config['discovery_modules']['cisco-otv']      = 1;
 $config['discovery_modules']['ldap_usersperou']= 0;
 $config['discovery_modules']['cisco-ntp']      = 1;
+$config['discovery_modules']['cisco-cimc']      = 1;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;
