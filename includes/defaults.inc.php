@@ -718,6 +718,7 @@ $config['poller_modules']['cisco-otv']                   = 1;
 $config['poller_modules']['cisco-ntp']                   = 1;
 $config['poller_modules']['services']                    = 1;
 $config['poller_modules']['ldap_usersperou']             = 0;
+$config['poller_modules']['cisco-cimc']                  = 1;
 
 // List of discovery modules. Need to be in this array to be
 // considered for execution.
