@@ -62,11 +62,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.9.35.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'chassis';
+                       $result['hwtype'] = 'chassis';
                        $result['id'] = $array[27][$key];
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[47][$key];
                        $result['string'] = $array[32][$key] ." - ". ($array[49][$key]/1024) ."G Mem, ". $array[36][$key] ." CPU, ". $array[35][$key] ." core";
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.35.1.43.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[43][$key] != 1) {
@@ -99,11 +100,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.9.6.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'board';
+                       $result['hwtype'] = 'board';
                        $result['id'] = $array[5][$key];
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[14][$key];
                        $result['string'] = $array[6][$key];
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.6.1.9.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
@@ -132,11 +134,12 @@ if ($device['os'] == 'cimc') {
                            continue;
                        }
 
-                       $result['type'] = 'memory';
+                       $result['hwtype'] = 'memory';
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[19][$key];
                        $result['string'] = $array[11][$key] ." - ". ($array[6][$key]/1024) ."G, ". $array[27][$key] ." Bit, ". $array[7][$key] ." Mhz, ". $array[21][$key] ." MT/s";
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.30.11.1.14.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[14][$key] != 1) {
@@ -160,11 +163,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.41.9.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'cpu';
+                       $result['hwtype'] = 'cpu';
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[15][$key];
                        $result['string'] = $array[8][$key] ." - ". $array[5][$key] ." Cores, ". $array[20][$key] ." Threads";
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.41.9.1.10.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[10][$key] != 1) {
@@ -188,11 +192,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.45.1.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'sas-controller';
+                       $result['hwtype'] = 'sas-controller';
                        $result['id'] = substr($array[3][$key],12);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[14][$key];
                        $result['string'] = $array[5][$key] ." - Rev: ". $array[13][$key] .", ". $array[9][$key] .", RAID Types: ". $array[19][$key];
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.1.1.7.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[7][$key] != 1) {
@@ -216,11 +221,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.45.4.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'sas-disk';
+                       $result['hwtype'] = 'sas-disk';
                        $result['id'] = substr($array[3][$key],5);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[12][$key];
                        $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", ". round(($array[13][$key]*1.25e-10)/1024,2) ." GB";
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.4.1.9.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
@@ -244,11 +250,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.45.8.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'lun';
+                       $result['hwtype'] = 'lun';
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
                        $result['string'] = $array[3][$key] ." - ". round(($array[13][$key]*1.25e-10)/1024,2) ." GB";
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.8.1.9.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
@@ -272,11 +279,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.45.11.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'raid-battery';
+                       $result['hwtype'] = 'raid-battery';
                        $result['id'] = $array[3][$key];
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
                        $result['string'] = $array[3][$key] ." - ". $array[7][$key];
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.11.1.9.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
@@ -300,11 +308,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.15.12.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'fan';
+                       $result['hwtype'] = 'fan';
                        $result['id'] = $array[8][$key] ."-". substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = 'N/A';
                        $result['string'] = $array[7][$key];
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.12.1.10.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[10][$key] != 1) {
@@ -328,11 +337,12 @@ if ($device['os'] == 'cimc') {
                case "1.3.6.1.4.1.9.9.719.1.15.56.1":
                    $result = array();
                    foreach ($array[3] as $key => $item) {
-                       $result['type'] = 'psu';
+                       $result['hwtype'] = 'psu';
                        $result['id'] = substr($array[3][$key],4);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[13][$key];
                        $result['string'] = $array[6][$key] ." - Rev: ". $array[12][$key];
+                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.56.1.8.'.$key;
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[8][$key] != 1) {
