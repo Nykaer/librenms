@@ -41,16 +41,23 @@ if ($device['os'] == 'cimc') {
 
         foreach ($components as &$array) {
 
-            // Because our discovery module was nice and stored the OID we need to poll for status, this is quite straight forward.
-            if ($tblUCSObjects[$array['statusoid']] != 1) {
-                // Yes, report an error
-                $array['status'] = 2;
-                $array['error'] = "Error Operability Code: ".$tblUCSObjects[$array['statusoid']]."\n";
-            }
-            else {
-                // No, unset any errors that may exist.
-                $array['status'] = 0;
-                $array['error'] = '';
+            /*
+             * Because our discovery module was nice and stored the OID we need to
+             * poll for status, this is quite straight forward.
+             *
+             * Was the status oid found in the list?
+             */
+            if (isset($tblUCSObjects[$array['statusoid']]) ) {
+                if ($tblUCSObjects[$array['statusoid']] != 1) {
+                    // Yes, report an error
+                    $array['status'] = 2;
+                    $array['error'] = "Error Operability Code: ".$tblUCSObjects[$array['statusoid']]."\n";
+                }
+                else {
+                    // No, unset any errors that may exist.
+                    $array['status'] = 0;
+                    $array['error'] = '';
+                }
             }
 
             // if the type is chassis, we may have to add generic chassis faults
