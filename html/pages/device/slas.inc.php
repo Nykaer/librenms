@@ -67,7 +67,7 @@ foreach ($slas as $sla) {
 
     // Jitter has more graphs. Display a sub-page
     if ($sla['rtt_type'] == 'jitter') {
-        $name = '<a href="'.generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_nr'])).'">'.$name.'</a>';
+        $name = '<a href="'.generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_id'])).'">'.$name.'</a>';
     }
     else {
         $name = htmlentities($name);
@@ -87,7 +87,7 @@ foreach ($slas as $sla) {
     $graph_array['width']   = '215';
     $graph_array['to']      = $config['time']['now'];
     $graph_array['type']    = 'device_sla';
-    $graph_array['id']      = $sla['sla_nr'];
+    $graph_array['id']      = $sla['sla_id'];
     echo '<div class="panel panel-default '.$danger.'">
     <div class="panel-heading">
         <h3 class="panel-title">'.$name.'</h3>

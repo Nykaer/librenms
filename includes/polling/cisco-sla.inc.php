@@ -82,7 +82,7 @@ if (count($slas > 0)) {
 
         // Update the DB if necessary
         if (count($update) > 0) {
-            $updated = dbUpdate($update, 'slas', '`sla_id` = ?', array($sla['sla_nr']));
+            $updated = dbUpdate($update, 'slas', '`sla_id` = ?', array($sla['sla_id']));
         }
     }
 }
