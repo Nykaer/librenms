@@ -21,7 +21,7 @@ if (count($slas > 0)) {
 
         // Use Nagios Status codes.
         $opstatus = $rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.2'][$sla['sla_nr']];
-        if ($opstatus == 4) {
+        if ($opstatus == 1) {
             $opstatus = 0;        // 0=Good
         } else {
             $opstatus = 2;        // 2=Critical

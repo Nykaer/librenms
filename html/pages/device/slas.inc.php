@@ -81,8 +81,13 @@ foreach ($slas as $sla) {
         $danger = '';
     }
 
-    $graph_array['type'] = 'device_sla';
-    $graph_array['id']   = $sla['sla_id'];
+    $graph_array = array();
+    $graph_array['device']  = $device['device_id'];
+    $graph_array['height']  = '100';
+    $graph_array['width']   = '215';
+    $graph_array['to']      = $config['time']['now'];
+    $graph_array['type']    = 'device_sla';
+    $graph_array['id']      = $sla['sla_nr'];
     echo '<div class="panel panel-default '.$danger.'">
     <div class="panel-heading">
         <h3 class="panel-title">'.$name.'</h3>
