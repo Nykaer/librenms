@@ -30,15 +30,15 @@ if (count($components) > 0) {
         }
 ?>
                     <tr class="<?php echo $class ?>">
-                        <td><?php echo $array['label']?></td>
-                        <td><?php echo $message?></td>
+                        <td><?php echo $array['string']?></td>
+<!--                        <td><?php echo $message?></td> -->
                     </tr>
 <?php
         // Display an additional row to show the error
         if ($array['status'] == 2) {
 ?>
                     <tr class="<?php echo $class ?>">
-                        <td colspan="2"><?php echo nl2br($array['error'])?></td>
+                        <td>Error: <?php echo nl2br($array['error'])?></td>
                     </tr>
 <?php
         }
