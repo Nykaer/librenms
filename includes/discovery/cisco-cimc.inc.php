@@ -225,9 +225,15 @@ if ($device['os'] == 'cimc') {
                        $result['id'] = substr($array[3][$key],5);
                        $result['label'] = $array[2][$key];
                        $result['serial'] = $array[12][$key];
-//                       $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", ". round(($array[13][$key]*1.25e-10)/1024,2) ." GB";
-                       $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", ". round($array[13][$key]/1024,2) ." GB";
                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.4.1.9.'.$key;
+
+                       // If the value is insanely large, this must be an old firmware, newer FW reports MB.
+                       if (($array[13][$key]) > 10000000000000 ) {
+                           $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
+                       }
+                       else {
+                           $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
+                       }
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
@@ -257,14 +263,14 @@ if ($device['os'] == 'cimc') {
                        $result['serial'] = 'N/A';
                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.8.1.9.'.$key;
 
-                       // A 1 PB Disk??? This must be an old firmware that reports in bytes.
-                       if (($array[13][$key]/1000) > 1000000 ) {
-                           $result['string'] = $array[3][$key] ." - ". round(($array[13][$key]*1.25e-10)/1024,2) ." GB";
+                       // If the value is insanely large, this must be an old firmware, newer FW reports MB.
+                       if (($array[13][$key]) > 10000000000000 ) {
+                           $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
                        }
                        else {
-                           $result['string'] = $array[3][$key] ." - ". round($array[13][$key]/1000,2) ." GB";
+                           $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
                        }
-                       $result['string'] = $array[3][$key] ." - ". $array[13][$key] ." ??";
+//                       $result['string'] = $array[3][$key] ." - ". round($array[13][$key]*1.25e-13,2) ." ??";
 
                        // What is the Operability, 1 is good, everything else is bad.
                        if ($array[9][$key] != 1) {
