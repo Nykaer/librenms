@@ -1,16 +1,16 @@
 <?php
 
 if ($device['sysObjectID'] == 'enterprises.23128.1000.1.1') {
-    $features = 'ETM???';
+    $features = 'Enterprise Security Manager';
 }
 elseif ($device['sysObjectID'] == 'enterprises.23128.1000.3.1') {
-    $features = 'ERC???';
+    $features = 'Event Receiver';
 }
 elseif ($device['sysObjectID'] == 'enterprises.23128.1000.7.1') {
-    $features = 'ELM';
+    $features = 'Enterprise Log Manager';
 }
 elseif ($device['sysObjectID'] == 'enterprises.23128.1000.11.1') {
-    $features = 'ACE';
+    $features = 'Advanced Correlation Engine';
 }
 else {
     $features = 'Unknown';
