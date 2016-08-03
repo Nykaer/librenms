@@ -46,346 +46,524 @@ if ($device['os'] == 'cimc') {
         // No Error, lets process things.
         d_echo("CIMC Hardware Found:\n");
 
-        // First, let's extract any active faults, we will use them later.
+        // Gather entPhysical data
+        $entmax = 0;
+        $entphysical = array();
+        $dbentphysical = $entries = dbFetchRows('SELECT * FROM entPhysical WHERE device_id=?', array($device['device_id']));
+        foreach ($dbentphysical as $array) {
+            $entphysical[$array['entPhysicalVendorType']] = $array;
+            if ($array['entPhysicalIndex'] > $entmax) {
+                $entmax = $array['entPhysicalIndex'];
+            }
+        }
+
+        // Create an entry in the entPhysical table if it doesnt already exist.
+        function setCIMCentPhysical ($location, $data, &$entphysical, &$index) {
+
+            // Go get the location
+            $id = getCIMCentPhysical($location, $entphysical, $index);
+
+            // See if we need to update
+            $update = array();
+            foreach ($data as $key => $value) {
+                // Is the Array(DB) value different to the supplied data
+                if ($entphysical[$location][$key] != $value) {
+                    $update[$key] = $value;
+                    $entphysical[$location][$key] = $value;
+                } // End if
+            } // end foreach
+
+            // Do we need to update
+            if (count($update) > 0) {
+                dbUpdate($update, 'entPhysical', '`entPhysical_id` = ?', array($entphysical[$location]['entPhysical_id']));
+            }
+            return $entphysical[$location]['entPhysical_id'];
+        }
+
+        function getCIMCentPhysical($location, &$entphysical, &$index) {
+            global $device;
+
+            // Level 1 - Does the location exist
+            if (isset($entphysical[$location])) {
+                // Yes, return the entPhysicalIndex.
+                return $entphysical[$location]['entPhysicalIndex'];
+            }
+            else {
+                /*
+                 * No, the entry doesnt exist.
+                 * Find its parent so we can create it.
+                 */
+
+                // Pull apart the location
+                $parts = explode('/',$location);
+
+                // Level 2 - Are we at the root
+                if (count($parts) == 1) {
+                    // Level 2 - Yes. We are the root, there is no parent
+                    d_echo("ROOT - ".$location."\n");
+                    $shortlocation = $location;
+                    $parent = 0;
+                }
+                else {
+                    // Level 2 - No. Need to go deeper.
+                    d_echo("NON-ROOT - ".$location."\n");
+                    $shortlocation = array_pop($parts);
+                    $parentlocation = implode('/', $parts);
+                    d_echo("Decend - parent location: ".$parentlocation."\n");
+                    $parent = getCIMCentPhysical($parentlocation, $entphysical, $index);
+                } // end if - Level 2
+                d_echo("Parent: ".$parent."\n");
+
+                // Now we have an ID, create the entry.
+                $index++;
+                $insert = array(
+                    'device_id'                 => $device['device_id'],
+                    'entPhysicalIndex'          => $index,
+                    'entPhysicalClass'          => 'container',
+                    'entPhysicalVendorType'     => $location,
+                    'entPhysicalName'           => $shortlocation,
+                    'entPhysicalContainedIn'    => $parent,
+                    'entPhysicalParentRelPos'   => '-1',
+                );
+
+                // Add to the DB and Array.
+                $id = dbInsert($insert, 'entPhysical');
+                $entphysical[$location] = dbFetchRow('SELECT * FROM entPhysical WHERE entPhysical_id=?',array($id));
+                return $index;
+            } // end if - Level 1
+        } // end function
+
+        // Let's extract any active faults, we will use them later.
         $faults = array();
         foreach ($tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'][5] as $fid => $fobj) {
-            $fobj = preg_replace('/^sys/','/sys',$fobj);
+            $fobj = preg_replace ('/^\/?sys\//', '', $fobj);
             $faults[$fobj] = $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'][3][$fid] ." - ". $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'][11][$fid];
         }
+
         // Unset the faults and stats array so it isn't reported as an error later.
         unset ($tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.14.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.44.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.30.12.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.41.2.1']);
 
-       foreach ($tblUCSObjects as $tbl => $array) {
+        foreach ($tblUCSObjects as $tbl => $array) {
+            // Remove the leading /sys/
+            foreach ($array[2] as &$label) {
+                $label = preg_replace ('/^\/?sys\//', '', $label);
+            }
 
-           switch ($tbl) {
-               // Chassis - /sys/rack-unit-1
-               case "1.3.6.1.4.1.9.9.719.1.9.35.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'chassis';
-                       $result['id'] = $array[27][$key];
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[47][$key];
-                       $result['string'] = $array[32][$key] ." - ". ($array[49][$key]/1024) ."G Mem, ". $array[36][$key] ." CPU, ". $array[35][$key] ." core";
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.35.1.43.'.$key;
+            // Lets Set some defaults.
+            $entPhysicalData = array(
+                'entPhysicalHardwareRev'    => '',
+                'entPhysicalFirmwareRev'    => '',
+                'entPhysicalSoftwareRev'    => '',
+                'entPhysicalIsFRU'          => 'FALSE',
+            );
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[43][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[43][$key]."\n";
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+            switch ($tbl) {
+                // Chassis - rack-unit-1
+                case "1.3.6.1.4.1.9.9.719.1.9.35.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'chassis';
+                        $result['id'] = $array[27][$key];
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[47][$key];
+                        $result['string'] = $array[32][$key] ." - ". ($array[49][$key]/1024) ."G Mem, ". $array[36][$key] ." CPU, ". $array[35][$key] ." core";
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.35.1.43.'.$key;
 
-                       // See if there are any errors on this chassis.
-                       foreach ($faults as $key => $value) {
-                           if (strstr($key,$result['label'])) {
-                               // The fault is on this chassis.
-                               $result['status'] = 2;
-                               $result['error'] .= $value."\n";
-                           }
-                       }
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[43][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[43][$key]."\n";
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-                       // Add the result to the array.
-                       d_echo("Chassis (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // See if there are any errors on this chassis.
+                        foreach ($faults as $id => $value) {
+                            if (strpos($id,$result['label']) !== false) {
+                                // The fault is on this chassis.
+                                $result['status'] = 2;
+                                $result['error'] .= $value."\n";
+                            }
+                        }
 
-               // System Board - /sys/rack-unit-1/board
-               case "1.3.6.1.4.1.9.9.719.1.9.6.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'board';
-                       $result['id'] = $array[5][$key];
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[14][$key];
-                       $result['string'] = $array[6][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.6.1.9.'.$key;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'chassis';
+                        $entPhysicalData['entPhysicalModelName'] = $array[32][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Chassis';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[47][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[9][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[9][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // Add the result to the array.
+                        d_echo("Chassis (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // Add the result to the array.
-                       d_echo("System Board (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                // System Board - rack-unit-1/board
+                case "1.3.6.1.4.1.9.9.719.1.9.6.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'board';
+                        $result['id'] = $array[5][$key];
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[14][$key];
+                        $result['string'] = $array[6][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.9.6.1.9.'.$key;
 
-               // Memory Modules - /sys/rack-unit-1/board/memarray-1/mem-0
-               case "1.3.6.1.4.1.9.9.719.1.30.11.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       // If there is no memory module present, continue.
-                       if ($array[17][$key] != 10) {
-                           continue;
-                       }
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[9][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[9][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-                       $result['hwtype'] = 'memory';
-                       $result['id'] = substr($array[3][$key],4);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[19][$key];
-                       $result['string'] = $array[11][$key] ." - ". ($array[6][$key]/1024) ."G, ". $array[27][$key] ." Bit, ". $array[7][$key] ." Mhz, ". $array[21][$key] ." MT/s";
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.30.11.1.14.'.$key;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'backplane';
+                        $entPhysicalData['entPhysicalName'] = 'System Board';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[14][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[14][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[14][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // Add the result to the array.
+                        d_echo("System Board (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // Add the result to the array.
-                       d_echo("Memory (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                // Memory Modules - /sys/rack-unit-1/board/memarray-1/mem-0
+                case "1.3.6.1.4.1.9.9.719.1.30.11.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        // If there is no memory module present, continue.
+                        if ($array[17][$key] != 10) {
+                            continue;
+                        }
 
-               // CPU's - /sys/rack-unit-1/board/cpu-1
-               case "1.3.6.1.4.1.9.9.719.1.41.9.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'cpu';
-                       $result['id'] = substr($array[3][$key],4);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[15][$key];
-                       $result['string'] = $array[8][$key] ." - ". $array[5][$key] ." Cores, ". $array[20][$key] ." Threads";
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.41.9.1.10.'.$key;
+                        $result['hwtype'] = 'memory';
+                        $result['id'] = substr($array[3][$key],4);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[19][$key];
+                        $result['string'] = $array[11][$key] ." - ". ($array[6][$key]/1024) ."G, ". $array[27][$key] ." Bit, ". $array[7][$key] ." Mhz, ". $array[21][$key] ." MT/s";
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.30.11.1.14.'.$key;
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[10][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[10][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[14][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[14][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-                       // Add the result to the array.
-                       d_echo("CPU (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[11][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Memory';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[19][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-               // SAS Storage Module - /sys/rack-unit-1/board/storage-SAS-2
-               case "1.3.6.1.4.1.9.9.719.1.45.1.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'sas-controller';
-                       $result['id'] = substr($array[3][$key],12);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[14][$key];
-                       $result['string'] = $array[5][$key] ." - Rev: ". $array[13][$key] .", ". $array[9][$key] .", RAID Types: ". $array[19][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.1.1.7.'.$key;
+                        // Add the result to the array.
+                        d_echo("Memory (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[7][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[7][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                // CPU's - /sys/rack-unit-1/board/cpu-1
+                case "1.3.6.1.4.1.9.9.719.1.41.9.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'cpu';
+                        $result['id'] = substr($array[3][$key],4);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[15][$key];
+                        $result['string'] = $array[8][$key] ." - ". $array[5][$key] ." Cores, ". $array[20][$key] ." Threads";
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.41.9.1.10.'.$key;
 
-                       // Add the result to the array.
-                       d_echo("SAS Module (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[10][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[10][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-               // SAS Disks - /sys/rack-unit-1/board/storage-SAS-2/disk-1
-               case "1.3.6.1.4.1.9.9.719.1.45.4.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'sas-disk';
-                       $result['id'] = substr($array[3][$key],5);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[12][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.4.1.9.'.$key;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'cpu';
+                        $entPhysicalData['entPhysicalModelName'] = $array[8][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Processor';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[15][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // If the value is insanely large, this must be an old firmware, newer FW reports MB.
-                       if (($array[13][$key]) > 10000000000000 ) {
-                           $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
-                       }
-                       else {
-                           $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
-                       }
+                        // Add the result to the array.
+                        d_echo("CPU (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[9][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[9][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                // SAS Storage Module - /sys/rack-unit-1/board/storage-SAS-2
+                case "1.3.6.1.4.1.9.9.719.1.45.1.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'sas-controller';
+                        $result['id'] = substr($array[3][$key],12);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[14][$key];
+                        $result['string'] = $array[5][$key] ." - Rev: ". $array[13][$key] .", ". $array[9][$key] .", RAID Types: ". $array[19][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.1.1.7.'.$key;
 
-                       // Add the result to the array.
-                       d_echo("SAS Disk (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[7][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[7][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-               // LUN's - /sys/rack-unit-1/board/storage-SAS-2/lun-0
-               case "1.3.6.1.4.1.9.9.719.1.45.8.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'lun';
-                       $result['id'] = substr($array[3][$key],4);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = 'N/A';
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.8.1.9.'.$key;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[5][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Storage Module';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[14][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // If the value is insanely large, this must be an old firmware, newer FW reports MB.
-                       if (($array[13][$key]) > 10000000000000 ) {
-                           $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
-                       }
-                       else {
-                           $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
-                       }
-//                       $result['string'] = $array[3][$key] ." - ". round($array[13][$key]*1.25e-13,2) ." ??";
+                        // Add the result to the array.
+                        d_echo("SAS Module (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[9][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[9][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                // SAS Disks - /sys/rack-unit-1/board/storage-SAS-2/disk-1
+                case "1.3.6.1.4.1.9.9.719.1.45.4.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'sas-disk';
+                        $result['id'] = substr($array[3][$key],5);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[12][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.4.1.9.'.$key;
 
-                       // Add the result to the array.
-                       d_echo("LUN (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // If the value is insanely large, this must be an old firmware, newer FW reports MB.
+                        if (($array[13][$key]) > 10000000000000 ) {
+                            $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
+                        }
+                        else {
+                            $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
+                        }
 
-               // RAID Battery - /sys/rack-unit-1/board/storage-SAS-2/raid-battery
-               case "1.3.6.1.4.1.9.9.719.1.45.11.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'raid-battery';
-                       $result['id'] = $array[3][$key];
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = 'N/A';
-                       $result['string'] = $array[3][$key] ." - ". $array[7][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.11.1.9.'.$key;
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[9][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[9][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[9][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[9][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[14][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Disk';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[12][$key];
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // Add the result to the array.
-                       d_echo("RAID Battery (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // Add the result to the array.
+                        d_echo("SAS Disk (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-               // Fan's - /sys/rack-unit-1/fan-module-1-1/fan-1
-               case "1.3.6.1.4.1.9.9.719.1.15.12.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'fan';
-                       $result['id'] = $array[8][$key] ."-". substr($array[3][$key],4);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = 'N/A';
-                       $result['string'] = $array[7][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.12.1.10.'.$key;
+                // LUN's - /sys/rack-unit-1/board/storage-SAS-2/lun-0
+                case "1.3.6.1.4.1.9.9.719.1.45.8.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'lun';
+                        $result['id'] = substr($array[3][$key],4);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = 'N/A';
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.8.1.9.'.$key;
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[10][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[10][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // If the value is insanely large, this must be an old firmware, newer FW reports MB.
+                        if (($array[13][$key]) > 10000000000000 ) {
+                            $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
+                        }
+                        else {
+                            $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
+                        }
 
-                       // Add the result to the array.
-                       d_echo("Fan (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[9][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[9][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-               // PSU's - /sys/rack-unit-1/psu-1
-               case "1.3.6.1.4.1.9.9.719.1.15.56.1":
-                   $result = array();
-                   foreach ($array[3] as $key => $item) {
-                       $result['hwtype'] = 'psu';
-                       $result['id'] = substr($array[3][$key],4);
-                       $result['label'] = $array[2][$key];
-                       $result['serial'] = $array[13][$key];
-                       $result['string'] = $array[6][$key] ." - Rev: ". $array[12][$key];
-                       $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.56.1.8.'.$key;
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[3][$key];
+                        $entPhysicalData['entPhysicalName'] = 'LUN';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = '';
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
 
-                       // What is the Operability, 1 is good, everything else is bad.
-                       if ($array[8][$key] != 1) {
-                           // Yes, report an error
-                           $result['status'] = 2;
-                           $result['error'] = "Error Operability Code: ".$array[8][$key];
-                       }
-                       else {
-                           // No, unset any errors that may exist.
-                           $result['status'] = 0;
-                           $result['error'] = '';
-                       }
+                        // Add the result to the array.
+                        d_echo("LUN (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
 
-                       // Add the result to the array.
-                       d_echo("PSU (".$tbl."): ".print_r($result, true)."\n");
-                       $tblCIMC[] = $result;
-                   }
-                   break;
+                // RAID Battery - /sys/rack-unit-1/board/storage-SAS-2/raid-battery
+                case "1.3.6.1.4.1.9.9.719.1.45.11.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'raid-battery';
+                        $result['id'] = $array[3][$key];
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = 'N/A';
+                        $result['string'] = $array[3][$key] ." - ". $array[7][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.11.1.9.'.$key;
 
-               // Unknown Table, ask the user to log an issue so this can be identified.
-               default:
-                   d_echo("Cisco-CIMC Error...\n");
-                   d_echo("    Unknown Table: ".$tbl."\n");
-                   d_echo("\n");
-                   break;
-           }
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[9][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[9][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
 
-        }
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[3][$key];
+                        $entPhysicalData['entPhysicalName'] = 'RAID Battery';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = '';
+                        $result['entPhysical'] = setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
+
+                        // Add the result to the array.
+                        d_echo("RAID Battery (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
+
+                // Fan's - /sys/rack-unit-1/fan-module-1-1/fan-1
+                case "1.3.6.1.4.1.9.9.719.1.15.12.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'fan';
+                        $result['id'] = $array[8][$key] ."-". substr($array[3][$key],4);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = 'N/A';
+                        $result['string'] = $array[7][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.12.1.10.'.$key;
+
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[10][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[10][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
+
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'fan';
+                        $entPhysicalData['entPhysicalModelName'] = $array[7][$key];
+                        $entPhysicalData['entPhysicalName'] = 'FAN';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = '';
+                        setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
+
+                        // Add the result to the array.
+                        d_echo("Fan (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
+
+                // PSU's - /sys/rack-unit-1/psu-1
+                case "1.3.6.1.4.1.9.9.719.1.15.56.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'psu';
+                        $result['id'] = substr($array[3][$key],4);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[13][$key];
+                        $result['string'] = $array[6][$key] ." - Rev: ". $array[12][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.15.56.1.8.'.$key;
+
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[8][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[8][$key];
+                        }
+                        else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
+
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'powerSupply';
+                        $entPhysicalData['entPhysicalModelName'] = $array[6][$key];
+                        $entPhysicalData['entPhysicalName'] = 'PSU';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[13][$key];
+                        setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
+
+                        // Add the result to the array.
+                        d_echo("PSU (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
+
+                // Unknown Table, ask the user to log an issue so this can be identified.
+                default:
+                    d_echo("Cisco-CIMC Error...\n");
+                    d_echo("    Unknown Table: ".$tbl."\n");
+                    d_echo("\n");
+                    break;
+            } // End Switch
+
+        } // End foreach tblUCSObjects
 
         /*
          * Ok, we have our 2 array's (Components and SNMP) now we need
@@ -433,8 +611,9 @@ if ($device['os'] == 'cimc') {
             }
 
             if ($found === false) {
-                // The component has not been found. we should delete it.
+                // The component has not been found. we should delete it and it's entPhysical entry
                 echo "-";
+                dbDelete('entPhysical', '`entPhysical_id` = ?', array($array['entPhysical']));
                 $component->deleteComponent($key);
             }
         }
