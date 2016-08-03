@@ -89,6 +89,7 @@ function discover_device($device, $options = null) {
     $valid = array();
     // Reset $valid array
     $attribs = get_dev_attribs($device['device_id']);
+    $device['snmp_max_repeaters'] = $attribs['snmp_max_repeaters'];
 
     $device_start = microtime(true);
     // Start counting device poll time
@@ -100,6 +101,13 @@ function discover_device($device, $options = null) {
         if ($device['os'] != 'generic') {
             echo "\nDevice os was updated to " . $device['os'] . '!';
             dbUpdate(array('os' => $device['os']), 'devices', '`device_id` = ?', array($device['device_id']));
+        }
+    }
+
+    // Set type to a predefined type for the OS if it's not already set
+    if ($device['type'] == 'unknown' || $device['type'] == '') {
+        if ($config['os'][$device['os']]['type']) {
+            $device['type'] = $config['os'][$device['os']]['type'];
         }
     }
 
@@ -140,13 +148,6 @@ function discover_device($device, $options = null) {
     if (is_mib_poller_enabled($device)) {
         $devicemib = array($device['sysObjectID'] => 'all');
         register_mibs($device, $devicemib, "includes/discovery/functions.inc.php");
-    }
-
-    // Set type to a predefined type for the OS if it's not already set
-    if ($device['type'] == 'unknown' || $device['type'] == '') {
-        if ($config['os'][$device['os']]['type']) {
-            $device['type'] = $config['os'][$device['os']]['type'];
-        }
     }
 
     $device_end = microtime(true);
