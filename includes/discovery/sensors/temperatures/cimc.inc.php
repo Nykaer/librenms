@@ -15,48 +15,10 @@ if ($device['os'] == 'cimc') {
     } else {
         // No Error, lets process things.
 
-        $probes = array();
-
-        // Ambient Temperature
-        $probes[] = array(
-            'name'      => " - Ambient",
-            'baseoid'   => '1.3.6.1.4.1.9.9.719.1.9.44.1.4',
-            'index'     => "ambient-",
-            'max'       => 40,
-        );
-        // Front Temperature
-        $probes[] = array(
-            'name'      => " - Front",
-            'baseoid'   => '1.3.6.1.4.1.9.9.719.1.9.44.1.8',
-            'index'     => "front-",
-            'max'       => 40,
-        );
-        // Rear Temperature
-        $probes[] = array(
-            'name'      => " - Rear",
-            'baseoid'   => '1.3.6.1.4.1.9.9.719.1.9.44.1.21',
-            'index'     => "rear-",
-            'max'       => 60,
-        );
-        // IO Hub Temperature
-        $probes[] = array(
-            'name'      => " - IO Hub",
-            'baseoid'   => '1.3.6.1.4.1.9.9.719.1.9.44.1.13',
-            'index'     => "ioh-",
-            'max'       => 60,
-        );
-
         // Board Temperatures
         foreach ($temp_board['1.3.6.1.4.1.9.9.719.1.9.44.1.2'] as $index => $string) {
             $temp = preg_match ('/sys\/(rack-unit-[^,]+)\/board\/temp-stats/', $string, $regexp_result);
-            $name = $regexp_result[1];
-
-/*
-            foreach ($probes as $probe) {
-                d_echo($probe['baseoid'].".".$index." - ".$name.$probe['name']." - ".$temp_board[$probe['baseoid']][$index]."\n");
-                discover_sensor ($valid['sensor'], 'temperature', $device, $probe['baseoid'].".".$index, $probe['index'].$index, 'cimc', $name.$probe['name'], '1', '1', null, null, $probe['max'], null, $temp_board[$probe['baseoid']][$index]);
-            }
-*/
+            $description = $regexp_result[1];
 
             // Ambient Temperature
             $oid = '1.3.6.1.4.1.9.9.719.1.9.44.1.4'.$index;
