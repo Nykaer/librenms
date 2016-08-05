@@ -2,8 +2,6 @@
 
 print_optionbar_start();
 
-echo "<span style='font-weight: bold;'>SLA</span> &#187; ";
-
 $slas = dbFetchRows('SELECT * FROM `slas` WHERE `device_id` = ? AND `deleted` = 0 ORDER BY `sla_nr`', array($device['device_id']));
 
 // Collect types
@@ -25,9 +23,17 @@ foreach ($slas as $sla) {
 
     $sla_types[$sla_type] = $text;
 }
-
 asort($sla_types);
 
+$status_options = array(
+    'all'   => 'All',
+    'up'    => 'Up',
+    'down'  => 'Down',
+);
+
+echo "<span style='font-weight: bold;'>SLA</span> &#187; ";
+
+// SLA Types, on the left.
 $sep = '';
 foreach ($sla_types as $sla_type => $text) {
     if (!$vars['view']) {
@@ -46,13 +52,39 @@ foreach ($sla_types as $sla_type => $text) {
 
     $sep = ' | ';
 }
+unset($sep);
 
+// The status option - on the right
+echo '<div class="pull-right">';
+echo "<span style='font-weight: bold;'>Status</span> &#187; ";
+$sep = '';
+foreach ($status_options as $option => $text) {
+    if (empty($vars['opstatus'])) {
+        $vars['opstatus'] = $option;
+    }
+    echo $sep;
+    if ($vars['opstatus'] == $option) {
+        echo "<span class='pagemenu-selected'>";
+    }
+
+    echo generate_link($text, $vars, array('opstatus' => $option));
+    if ($vars['opstatus'] == $option) {
+        echo '</span>';
+    }
+    $sep = ' | ';
+}
 unset($sep);
 
 print_optionbar_end();
 
 foreach ($slas as $sla) {
     if ($vars['view'] != 'all' && $vars['view'] != $sla['rtt_type']) {
+        continue;
+    }
+
+    $opstatus = ($sla['opstatus'] === '0') ? 'up' : 'down';
+    d_echo("<br>Opstatus :: var: ".$vars['opstatus'].", db: ".$sla['opstatus'].", name: ".$opstatus."<br>");
+    if ($vars['opstatus'] != 'all' && $vars['opstatus'] != $opstatus) {
         continue;
     }
 
