@@ -11,11 +11,6 @@
  * the source code distribution for details.
  */
 
-/*
- * TODO:
- *  Size of Disks (BOM: 4x500gb) and LUN
- */
-
 if ($device['os'] == 'cimc') {
 
     $module = 'Cisco-CIMC';
@@ -369,9 +364,11 @@ if ($device['os'] == 'cimc') {
                         // If the value is insanely large, this must be an old firmware, newer FW reports MB.
                         if (($array[13][$key]) > 10000000000000 ) {
                             $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
+                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]*1.25e-13,2)."GB\n";
                         }
                         else {
                             $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
+                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]*1.25e-3,2)."GB\n";
                         }
 
                         // What is the Operability, 1 is good, everything else is bad.
@@ -413,9 +410,11 @@ if ($device['os'] == 'cimc') {
                         // If the value is insanely large, this must be an old firmware, newer FW reports MB.
                         if (($array[13][$key]) > 10000000000000 ) {
                             $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
+                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]*1.25e-13,2)."GB\n";
                         }
                         else {
                             $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-3,2) ." GB";
+                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]*1.25e-3,2)."GB\n";
                         }
 
                         // What is the Operability, 1 is good, everything else is bad.
