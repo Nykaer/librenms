@@ -23,8 +23,7 @@ if (count($components) > 0) {
             $class = "danger";
             $message = "Alert";
 
-        }
-        else {
+        } else {
             $class = "";
             $message = "Ok";
         }

@@ -52,8 +52,7 @@ if ($device['os'] == 'cimc') {
                     // Yes, report an error
                     $array['status'] = 2;
                     $array['error'] = "Error Operability Code: ".$tblUCSObjects[$array['statusoid']]."\n";
-                }
-                else {
+                } else {
                     // No, unset any errors that may exist.
                     $array['status'] = 0;
                     $array['error'] = '';
@@ -75,8 +74,7 @@ if ($device['os'] == 'cimc') {
             // Print some debugging
             if ($array['status'] == 0) {
                 d_echo($array['label']." - Ok\n");
-            }
-            else {
+            } else {
                 d_echo($array['label']." - ".$array['error']."\n");
             }
         }
