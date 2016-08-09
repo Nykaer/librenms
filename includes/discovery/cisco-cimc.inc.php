@@ -230,7 +230,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // Memory Modules - /sys/rack-unit-1/board/memarray-1/mem-0
+                // Memory Modules - rack-unit-1/board/memarray-1/mem-0
                 case "1.3.6.1.4.1.9.9.719.1.30.11.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -271,7 +271,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // CPU's - /sys/rack-unit-1/board/cpu-1
+                // CPU's - rack-unit-1/board/cpu-1
                 case "1.3.6.1.4.1.9.9.719.1.41.9.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -307,7 +307,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // SAS Storage Module - /sys/rack-unit-1/board/storage-SAS-2
+                // SAS Storage Module - rack-unit-1/board/storage-SAS-2
                 case "1.3.6.1.4.1.9.9.719.1.45.1.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -343,7 +343,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // SAS Disks - /sys/rack-unit-1/board/storage-SAS-2/disk-1
+                // SAS Disks - rack-unit-1/board/storage-SAS-2/disk-1
                 case "1.3.6.1.4.1.9.9.719.1.45.4.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -387,7 +387,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // LUN's - /sys/rack-unit-1/board/storage-SAS-2/lun-0
+                // LUN's - rack-unit-1/board/storage-SAS-2/lun-0
                 case "1.3.6.1.4.1.9.9.719.1.45.8.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -431,7 +431,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // RAID Battery - /sys/rack-unit-1/board/storage-SAS-2/raid-battery
+                // RAID Battery - rack-unit-1/board/storage-SAS-2/raid-battery
                 case "1.3.6.1.4.1.9.9.719.1.45.11.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -467,7 +467,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // Fan's - /sys/rack-unit-1/fan-module-1-1/fan-1
+                // Fan's - rack-unit-1/fan-module-1-1/fan-1
                 case "1.3.6.1.4.1.9.9.719.1.15.12.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -503,7 +503,7 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
-                // PSU's - /sys/rack-unit-1/psu-1
+                // PSU's - rack-unit-1/psu-1
                 case "1.3.6.1.4.1.9.9.719.1.15.56.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
@@ -539,12 +539,51 @@ if ($device['os'] == 'cimc') {
                     }
                     break;
 
+                // Adaptors - rack-unit-1/adaptor-1
+                case "1.3.6.1.4.1.9.9.719.1.3.85.1":
+                    foreach ($array[3] as $key => $item) {
+                        $result = array();
+                        $result['hwtype'] = 'adaptor';
+                        $result['id'] = substr($array[3][$key],8);
+                        $result['label'] = $array[2][$key];
+                        $result['serial'] = $array[21][$key];
+                        $result['string'] = $array[11][$key] ." - Rev: ". $array[20][$key] ." - Part-No: ". $array[26][$key];
+                        $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.3.85.1.13.'.$key;
+
+                        // What is the Operability, 1 is good, everything else is bad.
+                        if ($array[13][$key] != 1) {
+                            // Yes, report an error
+                            $result['status'] = 2;
+                            $result['error'] = "Error Operability Code: ".$array[13][$key];
+                        } else {
+                            // No, unset any errors that may exist.
+                            $result['status'] = 0;
+                            $result['error'] = '';
+                        }
+
+                        // Add the ent Physical entry
+                        $entPhysicalData['entPhysicalClass'] = 'module';
+                        $entPhysicalData['entPhysicalModelName'] = $array[11][$key];
+                        $entPhysicalData['entPhysicalName'] = 'Adaptor';
+                        $entPhysicalData['entPhysicalDescr'] = $result['string'];
+                        $entPhysicalData['entPhysicalSerialNum'] = $array[21][$key];
+                        setCIMCentPhysical($result['label'], $entPhysicalData, $entphysical, $entmax);
+
+                        // Add the result to the array.
+                        d_echo("Adaptor (".$tbl."): ".print_r($result, true)."\n");
+                        $tblCIMC[] = $result;
+                    }
+                    break;
+
                 // Unknown Table, ask the user to log an issue so this can be identified.
                 default:
                     d_echo("Cisco-CIMC Error...\n");
-                    d_echo("    Unknown Table: ".$tbl."\n");
+                    d_echo("Please log an issue on github with the following information:\n");
+                    d_echo("-----------------------------------------------\n");
+                    d_echo("Subject: CIMC Unknown Table: ".$tbl."\n");
+                    d_echo("Description: The Cisco-CIMC module discovered an unknown table.\nA dump of its contents is below:\n");
                     d_echo($array);
-                    d_echo("\n");
+                    d_echo("-----------------------------------------------\n\n");
                     break;
             } // End Switch
 
