@@ -36,8 +36,7 @@ if ($device['os'] == 'cimc') {
     if ( is_null($tblUCSObjects) ) {
         // We have to error here or we will end up deleting all our components.
         echo "Error\n";
-    }
-    else {
+    } else {
         // No Error, lets process things.
         d_echo("CIMC Hardware Found:\n");
 
@@ -82,8 +81,7 @@ if ($device['os'] == 'cimc') {
             if (isset($entphysical[$location])) {
                 // Yes, return the entPhysicalIndex.
                 return $entphysical[$location]['entPhysicalIndex'];
-            }
-            else {
+            } else {
                 /*
                  * No, the entry doesnt exist.
                  * Find its parent so we can create it.
@@ -98,8 +96,7 @@ if ($device['os'] == 'cimc') {
                     d_echo("ROOT - ".$location."\n");
                     $shortlocation = $location;
                     $parent = 0;
-                }
-                else {
+                } else {
                     // Level 2 - No. Need to go deeper.
                     d_echo("NON-ROOT - ".$location."\n");
                     $shortlocation = array_pop($parts);
@@ -169,8 +166,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[43][$key]."\n";
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -215,8 +211,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[9][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -256,8 +251,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[14][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -293,8 +287,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[10][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -330,8 +323,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[7][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -365,8 +357,7 @@ if ($device['os'] == 'cimc') {
                         if (($array[13][$key]) > 10000000000000 ) {
                             $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
                             d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]*1.25e-13,2)."GB\n");
-                        }
-                        else {
+                        } else {
                             $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]/1000,2) ." GB";
                             d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]/1000,2)."GB\n");
                         }
@@ -376,8 +367,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[9][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -411,8 +401,7 @@ if ($device['os'] == 'cimc') {
                         if (($array[13][$key]) > 10000000000000 ) {
                             $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]*1.25e-13,2) ." GB";
                             d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]*1.25e-13,2)."GB\n");
-                        }
-                        else {
+                        } else {
                             $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]/1000,2) ." GB";
                             d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]/1000,2)."GB\n");
                         }
@@ -422,8 +411,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[9][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -459,8 +447,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[9][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -496,8 +483,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[10][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -533,8 +519,7 @@ if ($device['os'] == 'cimc') {
                             // Yes, report an error
                             $result['status'] = 2;
                             $result['error'] = "Error Operability Code: ".$array[8][$key];
-                        }
-                        else {
+                        } else {
                             // No, unset any errors that may exist.
                             $result['status'] = 0;
                             $result['error'] = '';
@@ -558,6 +543,7 @@ if ($device['os'] == 'cimc') {
                 default:
                     d_echo("Cisco-CIMC Error...\n");
                     d_echo("    Unknown Table: ".$tbl."\n");
+                    d_echo($array);
                     d_echo("\n");
                     break;
             } // End Switch
@@ -586,8 +572,7 @@ if ($device['os'] == 'cimc') {
                 $component_key = key($new_component);
                 $components[$component_key] = array_merge($new_component[$component_key], $array);
                 echo "+";
-            }
-            else {
+            } else {
                 // The component does exist, merge the details in - UPDATE.
                 $components[$component_key] = array_merge($components[$component_key], $array);
                 echo ".";
