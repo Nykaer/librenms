@@ -50,22 +50,38 @@ function data_uri($file, $mime) {
 }//end data_uri()
 
 
-function nicecase($item) {
+function nicecase($item)
+{
     switch ($item) {
-    case 'dbm':
-        return 'dBm';
+        case 'dbm':
+            return 'dBm';
 
-    case 'mysql':
-        return ' MySQL';
+        case 'mysql':
+            return ' MySQL';
 
-    case 'powerdns':
-        return 'PowerDNS';
+        case 'powerdns':
+            return 'PowerDNS';
 
-    case 'bind':
-        return 'BIND';
+        case 'bind':
+            return 'BIND';
 
-    default:
-        return ucfirst($item);
+        case 'nfs-stats':
+            return 'NFS Stats';
+
+        case 'nfs-v3-stats':
+            return 'NFS v3 Stats';
+
+        case 'os-updates':
+            return 'OS Updates';
+
+        case 'powerdns-recursor':
+            return 'PowerDNS Recursor';
+
+        case 'dhcp-stats':
+            return 'DHCP Stats';
+
+        default:
+            return ucfirst($item);
     }
 
 }//end nicecase()
@@ -891,14 +907,6 @@ function generate_ap_url($ap, $vars=array()) {
     return generate_url(array('page' => 'device', 'device' => $ap['device_id'], 'tab' => 'accesspoint', 'ap' => $ap['accesspoint_id']), $vars);
 
 }//end generate_ap_url()
-
-
-function report_this($message) {
-    global $config;
-    return '<h2>'.$message.' Please <a href="'.$config['project_issues'].'">report this</a> to the '.$config['project_name'].' developers.</h2>';
-
-}//end report_this()
-
 
 function report_this_text($message) {
     global $config;

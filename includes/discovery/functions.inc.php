@@ -28,13 +28,16 @@ function discover_new_device($hostname, $device = '', $method = '', $interface =
         // $ip isn't a valid IP so it must be a name.
         if ($ip == $dst_host) {
             d_echo("name lookup of $dst_host failed\n");
-
+            log_event("$method discovery of " . $dst_host  . " failed - Check name lookup", $device['device_id'], 'discovery');
+ 
             return false;
         }
     } elseif (filter_var($dst_host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === true || filter_var($dst_host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === true) {
         // gethostbyname returned a valid $ip, was $dst_host an IP?
         if ($config['discovery_by_ip'] === false) {
             d_echo('Discovery by IP disabled, skipping ' . $dst_host);
+            log_event("$method discovery of " . $dst_host . " failed - Discovery by IP disabled", $device['device_id'], 'discovery');
+ 
             return false;
         }
     }
@@ -50,8 +53,9 @@ function discover_new_device($hostname, $device = '', $method = '', $interface =
     }
 
     if (match_network($config['nets'], $ip)) {
-        $remote_device_id = addHost($dst_host, '', '161', 'udp', '0', $config['distributed_poller_group']);
-        if ($remote_device_id) {
+        $result = addHost($dst_host, '', '161', 'udp', '0', $config['distributed_poller_group']);
+        if (is_numeric($result)) {
+            $remote_device_id = $result;
             $remote_device = device_by_id_cache($remote_device_id, 1);
             echo '+[' . $remote_device['hostname'] . '(' . $remote_device['device_id'] . ')]';
             discover_device($remote_device);
@@ -65,10 +69,14 @@ function discover_new_device($hostname, $device = '', $method = '', $interface =
 
                 log_event('Device ' . $remote_device['hostname'] . " ($ip) $extra_log autodiscovered through $method on " . $device['hostname'], $remote_device_id, 'discovery');
             } else {
-                log_event("$method discovery of " . $remote_device['hostname'] . " ($ip) failed - check ping and SNMP access", $device['device_id'], 'discovery');
+                log_event("$method discovery of " . $remote_device['hostname'] . " ($ip) failed - Check ping and SNMP access", $device['device_id'], 'discovery');
             }
 
             return $remote_device_id;
+        } else {
+            if(substr($result, 0, 12) !== 'Already have') {
+                log_event("$method discovery of " . $dst_host . " ($ip) failed - " . $result);
+            }
         }
     } else {
         d_echo("$ip not in a matched network - skipping\n");
@@ -83,6 +91,7 @@ function discover_device($device, $options = null) {
     $valid = array();
     // Reset $valid array
     $attribs = get_dev_attribs($device['device_id']);
+    $device['snmp_max_repeaters'] = $attribs['snmp_max_repeaters'];
 
     $device_start = microtime(true);
     // Start counting device poll time
@@ -97,6 +106,13 @@ function discover_device($device, $options = null) {
         }
     }
 
+    // Set type to a predefined type for the OS if it's not already set
+    if ($device['type'] == 'unknown' || $device['type'] == '') {
+        if ($config['os'][$device['os']]['type']) {
+            $device['type'] = $config['os'][$device['os']]['type'];
+        }
+    }
+
     if ($config['os'][$device['os']]['group']) {
         $device['os_group'] = $config['os'][$device['os']]['group'];
         echo ' (' . $device['os_group'] . ')';
@@ -105,16 +121,18 @@ function discover_device($device, $options = null) {
     echo "\n";
 
     // If we've specified modules, use them, else walk the modules array
+    $force_module = false;
     if ($options['m']) {
         $config['discovery_modules'] = array();
         foreach (explode(',', $options['m']) as $module) {
             if (is_file("includes/discovery/$module.inc.php")) {
                 $config['discovery_modules'][$module] = 1;
+                $force_module = true;
             }
         }
     }
     foreach ($config['discovery_modules'] as $module => $module_status) {
-        if ($attribs['discover_' . $module] || ( $module_status && !isset($attribs['discover_' . $module]))) {
+        if ($force_module === true || $attribs['discover_' . $module] || ( $module_status && !isset($attribs['discover_' . $module]))) {
             $module_start = microtime(true);
             echo "#### Load disco module $module ####\n";
             include "includes/discovery/$module.inc.php";
@@ -132,13 +150,6 @@ function discover_device($device, $options = null) {
     if (is_mib_poller_enabled($device)) {
         $devicemib = array($device['sysObjectID'] => 'all');
         register_mibs($device, $devicemib, "includes/discovery/functions.inc.php");
-    }
-
-    // Set type to a predefined type for the OS if it's not already set
-    if ($device['type'] == 'unknown' || $device['type'] == '') {
-        if ($config['os'][$device['os']]['type']) {
-            $device['type'] = $config['os'][$device['os']]['type'];
-        }
     }
 
     $device_end = microtime(true);

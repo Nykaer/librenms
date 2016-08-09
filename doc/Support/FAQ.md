@@ -15,10 +15,12 @@
  - [Why do I see traffic spikes in my graphs?](#faq15)
  - [Why do I see gaps in my graphs?](#faq17)
  - [How do I change the IP / hostname of a device?](#faq16)
+ - [My device doesn't finish polling within 300 seconds](#faq19)
  - [Things aren't working correctly?](#faq18)
 
 ### Developing
  - [How do I add support for a new OS?](#faq8)
+ - [What information do you need to add a new OS?](#faq20)
  - [What can I do to help?](#faq9)
  - [How can I test another users branch?](#faq13)
 
@@ -26,9 +28,7 @@
 
 This is currently well documented within the doc folder of the installation files.
 
-For Debian / Ubuntu installs follow [Debian / Ubuntu](http://docs.librenms.org/Installation/Installation-(Debian-Ubuntu))
-
-For RedHat / CentOS installs follow [RedHat / CentOS](http://docs.librenms.org/Installation/Installation-(RHEL-CentOS))
+Please see the following [doc](http://docs.librenms.org/Installation/Installing-LibreNMS/)
 
 #### <a name="faq2"> How do I add a device?</a>
 
@@ -76,6 +76,9 @@ If the page you are trying to load has a substantial amount of data in it then i
 
 The easiest way to check if all is well is to run `./validate.php` as root from within your install directory. This should give you info on why things aren't working.
 
+One other reason could be a restricted snmpd.conf file or snmp view which limits the data sent back. If you use net-snmp then we suggest using 
+the (included snmpd.conf)[https://raw.githubusercontent.com/librenms/librenms/master/snmpd.conf.example] file.
+
 #### <a name="faq7"> How do I debug pages not loading correctly?</a>
 
 A debug system is in place which enables you to see the output from php errors, warnings and notices along with the MySQL queries that have been run for that page.
@@ -122,6 +125,14 @@ Usage:
 ./renamehost.php <old hostname> <new hostname>
 ```
 
+#### <a name="faq19"> My device doesn't finish polling within 300 seconds</a>
+
+We have a few things you can try:
+
+  - Disable unnecessary polling modules under edit device.
+  - Set a max repeater value within the snmp settings for a device.
+    What to set this to is tricky, you really should run an snmpbulkwalk with -Cr10 through -Cr50 to see what works best. 50 is usually a good choice if the device can cope.
+
 #### <a name="faq18"> Things aren't working correctly?</a>
 
 Run `./validate.php` as root from within your install.
@@ -145,6 +156,20 @@ sysObjectID or sysDescr, or the existence of a particular enterprise tree.
 This file will usually set the variables for $version and $hardware gained from an snmp lookup.
 **html/images/os/$os.png**
 This is a 32x32 png format image of the OS you are adding support for.
+
+#### <a name="faq20"> What information do you need to add a new OS?</a>
+
+Please provide the following output as seperate non-expiring pastebin.com links.
+
+Replace the relevant information in these commands such as HOSTNAME and COMMUNITY.
+
+```bash
+./discovery.php -h HOSTNAME -d -m os
+./poller.php -h HOSTNAME -r -f -d -m os
+snmpbulkwalk -On -v2c -c COMMUNITY HOSTNAME .
+```
+
+If possible please also provide what the OS name should be if it doesn't exist already.
 
 #### <a name="faq9"> What can I do to help?</a>
 

@@ -16,6 +16,21 @@
  * the source code distribution for details.
  */
 
+function generate_priority_icon($priority) {
+    $map = array(
+        "emerg"     => "server_delete",
+        "alert"     => "cancel",
+        "crit"      => "application_lightning",
+        "err"       => "application_delete",
+        "warning"   => "application_error",
+        "notice"    => "application_edit",
+        "info"      => "application",
+        "debug"     => "bug",
+    );
+
+    return '<img src="images/16/' . $map[$priority] .'.png" title="' . $priority . '">';
+}
+
 function format_number_short($number, $sf) {
     // This formats a number so that we only send back three digits plus an optional decimal point.
     // Example: 723.42 -> 723    72.34 -> 72.3    2.23 -> 2.23
@@ -80,9 +95,13 @@ function isCli() {
     }
 }
 
-function print_error($text) {
-    global $console_color;
+function print_error($text, $quiet = false) {
+    if ($quiet) {
+        return;
+    }
+
     if (isCli()) {
+        global $console_color;
         print $console_color->convert("%r".$text."%n\n", false);
     }
     else {
@@ -90,9 +109,14 @@ function print_error($text) {
     }
 }
 
-function print_message($text) {
+function print_message($text, $quiet = false) {
+    if ($quiet) {
+        return;
+    }
+
     if (isCli()) {
-        print Console_Color2::convert("%g".$text."%n\n", false);
+        global $console_color;
+        print $console_color->convert("%g".$text."%n\n", false);
     }
     else {
         echo('<div class="alert alert-success"><img src="images/16/tick.png" align="absmiddle"> '.$text.'</div>');
@@ -318,14 +342,16 @@ function device_by_id_cache($device_id, $refresh = '0') {
 		
 		//order vrf_lite_cisco with context, this will help to get the vrf_name and instance_name all the time
 		$vrfs_lite_cisco = dbFetchRows("SELECT * FROM `vrf_lite_cisco` WHERE `device_id` = ?", array($device_id));
-		$device['vrf_lite_cisco'] = array();
 		if(!empty($vrfs_lite_cisco)){
+			$device['vrf_lite_cisco'] = array();
 			foreach ($vrfs_lite_cisco as $vrf){
 				$device['vrf_lite_cisco'][$vrf['context_name']] = $vrf;
 			}
 		}
 
-        $device['ip'] = inet6_ntop($device['ip']);
+        if(!empty($device['ip'])) {
+            $device['ip'] = inet6_ntop($device['ip']);
+        }
         $cache['devices']['id'][$device_id] = $device;
     }
     return $device;
@@ -1036,7 +1062,9 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']    = rtrim(`git rev-parse HEAD`);
+    list($local_sha, $local_date) = explode('|', rtrim(`git show --pretty='%H|%ct' -s HEAD`));
+    $output['local_sha']    = $local_sha;
+    $output['local_date']   = $local_date;
     $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
 
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');
