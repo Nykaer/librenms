@@ -289,14 +289,13 @@ function add_device() {
         $message = "You haven't specified an SNMP version to use";
     }
     if (empty($message)) {
-        $result = addHost($hostname, $snmpver, $port, $transport, 1, $poller_group, $force_add);
-        if ($result) {
+        try {
+            $device_id = addHost($hostname, $snmpver, $port, $transport, $poller_group, $force_add);
             $code    = 201;
             $status  = 'ok';
-            $message = "Device $hostname has been added successfully";
-        }
-        else {
-            $message = "Failed adding $hostname";
+            $message = "Device $hostname ($device_id) has been added successfully";
+        } catch (Exception $e) {
+            $message = $e->getMessage();
         }
     }
 
@@ -495,19 +494,10 @@ function get_graph_by_portgroup() {
     $vars['width']  = $_GET['width'] ?: 1075;
     $vars['height'] = $_GET['height'] ?: 300;
     $auth           = '1';
-    $type_where     = ' (';
-    $or             = '';
-    $type_param     = array();
-    foreach (explode(',', $group) as $type) {
-        $type_where  .= " $or `port_descr_type` = ?";
-        $or           = 'OR';
-        $type_param[] = $type;
-    }
 
-    $type_where .= ') ';
+    $ports = get_ports_from_type(explode(',', $group));
     $if_list     = '';
     $seperator   = '';
-    $ports       = dbFetchRows("SELECT * FROM `ports` as I, `devices` AS D WHERE $type_where AND I.device_id = D.device_id ORDER BY I.ifAlias", $type_param);
     foreach ($ports as $port) {
         $if_list  .= $seperator.$port['port_id'];
         $seperator = ',';
@@ -1271,7 +1261,7 @@ function get_devices_by_group() {
     }
     else {
         $group_id = dbFetchCell("SELECT `id` FROM `device_groups` WHERE `name`=?",array($name));
-        $devices = GetDevicesFromGroup($group_id);
+        $devices = GetDevicesFromGroup($group_id, true);
         $count = count($devices);
         if (empty($devices)) {
             $message = 'No devices found in group ' . $name;
@@ -1318,6 +1308,40 @@ function list_ipsec() {
         'err-msg' => $message,
         'count'   => $total,
         'ipsec'  => $ipsec,
+    );
+    $app->response->setStatus($code);
+    $app->response->headers->set('Content-Type', 'application/json');
+    echo _json_encode($output);
+}
+
+function list_arp() {
+    $app      = \Slim\Slim::getInstance();
+    $router   = $app->router()->getCurrentRoute()->getParams();
+    $status   = 'error';
+    $code     = 404;
+    $message  = '';
+    $ip       = $router['ip'];
+    if (empty($ip)) {
+        $message = "No valid IP provided";
+    }
+    else {
+        $code = 200;
+        $status = 'ok';
+        if ($ip === "all") {
+            $hostname =  mres($_GET['device']);
+            $device_id = ctype_digit($hostname) ? $hostname : getidbyname($hostname);
+            $arp = dbFetchRows("SELECT `ipv4_mac`.* FROM `ipv4_mac` LEFT JOIN `ports` ON `ipv4_mac`.`port_id` = `ports`.`port_id` WHERE `ports`.`device_id` = ?", array($device_id));
+        }
+        else {
+            $arp = dbFetchRows("SELECT * FROM `ipv4_mac` WHERE `ipv4_address`=?", array($ip));
+        }
+        $total  = count($arp);
+    }
+    $output  = array(
+        'status'  => $status,
+        'err-msg' => $message,
+        'count'   => $total,
+        'arp'  => $arp,
     );
     $app->response->setStatus($code);
     $app->response->headers->set('Content-Type', 'application/json');
