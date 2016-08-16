@@ -75,6 +75,14 @@ if (isset($_POST['create-default'])) {
         'disabled'  => 0,
         'name'      => 'Sensor under limit',
     );
+    $default_rules[] = array(
+        'device_id' => '-1',
+        'rule'      => '%services.service_status != "0"',
+        'severity'  => 'critical',
+        'extra'     => '{"mute":false,"count":"-1","delay":"300"}',
+        'disabled'  => 0,
+        'name'      => 'Service up/down',
+    );
     foreach ($default_rules as $add_rule) {
         dbInsert($add_rule, 'alert_rules');
     }
@@ -155,7 +163,7 @@ $start      = (($page_number - 1) * $results);
 $full_query = $full_query.$query." LIMIT $start,$results";
 
 foreach (dbFetchRows($full_query, $param) as $rule) {
-    $sub   = dbFetchRows('SELECT * FROM alerts WHERE rule_id = ? ORDER BY id DESC LIMIT 1', array($rule['id']));
+    $sub   = dbFetchRows('SELECT * FROM alerts WHERE rule_id = ? ORDER BY `state` DESC, `id` DESC LIMIT 1', array($rule['id']));
     $ico   = 'ok';
     $col   = 'success';
     $extra = '';
@@ -165,15 +173,10 @@ foreach (dbFetchRows($full_query, $param) as $rule) {
             $ico = 'ok';
             $col = 'success';
         }
-        else if ((int) $sub['state'] === 1) {
+        elseif ((int) $sub['state'] === 1 || (int) $sub['state'] === 2) {
             $ico   = 'remove';
             $col   = 'danger';
             $extra = 'danger';
-        }
-        else if ((int) $sub['state'] === 2) {
-            $ico   = 'time';
-            $col   = 'default';
-            $extra = 'warning';
         }
     }
 

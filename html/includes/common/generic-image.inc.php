@@ -58,5 +58,11 @@ if( defined('show_settings') || empty($widget_settings) ) {
 }
 else {
     $widget_settings['title'] = $widget_settings['image_title'];
-    $common_output[]          = '<a target="_blank" href="'.$widget_settings['target_url'].'"><img class="minigraph-image" width="'.$widget_dimensions['x'].'" height="'.$widget_dimensions['y'].'" src="'.$widget_settings['image_url'].'"/></a>';
+    if (strstr($widget_settings['image_url'], '?')) {
+        $widget_settings['image_url'] .= "&".mt_rand();
+    }
+    else {
+        $widget_settings['image_url'] .= "?".mt_rand();
+    }
+    $common_output[]          = '<a target="_blank" href="'.$widget_settings['target_url'].'"><img class="minigraph-image" style="max-width: '.$widget_dimensions['x'].'px; max-height:'.$widget_dimensions['y'].'px;" src="'.$widget_settings['image_url'].'"/></a>';
 }

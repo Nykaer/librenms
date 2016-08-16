@@ -4,7 +4,8 @@ if (!$os) {
     $skip_oids = array(
         '.1.3.6.1.4.1.674.10892.2',
         '.1.3.6.1.4.1.17163.1.1',
-        '.1.3.6.1.4.1.17713.21'
+        '.1.3.6.1.4.1.17713.21',
+        '.1.3.6.1.4.1.2.3.51.3'
     );
     if (preg_match('/^Linux/', $sysDescr) && !in_array($sysObjectId, $skip_oids)) {
         $os = 'linux';
@@ -68,9 +69,9 @@ if (!$os) {
         elseif (stristr($sysObjectId, 'cumulusMib') || strstr($sysObjectId, '.1.3.6.1.4.1.40310')) {
             $os = 'cumulus';
         }
-//        elseif (strstr($sysObjectId, '.1.3.6.1.4.1.8072.3.2.10')) {
-//            $os = 'sophos';
-//        }
+        elseif (strstr($sysDescr, 'g56fa85e') || strstr($sysDescr, 'gc80f187') || strstr($sysDescr, 'g829be90') || strstr($sysDescr, 'g63c0044')) {
+            $os = 'sophos';
+        }
         else {
             // Check for Synology DSM
             $hrSystemInitialLoadParameters = trim(snmp_get($device, 'HOST-RESOURCES-MIB::hrSystemInitialLoadParameters.0', '-Osqnv'));

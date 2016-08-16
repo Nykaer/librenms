@@ -104,11 +104,9 @@ Settings to enable memcached - currently it's not recommended to run memcached u
 
 ```php
 $config['rrdcached']    = "unix:/var/run/rrdcached.sock"; // or a tcp connection 127.0.0.1:42217
-$config['rrdcached_dir'] = FALSE;
 ```
-To enable rrdcached you need to set at least the `rrdcached` option. If `rrdcached` is a tcp socket then you need to configure `rrdcached_dir` as well.
-This should be set based on your base directory for running rrdcached. For instance if -b for rrdcached is set to /var/lib/rrd but you are expecting
-LibreNMS to store them in /var/lib/rrd/librenms then you would need to set `rrdcached_dir` to librenms.
+To enable rrdcached you need to set at least the `rrdcached` option. Make sure rrdcached is started with the `-b` option set to the correct directoy, 
+as configured in `$config['rrd_dir`]`.
 
 #### WebUI Settings
 
@@ -161,10 +159,10 @@ $config['show_services']           = 0;  # Enable Services on menu
 $config['int_customers']           = 1;  # Enable Customer Port Parsing
 $config['summary_errors']          = 0;  # Show Errored ports in summary boxes on the dashboard
 $config['customers_descr']         = 'cust'; // The description to look for in ifDescr. Can be an array as well array('cust','cid');
-$config['transit_descr']           = ""; // Add custom transit descriptions (can be an array)
-$config['peering_descr']           = ""; // Add custom peering descriptions (can be an array)
-$config['core_descr']              = ""; // Add custom core descriptions (can be an array)
-$config['custom_descr']            = ""; // Add custom interface descriptions (can be an array)
+$config['transit_descr']           = 'transit'; // Add custom transit descriptions (can be an array)
+$config['peering_descr']           = 'peering'; // Add custom peering descriptions (can be an array)
+$config['core_descr']              = 'core'; // Add custom core descriptions (can be an array)
+$config['custom_descr']            = ''; // Add custom interface descriptions (can be an array)
 $config['int_transit']             = 1;  # Enable Transit Types
 $config['int_peering']             = 1;  # Enable Peering Types
 $config['int_core']                = 1;  # Enable Core Port Types
@@ -210,7 +208,7 @@ Disable the footer of the WebUI by setting `enable_footer` to 0.
 You can enable the old style network map (only available for individual devices with links discovered via xDP) by setting:
 ```php
 $config['gui']['network-map']['style'] = 'old';
-````
+```
 
 #### Add host settings
 The following setting controls how hosts are added.  If a host is added as an ip address it is checked to ensure the ip is not already present.  If the ip is present the host is not added.
@@ -496,9 +494,13 @@ $config['eventlog_purge']                                 = 30;
 $config['authlog_purge']                                  = 30;
 $config['perf_times_purge']                               = 30;
 $config['device_perf_purge']                              = 30;
+$config['rrd_purge']                                      = 90;// Not set by default
 ```
-This option will ensure data within LibreNMS over 1 month old is automatically purged. You can alter these individually,
+These options will ensure data within LibreNMS over X days old is automatically purged. You can alter these individually,
 values are in days.
+
+> NOTE: Please be aware that `$config['rrd_purge']` is _NOT_ set by default. This option will remove any old data within 
+the rrd directory automatically - only enable this if you are comfortable with that happening.
 
 #### Syslog options
 

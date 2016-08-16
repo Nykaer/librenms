@@ -91,8 +91,7 @@ $config['rrd_rra'] .= ' RRA:LAST:0.5:1:1440 ';
 
 // RRDCacheD - Make sure it can write to your RRD dir!
 // $config['rrdcached']    = "unix:/var/run/rrdcached.sock";
-$config['rrdcached_dir'] = false;
-// Set this if you are using tcp connections to rrdcached
+
 // Web Interface Settings
 if (isset($_SERVER['SERVER_NAME']) && isset($_SERVER['SERVER_PORT'])) {
     if (strpos($_SERVER['SERVER_NAME'], ':')) {
@@ -138,11 +137,11 @@ $config['old_graphs'] = 1;
 $config['int_customers'] = 1;
 // Enable Customer Port Parsing
 $config['customers_descr'] = 'cust';
-$config['transit_descr']   = '';
+$config['transit_descr']   = 'transit';
 // Add custom transit descriptions (can be an array)
-$config['peering_descr'] = '';
+$config['peering_descr'] = 'peering';
 // Add custom peering descriptions (can be an array)
-$config['core_descr'] = '';
+$config['core_descr'] = 'core';
 // Add custom core descriptions (can be an array)
 $config['custom_descr'] = '';
 // Add custom interface descriptions (can be an array)
@@ -879,4 +878,7 @@ $config['ignore_unmapable_port'] = False;
 // InfluxDB default configuration
 $config['influxdb']['timeout']      = 0;
 $config['influxdb']['verifySSL']    = false;
+
+// Xirrus - Disable station/client polling if true as it may take a long time on larger/heavily used APs.
+$config['xirrus_disable_stations']  = false;
 

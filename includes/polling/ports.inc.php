@@ -108,17 +108,31 @@ $pagp_oids = array(
     'pagpGroupIfIndex',
 );
 
-$ifmib_oids = array_merge($data_oids, $stat_oids);
-
 $ifmib_oids = array(
-    'ifEntry',
-    'ifXEntry',
+    'ifDescr',
+    'ifAdminStatus',
+    'ifOperStatus',
+    'ifType',
+    'ifPhysAddress',
+    'ifMtu',
+    'ifInErrors',
+    'ifOutErrors',
+    'ifInDiscards',
+    'ifOutDiscards',
 );
 
 echo 'Caching Oids: ';
-foreach ($ifmib_oids as $oid) {
-    echo "$oid ";
-    $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'IF-MIB');
+$port_stats = snmpwalk_cache_oid($device, 'ifXEntry', $port_stats, 'IF-MIB');
+
+$hc_test = array_slice($port_stats, 0, 1);
+if (!isset($hc_test[0]['ifHCInOctets']) && !is_numeric($hc_test[0]['ifHCInOctets'])) {
+    $port_stats = snmpwalk_cache_oid($device, 'ifEntry', $port_stats, 'IF-MIB');
+}
+else {
+    foreach ($ifmib_oids as $oid) {
+        echo "$oid ";
+        $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'IF-MIB');
+    }
 }
 
 if ($config['enable_ports_etherlike']) {
@@ -209,17 +223,11 @@ $ports = $ports_mapped['ports'];
 //
 // Rename any old RRD files still named after the previous ifIndex based naming schema.
 foreach ($ports_mapped['maps']['ifIndex'] as $ifIndex => $port_id) {
-    foreach (array ('', 'adsl', 'dot3') as $suffix) {
-        $suffix_tmp = '';
-        if ($suffix)
-            $suffix_tmp = "-$suffix";
+    foreach (array ('', '-adsl', '-dot3') as $suffix) {
+        $old_rrd_name = "port-$ifIndex$suffix.rrd";
+        $new_rrd_name = getPortRrdName($port_id, ltrim($suffix, '-'));
 
-        $old_rrd_path = trim ($config['rrd_dir']) . '/' . $device['hostname'] . "/port-$ifIndex$suffix_tmp.rrd";
-        $new_rrd_path = get_port_rrdfile_path ($device['hostname'], $port_id, $suffix);
-
-        if (is_file ($old_rrd_path)) {
-            rename ($old_rrd_path, $new_rrd_path);
-        }
+        rrd_file_rename($device, $old_rrd_name, $new_rrd_name);
     }
 }
 
@@ -358,6 +366,10 @@ foreach ($ports as $port) {
             $this_port['ifInOctets']  = $this_port['ifHCInOctets'];
             $this_port['ifOutOctets'] = $this_port['ifHCOutOctets'];
         }
+        if (is_numeric($this_port['ifHCInUcastPkts']) && $this_port['ifHCInUcastPkts'] > 0 && is_numeric($this_port['ifHCOutUcastPkts']) && $this_port['ifHCOutUcastPkts'] > 0) {
+            $this_port['ifInUcastPkts']  = $this_port['ifHCInUcastPkts'];
+            $this_port['ifOutUcastPkts'] = $this_port['ifHCOutUcastPkts'];
+        }
 
         if ($device['os'] === 'airos-af' && $port['ifAlias'] === 'eth0') {
             $airos_stats = snmpwalk_cache_oid($device, '.1.3.6.1.4.1.41112.1.3.3.1', $airos_stats, 'UBNT-AirFIBER-MIB');
@@ -440,8 +452,13 @@ foreach ($ports as $port) {
         foreach ($data_oids as $oid) {
 
             if ($oid == 'ifAlias') {
-                if (get_dev_attrib($device, 'ifName:'.$port['ifName'], 1)) {
+                if ($attribs['ifName:'.$port['ifName']]) {
                     $this_port['ifAlias'] = $port['ifAlias'];
+                }
+            }
+            if ($oid == 'ifSpeed' || $oid == 'ifHighSpeed') {
+                if ($attribs['ifSpeed:'.$port['ifName']]) {
+                    $this_port[$oid] = $port[$oid];
                 }
             }
 
@@ -456,10 +473,10 @@ foreach ($ports as $port) {
                 }
             }
             else if ($port[$oid] != $this_port[$oid]) {
-                $port_tune = get_dev_attrib($device, 'ifName_tune:'.$port['ifName']);
-                $device_tune = get_dev_attrib($device,'override_rrdtool_tune');
+                $port_tune = $attribs['ifName_tune:'.$port['ifName']];
+                $device_tune = $attribs['override_rrdtool_tune'];
                 if ($port_tune == "true" ||
-                    ($device_tune == "true" && $port_tune != 'false') || 
+                    ($device_tune == "true" && $port_tune != 'false') ||
                     ($config['rrdtool_tune'] == "true" && $port_tune != 'false' && $device_tune != 'false')) {
                     if ($oid == 'ifSpeed') {
                         $tune_port = true;
@@ -576,29 +593,26 @@ foreach ($ports as $port) {
             }
         }
 
-        // Update RRDs
-        $rrdfile = get_port_rrdfile_path ($device['hostname'], $port_id);
-        if (!is_file($rrdfile)) {
-            rrdtool_create(
-                $rrdfile,
-                ' --step 300 
-                DS:INOCTETS:DERIVE:600:0:12500000000 
-                DS:OUTOCTETS:DERIVE:600:0:12500000000 
-                DS:INERRORS:DERIVE:600:0:12500000000 
-                DS:OUTERRORS:DERIVE:600:0:12500000000 
-                DS:INUCASTPKTS:DERIVE:600:0:12500000000 
-                DS:OUTUCASTPKTS:DERIVE:600:0:12500000000 
-                DS:INNUCASTPKTS:DERIVE:600:0:12500000000 
-                DS:OUTNUCASTPKTS:DERIVE:600:0:12500000000 
-                DS:INDISCARDS:DERIVE:600:0:12500000000 
-                DS:OUTDISCARDS:DERIVE:600:0:12500000000 
-                DS:INUNKNOWNPROTOS:DERIVE:600:0:12500000000 
-                DS:INBROADCASTPKTS:DERIVE:600:0:12500000000 
-                DS:OUTBROADCASTPKTS:DERIVE:600:0:12500000000 
-                DS:INMULTICASTPKTS:DERIVE:600:0:12500000000 
-                DS:OUTMULTICASTPKTS:DERIVE:600:0:12500000000 '.$config['rrd_rra']
-            );
-        }//end if
+        // Update data stores
+        $rrd_name = getPortRrdName($port_id);
+        $rrdfile = rrd_name($device['hostname'], $rrd_name);
+        $rrd_def = array(
+            'DS:INOCTETS:DERIVE:600:0:12500000000',
+            'DS:OUTOCTETS:DERIVE:600:0:12500000000',
+            'DS:INERRORS:DERIVE:600:0:12500000000',
+            'DS:OUTERRORS:DERIVE:600:0:12500000000',
+            'DS:INUCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:OUTUCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:INNUCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:OUTNUCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:INDISCARDS:DERIVE:600:0:12500000000',
+            'DS:OUTDISCARDS:DERIVE:600:0:12500000000',
+            'DS:INUNKNOWNPROTOS:DERIVE:600:0:12500000000',
+            'DS:INBROADCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:OUTBROADCASTPKTS:DERIVE:600:0:12500000000',
+            'DS:INMULTICASTPKTS:DERIVE:600:0:12500000000',
+            'DS:OUTMULTICASTPKTS:DERIVE:600:0:12500000000'
+        );
 
         $fields = array(
             'INOCTETS'         => $this_port['ifInOctets'],
@@ -621,7 +635,9 @@ foreach ($ports as $port) {
         if ($tune_port === true) {
             rrdtool_tune('port',$rrdfile,$this_port['ifSpeed']);
         }
-        rrdtool_update("$rrdfile", $fields);
+
+        $tags = compact('ifName', 'port_descr_type', 'rrd_name', 'rrd_def');
+        rrdtool_data_update($device, 'ports', $tags, $fields);
 
         $fields['ifInUcastPkts_rate'] = $port['ifInUcastPkts_rate'];
         $fields['ifOutUcastPkts_rate'] = $port['ifOutUcastPkts_rate'];
@@ -630,8 +646,7 @@ foreach ($ports as $port) {
         $fields['ifInOctets_rate'] = $port['ifInOctets_rate'];
         $fields['ifOutOctets_rate'] = $port['ifOutOctets_rate'];
 
-        $tags = array('ifName' => $port['ifName'], 'port_descr_type' => $port['port_descr_type']);
-        influx_update($device,'ports',$tags,$fields);
+        influx_update($device, 'ports', rrd_array_filter($tags), $fields);
 
         // End Update IF-MIB
         // Update PAgP
