@@ -275,6 +275,11 @@ if ($device['os'] == 'cimc') {
                 case "1.3.6.1.4.1.9.9.719.1.41.9.1":
                     foreach ($array[3] as $key => $item) {
                         $result = array();
+                        // If there is no cpu present, continue.
+                        if ($array[13][$key] != 10) {
+                            continue;
+                        }
+
                         $result['hwtype'] = 'cpu';
                         $result['id'] = substr($array[3][$key],4);
                         $result['label'] = $array[2][$key];
