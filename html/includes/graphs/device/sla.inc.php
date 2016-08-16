@@ -19,4 +19,3 @@ $rrd_options .= " LINE1:rtt#CC0000:'RTT'";
 $rrd_options .= ' GPRINT:rtt:LAST:%4.1lfms ';
 $rrd_options .= ' GPRINT:rtt:MIN:%4.1lfms ';
 $rrd_options .= ' GPRINT:rtt:MAX:%4.1lfms\\\l ';
->>>>>>> issue-3550
