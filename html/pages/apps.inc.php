@@ -33,6 +33,20 @@ $graphs['nginx']     = array(
     'req',
 );
 
+$graphs['powerdns-recursor'] = array(
+    'questions',
+    'answers',
+    'cache_performance',
+    'outqueries'
+);
+
+$graphs['rrdcached'] = array(
+    'queue_length',
+    'events',
+    'tree',
+    'journal'
+);
+
 $graphs['bind']      = array('queries');
 
 $graphs['tinydns']   = array(
@@ -40,6 +54,33 @@ $graphs['tinydns']   = array(
     'errors',
     'dnssec',
     'other',
+);
+
+$graphs['powerdns'] = array(
+    'latency',
+    'fail',
+    'packetcache',
+    'querycache',
+    'recursing',
+    'queries',
+    'queries_udp',
+);
+
+$graphs['nfs-v3-stats'] = array(
+    'stats',
+    'io',
+    'fh',
+    'rc',
+    'ra',
+    'net',
+    'rpc',
+);
+
+$graphs['os-updates'] = array(
+    'packages',
+);
+$graphs['dhcp-stats'] = array(
+     'stats',
 );
 
 print_optionbar_start();

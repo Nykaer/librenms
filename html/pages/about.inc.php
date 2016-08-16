@@ -10,7 +10,7 @@ $git_log = `git log -10`;
         <h4 class="modal-title" id="myModalLabel">Local git log</h4>
       </div>
       <div class="modal-body">
-<pre><?php echo $git_log; ?></pre>
+	<pre><?php echo htmlspecialchars($git_log, ENT_COMPAT,'ISO-8859-1', true); ?></pre>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -145,7 +145,7 @@ echo "
 
     <h3>LibreNMS is an autodiscovering PHP/MySQL-based network monitoring system.</h3>
 <?php
-$versions = version_info();
+$versions = version_info(false);
 $project_name    = $config['project_name'];
 $project_version = $config['version'];
 $apache_version  = str_replace('Apache/', '', $_SERVER['SERVER_SOFTWARE']);
@@ -155,12 +155,12 @@ $netsnmp_version = $versions['netsnmp_ver'];
 $rrdtool_version = $versions['rrdtool_ver'];
 $schema_version  = $versions['db_schema'];
 $version         = `git rev-parse --short HEAD`;
-
+$version_date    = $versions['local_date'];
 
 echo "
 <div class='table-responsive'>
     <table class='table table-condensed' border='0'>
-      <tr><td><b>Version</b></td><td><a href='http://www.librenms.org/changelog.html'>$version</a></td></tr>
+      <tr><td><b>Version</b></td><td><a href='http://www.librenms.org/changelog.html'>$version - <span id='version_date'>$version_date</span></a></td></tr>
       <tr><td><b>DB Schema</b></td><td>#$schema_version</td></tr>
       <tr><td><b>Apache</b></td><td>$apache_version</td></tr>
       <tr><td><b>PHP</b></td><td>$php_version</td></tr>
@@ -234,4 +234,7 @@ echo "
              }
         });
     });
+
+    var ver_date = $('#version_date');
+    ver_date.text(moment.unix(ver_date.text()));
 </script>

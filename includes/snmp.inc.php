@@ -74,6 +74,9 @@ function snmp_get_multi($device, $oids, $options='-OQUs', $mib=null, $mibdir=nul
     $cmd .= isset($retries) ? ' -r '.$retries : '';
 
     $cmd .= ' '.$device['transport'].':'.$device['hostname'].':'.$device['port'];
+    if (is_array($oids)) {
+        $oids = implode(' ', $oids);
+    }
     $cmd .= ' '.$oids;
 
     if (!$debug) {
@@ -167,6 +170,10 @@ function snmp_walk($device, $oid, $options=null, $mib=null, $mibdir=null) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd = $snmpcommand;
@@ -194,6 +201,7 @@ function snmp_walk($device, $oid, $options=null, $mib=null, $mibdir=null) {
 
     $data = trim(external_exec($cmd));
     $data = str_replace('"', '', $data);
+    $data = str_replace('End of MIB', '', $data);
 
     if (is_string($data) && (preg_match('/No Such (Object|Instance)/i', $data))) {
         $data = false;
@@ -229,6 +237,10 @@ function snmpwalk_cache_cip($device, $oid, $array=array(), $mib=0) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd  = $snmpcommand;
@@ -300,6 +312,10 @@ function snmp_cache_ifIndex($device) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd  = $snmpcommand;
@@ -351,6 +367,26 @@ function snmpwalk_cache_oid($device, $oid, $array, $mib=null, $mibdir=null, $snm
 
 }//end snmpwalk_cache_oid()
 
+function snmpwalk_cache_long_oid($device, $oid, $noid, $array, $mib=null, $mibdir=null, $snmpflags='-OQnU') {
+    $data = snmp_walk($device, $oid, $snmpflags, $mib, $mibdir);
+    foreach (explode("\n", $data) as $entry) {
+        list($tmp_oid,$value)  = explode('=', $entry, 2);
+        $tmp_oid               = trim($tmp_oid);
+        $value                 = trim($value);
+        $tmp_index                 = str_replace($noid, '', $tmp_oid);
+        $index                 = md5($tmp_index);
+        if (!empty($index) && !empty($oid)) {
+            $array[$index][$oid] = $value;
+            if (empty($array[$index]['orig'])) {
+                $array[$index]['orig'] = $tmp_index;
+            }
+        }
+    }
+
+    return $array;
+
+}//end snmpwalk_cache_oid()
+
 
 // just like snmpwalk_cache_oid except that it returns the numerical oid as the index
 // this is useful when the oid is indexed by the mac address and snmpwalk would
@@ -362,36 +398,20 @@ function snmpwalk_cache_oid_num($device, $oid, $array, $mib=null, $mibdir=null) 
 }//end snmpwalk_cache_oid_num()
 
 
-function snmpwalk_cache_multi_oid($device, $oid, $array, $mib=null, $mibdir=null) {
+function snmpwalk_cache_multi_oid($device, $oid, $array, $mib=null, $mibdir=null, $snmpflags='-OQUs') {
     global $cache;
 
     if (!(is_array($cache['snmp'][$device['device_id']]) && array_key_exists($oid, $cache['snmp'][$device['device_id']]))) {
-        $data = snmp_walk($device, $oid, '-OQUs', $mib, $mibdir);
+        $data = snmp_walk($device, $oid, $snmpflags, $mib, $mibdir);
         foreach (explode("\n", $data) as $entry) {
             list($r_oid,$value) = explode('=', $entry, 2);
             $r_oid              = trim($r_oid);
             $value              = trim($value);
             $oid_parts          = explode('.', $r_oid);
-            $r_oid              = $oid_parts['0'];
-            $index              = $oid_parts['1'];
-            if (isset($oid_parts['2'])) {
-                $index .= '.'.$oid_parts['2'];
-            }
-
-            if (isset($oid_parts['3'])) {
-                $index .= '.'.$oid_parts['3'];
-            }
-
-            if (isset($oid_parts['4'])) {
-                $index .= '.'.$oid_parts['4'];
-            }
-
-            if (isset($oid_parts['5'])) {
-                $index .= '.'.$oid_parts['5'];
-            }
-
-            if (isset($oid_parts['6'])) {
-                $index .= '.'.$oid_parts['6'];
+            $r_oid              = array_shift($oid_parts);
+            $index              = array_shift($oid_parts);
+            foreach ($oid_parts as $tmp_oid) {
+                $index .= '.'.$tmp_oid;
             }
 
             if (!strstr($value, 'at this OID') && isset($r_oid) && isset($index)) {
@@ -460,6 +480,10 @@ function snmpwalk_cache_twopart_oid($device, $oid, $array, $mib=0) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd  = $snmpcommand;
@@ -514,6 +538,10 @@ function snmpwalk_cache_threepart_oid($device, $oid, $array, $mib=0) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd  = $snmpcommand;
@@ -572,6 +600,10 @@ function snmp_cache_slotport_oid($oid, $device, $array, $mib=0) {
     }
     else {
         $snmpcommand = $config['snmpbulkwalk'];
+        $max_repeaters = $device['snmp_max_repeaters'];
+        if ($max_repeaters > 0) {
+            $snmpcommand .= " -Cr$max_repeaters ";
+        }
     }
 
     $cmd  = $snmpcommand;
@@ -1000,7 +1032,7 @@ function snmp_translate($oid, $module, $mibdir = null)
     }
 
     $cmd  = 'snmptranslate'.mibdir($mibdir);
-    $cmd .= " -m $module $oid";
+    $cmd .= " -IR -m $module $oid";
     // load all the MIBs looking for our object
     $cmd .= ' 2>/dev/null';
     // ignore invalid MIBs
@@ -1244,14 +1276,14 @@ function register_mibs($device, $mibs, $included_by)
         return;
     }
 
-    echo "MIB: registering\n";
+    d_echo("MIB: registering\n");
 
     foreach ($mibs as $name => $module) {
         $translated = snmp_translate($name, $module);
         if ($translated) {
             $mod = $translated[0];
             $nam = $translated[1];
-            echo "     $mod::$nam\n";
+            d_echo("     $mod::$nam\n");
             if (snmp_mib_load($nam, $mod, $included_by) > 0) {
                 // NOTE: `last_modified` omitted due to being automatically maintained by MySQL
                 $columns = array('device_id', 'module', 'mib', 'included_by');
@@ -1265,11 +1297,11 @@ function register_mibs($device, $mibs, $included_by)
                 update_db_table('device_mibs', $columns, 3, $rows);
             }
             else {
-                echo("MIB: Could not load definition for $mod::$nam\n");
+                d_echo("MIB: Could not load definition for $mod::$nam\n");
             }
         }
         else {
-            echo("MIB: Could not find $module::$name\n");
+            d_echo("MIB: Could not find $module::$name\n");
         }
     }
 

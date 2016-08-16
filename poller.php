@@ -27,6 +27,7 @@ $versions = version_info(false);
 echo "Version info:\n";
 $cur_sha = $versions['local_sha'];
 echo "Commit SHA: $cur_sha\n";
+echo "Commit Date: ".$versions['local_date']."\n";
 echo "DB Schema: ".$versions['db_schema']."\n";
 echo "PHP: ".$versions['php_ver']."\n";
 echo "MySQL: ".$versions['mysql_ver']."\n";
@@ -83,7 +84,7 @@ if (!$where) {
     echo "-r                                           Do not create or update RRDs\n";
     echo "-f                                           Do not insert data into InfluxDB\n";
     echo "-d                                           Enable debugging output\n";
-    echo "-d                                           Enable verbose debugging output\n";
+    echo "-v                                           Enable verbose debugging output\n";
     echo "-m                                           Specify module(s) to be run\n";
     echo "\n";
     echo "No polling type specified!\n";

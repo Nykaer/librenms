@@ -43,7 +43,8 @@ $menu_options = array('bits'        => 'Bits',
     'storage'     => 'Storage',
     'diskio'      => 'Disk I/O',
     'poller_perf' => 'Poller',
-    'ping_perf'   => 'Ping'
+    'ping_perf'   => 'Ping',
+    'temperature' => 'Temperature'
 );
 $sep = "";
 foreach ($menu_options as $option => $text) {
@@ -200,7 +201,7 @@ if($format == "graph") {
         $where .= " AND ( ";
         foreach( GetDevicesFromGroup($vars['group']) as $dev ) {
             $where .= "device_id = ? OR ";
-            $sql_param[] = $dev['device_id'];
+            $sql_param[] = $dev;
         }
         $where = substr($where, 0, strlen($where)-3);
         $where .= " )";

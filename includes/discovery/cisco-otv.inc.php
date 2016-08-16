@@ -58,7 +58,6 @@ if ($device['os_group'] == 'cisco') {
     $error_overlay[6] = "destroy";
 
     $module = 'Cisco-OTV';
-    echo $module.': ';
 
     require_once 'includes/component.php';
     $component = new component();
@@ -117,11 +116,11 @@ if ($device['os_group'] == 'cisco') {
             // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $result['error'] = $message;
-                $result['status'] = 0;
+                $result['status'] = 2;
             }
             else {
                 $result['error'] = "";
-                $result['status'] = 1;
+                $result['status'] = 0;
             }
 
             // Let's log some debugging
@@ -155,11 +154,11 @@ if ($device['os_group'] == 'cisco') {
             // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $result['error'] = $message;
-                $result['status'] = 0;
+                $result['status'] = 1;
             }
             else {
                 $result['error'] = "";
-                $result['status'] = 1;
+                $result['status'] = 0;
             }
 
             // Set a default name, if for some unknown reason we cant find the parent VPN.
