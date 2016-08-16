@@ -16,8 +16,7 @@ foreach ($slas as $sla) {
         if (isset($config['sla_type_labels'][$sla_type])) {
             $text = $config['sla_type_labels'][$sla_type];
         }
-    }
-    else {
+    } else {
         $text = ucfirst($sla_type);
     }
 
@@ -100,16 +99,14 @@ foreach ($slas as $sla) {
     // Jitter has more graphs. Display a sub-page
     if ($sla['rtt_type'] == 'jitter') {
         $name = '<a href="'.generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_id'])).'">'.$name.'</a>';
-    }
-    else {
+    } else {
         $name = htmlentities($name);
     }
 
     // If we have an error highlight the row.
     if ($sla['opstatus'] == 2) {
         $danger = "panel-danger";
-    }
-    else {
+    } else {
         $danger = '';
     }
 

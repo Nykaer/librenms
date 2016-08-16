@@ -8,7 +8,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter-latency';
+        $graph_array['type']    = 'device_sla_jitter-latency';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
 ?>
@@ -24,7 +24,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter';
+        $graph_array['type']    = 'device_sla_jitter';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
         ?>
@@ -40,7 +40,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter-loss';
+        $graph_array['type']    = 'device_sla_jitter-loss';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
         ?>
@@ -56,7 +56,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter-lost';
+        $graph_array['type']    = 'device_sla_jitter-lost';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
         ?>
@@ -72,7 +72,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter-mos';
+        $graph_array['type']    = 'device_sla_jitter-mos';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
         ?>
@@ -88,7 +88,7 @@
         $graph_array['height']  = '100';
         $graph_array['width']   = '215';
         $graph_array['to']      = $config['time']['now'];
-        $graph_array['type']    = 'device_sla-jitter-icpif';
+        $graph_array['type']    = 'device_sla_jitter-icpif';
         $graph_array['id']      = $vars['id'];
         require 'includes/print-graphrow.inc.php';
         ?>
