@@ -575,6 +575,7 @@ $config['os'][$os]['over'][4]['text']  = 'Number of Clients';
 $config['os'][$os]['icon']             = 'cisco';
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // CUOS - Unified Communications OS
 $os = "ucos";
 $config['os'][$os]['text']              = "Unified Communications OS";
