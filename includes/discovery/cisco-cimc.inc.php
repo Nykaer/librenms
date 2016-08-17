@@ -133,7 +133,14 @@ if ($device['os'] == 'cimc') {
         }
 
         // Unset the faults and stats array so it isn't reported as an error later.
-        unset ($tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.14.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.44.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.30.12.1'],$tblUCSObjects['1.3.6.1.4.1.9.9.719.1.41.2.1']);
+        unset (
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.1.1.1'],
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.14.1'],
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.9.44.1'],
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.30.12.1'],
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.41.2.1'],
+            $tblUCSObjects['1.3.6.1.4.1.9.9.719.1.45.36.1']
+        );
 
         foreach ($tblUCSObjects as $tbl => $array) {
             // Remove the leading /sys/
