@@ -574,7 +574,6 @@ $config['os'][$os]['over'][4]['graph'] = 'device_ciscowlc_numclients';
 $config['os'][$os]['over'][4]['text']  = 'Number of Clients';
 $config['os'][$os]['icon']             = 'cisco';
 
-<<<<<<< HEAD
 $os = "cimc";
 $config['os'][$os]['text']              = "Cisco Integrated Management Controller";
 $config['os'][$os]['group']             = "cisco";
