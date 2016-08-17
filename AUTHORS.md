@@ -114,7 +114,9 @@ LibreNMS contributors:
 - Cercel Valentin <crc@nuamchefazi.ro> (crcro)
 - Ahmed Sajid <ahmed4343@hotmail.com> (ahmedsajid)
 - Karsten Schmidt <git@guggemand.dk> (guggemand)
+- Maxence POULAIN <maxence.poulain@eriador.info> (Linutux42)
 - Florian Beer <fb@42dev.eu> (florianbeer)
+- Vladislav Solovei <vladsol2009@gmail.com> (vladsol)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
