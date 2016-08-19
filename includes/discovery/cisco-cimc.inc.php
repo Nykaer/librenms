@@ -365,13 +365,16 @@ if ($device['os'] == 'cimc') {
                         $result['serial'] = $array[12][$key];
                         $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.4.1.9.'.$key;
 
-                        // If the value is insanely large, this must be an old firmware, newer FW reports MB.
-                        if (($array[13][$key]) > 10000000000000 ) {
-                            $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]/4398046511104,2) ." GB";
-                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]/4398046511104,2)."GB\n");
+                        // Old Firmware returns 4294967296 as 1 MB.
+                        // The if below assumes we will never have < 1 Gb on old firmware or > 4 Pb on new firmware
+                        if (($array[13][$key]) > 4294967296000 ) {
+                            // Old Firmware
+                            $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]/4294967296000,2) ." GB";
+                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (old FW): ".round($array[13][$key]/4294967296000,2)."GB\n");
                         } else {
+                            // New Firmware
                             $result['string'] = $array[14][$key] ." ". $array[7][$key] .", Rev: ". $array[11][$key] .", Size: ". round($array[13][$key]/1000,2) ." GB";
-                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]/1000,2)."GB\n");
+                            d_echo("Disk: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (New FW): ".round($array[13][$key]/1000,2)."GB\n");
                         }
 
                         // What is the Operability, 1 is good, everything else is bad.
@@ -409,13 +412,16 @@ if ($device['os'] == 'cimc') {
                         $result['serial'] = 'N/A';
                         $result['statusoid'] = '1.3.6.1.4.1.9.9.719.1.45.8.1.9.'.$key;
 
-                        // If the value is insanely large, this must be an old firmware, newer FW reports MB.
-                        if (($array[13][$key]) > 10000000000000 ) {
-                            $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]/4398046511104,2) ." GB";
-                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (if): ".round($array[13][$key]/4398046511104,2)."GB\n");
+                        // Old Firmware returns 4294967296 as 1 MB.
+                        // The if below assumes we will never have < 1 Gb on old firmware or > 4 Pb on new firmware
+                        if (($array[13][$key]) > 4294967296000 ) {
+                            // Old Firmware
+                            $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]/4294967296000,2) ." GB";
+                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (Old FW): ".round($array[13][$key]/4294967296000,2)."GB\n");
                         } else {
+                            // New Firmware
                             $result['string'] = $array[3][$key] .", Size: ". round($array[13][$key]/1000,2) ." GB";
-                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (else): ".round($array[13][$key]/1000,2)."GB\n");
+                            d_echo("LUN: ".$array[2][$key].", Raw Size: ".$array[13][$key].", converted (New FW): ".round($array[13][$key]/1000,2)."GB\n");
                         }
 
                         // What is the Operability, 1 is good, everything else is bad.
