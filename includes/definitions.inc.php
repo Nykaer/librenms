@@ -611,6 +611,11 @@ $config['os'][$os]['over'][2]['graph'] = 'device_current';
 $config['os'][$os]['over'][2]['text']  = 'Power Current';
 $config['os'][$os]['icon']              = "cisco";
 
+$os = 'vcs';
+$config['os'][$os]['text']		= 'Video Communication Server';
+$config['os'][$os]['type']		= 'collaboration';
+$config['os'][$os]['icon']		= 'cisco';
+
 $os = 'acano';
 $config['os'][$os]['group']            = 'cisco';
 $config['os'][$os]['text']             = 'Acano OS';
@@ -714,6 +719,35 @@ $os = 'vccodec';
 $config['os'][$os]['text']             = 'TelePresence Codec';
 $config['os'][$os]['type']             = 'collaboration';
 $config['os'][$os]['icon']             = 'cisco';
+
+$os = 'ise';
+$config['os'][$os]['text']             = 'Cisco Identity Services Engine';
+$config['os'][$os]['type']             = 'server';
+$config['os'][$os]['icon']             = 'cisco';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
+$os = 'primeinfrastructure';
+$config['os'][$os]['text']		= 'Prime Infrastructure';
+$config['os'][$os]['type']		= 'server';
+$config['os'][$os]['icon']		= 'cisco';
+$config['os'][$os]['over'][0]['graph']	= 'device_bits';
+$config['os'][$os]['over'][0]['text']	= 'Device Traffic';
+$config['os'][$os]['over'][1]['graph']	= 'device_processor';
+$config['os'][$os]['over'][1]['text']	= 'CPU Usage';
+$config['os'][$os]['over'][2]['graph']	= 'device_mempool';
+$config['os'][$os]['over'][2]['text']	= 'Memory Usage';
+$config['os'][$os]['over'][3]['graph']	= 'device_storage';
+$config['os'][$os]['over'][3]['text']	= 'Storage Usage';
+
+$os = 'tpconductor';
+$config['os'][$os]['text']		= 'TelePresence Conductor';
+$config['os'][$os]['type']		= 'collaboration';
+$config['os'][$os]['icon']		= 'cisco';
 
 // Brocade NOS
 $os = 'nos';
@@ -1085,6 +1119,16 @@ $config['os'][$os]['text']             = 'IP Office Firmware';
 $config['os'][$os]['type']             = 'network';
 $config['os'][$os]['icon']             = 'avaya';
 
+$os = 'avaya-vsp';
+$config['os'][$os]['text']             = 'Avaya VSP';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'avaya';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
 $os = 'arista_eos';
 $config['os'][$os]['text']             = 'Arista EOS';
@@ -1195,12 +1239,6 @@ $config['os'][$os]['type'] = 'storage';
 $config['os'][$os]['icon'] = 'emc';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text'] = 'Device Traffic';
-$config['os'][$os]['over'][1]['graph'] = 'device_processor';
-$config['os'][$os]['over'][1]['text'] = 'CPU Usage';
-$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
-$config['os'][$os]['over'][2]['text'] = 'Memory Usage';   
-$config['os'][$os]['over'][3]['graph'] = 'device_storage';
-$config['os'][$os]['over'][3]['text'] = 'Storage Usage';
 
 $os = 'equallogic';
 $config['os'][$os]['text']             = 'Dell EqualLogic';
@@ -1963,6 +2001,12 @@ $config['os'][$os]['type']             = 'environment';
 $config['os'][$os]['icon']             = 'hwg';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+
+// HWGroup STE2
+$os = 'hwg-ste2';
+$config['os'][$os]['text']             = 'HWg STE2';
+$config['os'][$os]['type']             = 'environment';
+$config['os'][$os]['icon']             = 'hwg';
 
 // EATON PDU
 $os = 'eatonpdu';

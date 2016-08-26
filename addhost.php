@@ -12,6 +12,8 @@
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  */
 
+use LibreNMS\Exceptions\HostUnreachableException;
+
 chdir(dirname($argv[0]));
 
 require 'includes/defaults.inc.php';
@@ -182,7 +184,7 @@ if (!empty($argv[1])) {
     }
 } else {
 
-    print $console_color->convert(
+    c_echo(
     "\n".$config['project_name_version'].' Add Host Tool
 
     Usage (SNMPv1/2c): ./addhost.php [-g <poller group>] [-f] [-p <port assoc mode>] <%Whostname%n> [community] [v1|v2c] [port] ['.implode('|', $config['snmp']['transports']).']

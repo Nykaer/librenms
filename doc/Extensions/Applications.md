@@ -7,15 +7,17 @@ Different applications support a variety of ways collect data: by direct connect
 1. [BIND9/named](#bind9-aka-named) - Agent
 2. [MySQL](#mysql) - Agent
 3. [NGINX](#nginx) - Agent
-4. [PowerDNS](#powerdns) - Agent
-5. [PowerDNS Recursor](#powerdns-recursor) - Agent
-6. [TinyDNS/djbdns](#tinydns-aka-djbdns) - Agent
-7. [OS Updates](#os-updates) - extend SNMP
-8. [DHCP Stats](#dhcp-stats) - extend SNMP
-9. [Memcached](#memcached) - extend SNMP
-
-
-* [Agent Setup](#agent-setup)
+4. [NTPD](#ntpd-server) - extend SNMP, Agent
+5. [PowerDNS](#powerdns) - Agent
+6. [PowerDNS Recursor](#powerdns-recursor) - Agent
+7. [TinyDNS/djbdns](#tinydns-aka-djbdns) - Agent
+8. [OS Updates](#os-updates) - extend SNMP
+9. [DHCP Stats](#dhcp-stats) - extend SNMP
+10. [Memcached](#memcached) - extend SNMP
+11. [Unbound](#unbound) - Agent
+12. [Proxmox](#proxmos) - extend SNMP
+13. [Raspberry PI](#raspberry-pi) - extend SNMP
+14. [Agent Setup](#agent-setup)
 
 ### BIND9 aka named
 
@@ -83,6 +85,25 @@ location /nginx-status {
 }
 ```
 
+### NTPD Server
+Supports NTPD Server (not client, that is separate)
+
+##### Extend SNMP
+1. Download the script onto the desired host (the host must be added to LibreNMS devices)
+```
+wget https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/ntpd-server.php -o /etc/snmp/ntpd-server.php
+```
+2. Make the script executable (chmod +x /etc/snmp/ntdp-server.php)
+3. Edit your snmpd.conf file (usually /etc/snmp/snmpd.conf) and add:
+```
+extend ntpdserver /etc/snmp/ntpd-server.php
+```
+4. Restart snmpd on your host
+5. On the device page in Librenms, edit your host and check the `Ntpd-server` under the Applications tab.
+
+##### Agent
+Support is built into the agent, and this app will be automatically enabled.
+
 ### PowerDNS
 An authoritative DNS server: https://www.powerdns.com/auth.html
 
@@ -130,7 +151,9 @@ chown dnslog:nofiles /service/dns/log/main/tinystats
    _Note_: Some say `svc -t /service/dns` is enough, on my install (Gentoo) it doesn't rehook the logging and I'm forced to restart it entirely.
 
 ### OS Updates
-A small shell script that checks your system package manager for any available updates (supports yum/apt-get/zypper package managers).
+A small shell script that checks your system package manager for any available updates. Supports apt-get/pacman/yum/zypper package managers).
+
+For pacman users automatically refreshing the database, it is recommended you use an alternative database location `--dbpath=/var/lib/pacman/checkupdate`
 
 ##### Extend SNMP
 1. Copy the shell script to the desired host (the host must be added to LibreNMS devices)
@@ -167,6 +190,51 @@ extend memcached /usr/local/bin/memcached
 ```
 4. Restart snmpd on your host
 5. On the device page in Librenms, edit your host and check `Memcached` under the Applications tab.
+
+### Unbound
+
+##### Agent
+[Install the agent](#agent-setup) on this device if it isn't already and copy the `unbound.sh` script to `/usr/lib/check_mk_agent/local/`
+
+Unbound configuration:
+
+```text
+# Enable extended statistics.
+server:
+        statistics-interval: 0
+        extended-statistics: yes
+        statistics-cumulative: yes
+```
+
+Restart your unbound after changing the configuration,v erify it is working by running /usr/lib/check_mk_agent/local/unbound.sh
+
+### Proxmox
+1. Download the script onto the desired host (the host must be added to LibreNMS devices)
+`wget https://github.com/librenms/librenms-agent/blob/master/agent-local/proxmox -o /usr/local/bin/proxmox`
+2. Make the script executable: `chmod +x /usr/local/proxmox`
+3. Edit your snmpd.conf file (usually `/etc/snmp/snmpd.conf`) and add:
+`extend proxmox /usr/local/bin/proxmox`
+(Note: if your snmpd doesn't run as root, you might have to invoke the script using sudo. `extend proxmox /usr/bin/sudo /usr/local/bin/proxmox`)
+4. Restart snmpd on your host
+5. On the device page in Librenms, edit your host and check `Proxmox` on the Applications tab.
+
+=======
+### Raspberry PI
+SNMP extend script to get your PI data into your host.
+
+##### Extend SNMP
+1. Copy the [raspberry script](https://github.com/librenms/librenms-agent/blob/master/snmp/raspberry.sh) to `/opt/` (or any other suitable location) on your PI host.
+2. Make the script executable: `chmod +x /opt/raspberry.sh`
+3. Edit your snmpd.conf file (usually `/etc/snmp/snmpd.conf`) and add:
+```
+extend raspberry /opt/raspberry.sh
+```
+4. Edit your sudo users (usually `visudo`) and add at the bottom:
+```
+snmp ALL=(ALL) NOPASSWD: /opt/raspberry.sh, /usr/bin/vcgencmd*
+```
+5. Restart snmpd on PI host
+
 
 Agent Setup
 -----------

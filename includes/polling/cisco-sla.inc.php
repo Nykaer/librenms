@@ -82,6 +82,38 @@ if (count($slas > 0)) {
                 data_update($device,'sla',$tags,$jitter);
                 $metrics = array_merge($metrics,$jitter);
                 break;
+            case 'icmpjitter':
+                $icmpjitter = array(
+                    'PacketLoss' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.26'][$sla_nr],
+                    'PacketOosSD' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.28'][$sla_nr],
+                    'PacketOosDS' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.29'][$sla_nr],
+                    'PacketSkipped' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.30'][$sla_nr],
+                    'PacketLateArrival' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.32'][$sla_nr],
+                    'JitterAvgSD' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.45'][$sla_nr],
+                    'JitterAvgDS' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.46'][$sla_nr],
+                    'LatencyOWAvgSD' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.47'][$sla_nr],
+                    'LatencyOWAvgDS' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.48'][$sla_nr],
+                    'JitterIAJOut' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.49'][$sla_nr],
+                    'JitterIAJIn' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.50'][$sla_nr],
+                );
+                $rrd_name = array('sla', $sla_nr, $rtt_type);
+                $rrd_def = array(
+                    'DS:PacketLoss:GAUGE:600:0:U',
+                    'DS:PacketOosSD:GAUGE:600:0:U',
+                    'DS:PacketOosDS:GAUGE:600:0:U',
+                    'DS:PacketSkipped:GAUGE:600:0:U',
+                    'DS:PacketLateArrival:GAUGE:600:0:U',
+                    'DS:JitterAvgSD:GAUGE:600:0:U',
+                    'DS:JitterAvgDS:GAUGE:600:0:U',
+                    'DS:LatencyOWAvgSD:GAUGE:600:0:U',
+                    'DS:LatencyOWAvgDS:GAUGE:600:0:U',
+                    'DS:JitterIAJOut:GAUGE:600:0:U',
+                    'DS:JitterIAJIn:GAUGE:600:0:U',
+                );
+                $tags = compact('rrd_name', 'rrd_def', 'sla_nr', 'rtt_type');
+                data_update($device,'sla',$tags,$icmpjitter);
+                $metrics = array_merge($metrics,$icmpjitter);
+                break;
         }
 
         d_echo("The following metrics were collected for #".$sla['sla_nr'].":\n");
