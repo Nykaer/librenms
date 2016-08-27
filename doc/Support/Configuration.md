@@ -1,3 +1,4 @@
+source: Support/Configuration.md
 The options shown below also contain the default values.
 
 If you would like to alter any of these then please add your config option to `config.php`.
@@ -143,6 +144,16 @@ A number of home pages are provided within the install and can be found in html/
 setting `front_page`. The other options are used to alter the look of those pages that support it (default.php supports these options).
 
 ```php
+// This option exists in the web UI, edit it under Global Settings -> webui
+$config['webui']['default_dashboard_id'] = 0;
+```
+Allows the specification of a global default dashboard page for any user who
+has not set one in their user preferences.  Should be set to dashboard_id of an
+existing dashboard that is shared or shared(read).  Otherwise, the system will
+automatically create each user an empty dashboard called `Default` on their
+first login.
+
+```php
 $config['login_message']    = "Unauthorised access or use shall render the user liable to criminal and/or civil prosecution.";
 ```
 This is the default message on the login page displayed to users.
@@ -189,6 +200,11 @@ Enable or disable the overview tab for a device.
 $config['overview_show_sysDescr'] = TRUE;
 ```
 Enable or disable the sysDescr output for a device.
+
+```php
+$config['force_ip_to_sysname'] = false;
+```
+When using IP addresses as a hostname you can instead represent the devices on the WebUI by its SNMP sysName resulting in an easier to read overview of your network. This would apply on networks where you don't have DNS records for most of your devices.
 
 ```php
 $config['device_traffic_iftype'][] = '/loopback/';
@@ -312,7 +328,6 @@ $config['enable_syslog']                = 0; # Enable Syslog
 $config['enable_inventory']             = 1; # Enable Inventory
 $config['enable_pseudowires']           = 1; # Enable Pseudowires
 $config['enable_vrfs']                  = 1; # Enable VRFs
-$config['enable_printers']              = 0; # Enable Printer support
 $config['enable_sla']                   = 0; # Enable Cisco SLA collection and display
 ```
 
