@@ -18,9 +18,7 @@ if ($device['os_group'] == "ucos") {
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
-    require_once 'includes/component.php';
-
-    $COMPONENT = new component();
+    $component = new LibreNMS\Component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE));
 
     // We only care about our device id.

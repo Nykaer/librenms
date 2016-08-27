@@ -17,9 +17,7 @@ if ($device['os'] == "cucm") {
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_cucm_perfmon.inc.php';
-    require_once 'includes/component.php';
-
-    $COMPONENT = new component();
+    $component = new LibreNMS\Component();
     $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
 
     // We only care about our device id.
