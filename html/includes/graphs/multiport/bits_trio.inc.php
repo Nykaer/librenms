@@ -14,19 +14,19 @@ if ($height < '99') {
 $i = 1;
 
 foreach (explode(',', $_GET['id']) as $ifid) {
-    $int = dbFetchRow('SELECT `ifIndex`, `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
-    if (is_file($config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd')) {
+    $int = dbFetchRow('SELECT `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
+    $rrd_file = get_port_rrdfile_path($int['hostname'], $ifid);
+    if (rrdtool_check_rrd_exists($rrd_file)) {
         if (strstr($inverse, 'a')) {
             $in  = 'OUT';
             $out = 'IN';
-        }
-        else {
+        } else {
             $in  = 'IN';
             $out = 'OUT';
         }
 
-        $rrd_options .= ' DEF:inoctets'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$in.'OCTETS:AVERAGE';
-        $rrd_options .= ' DEF:outoctets'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$out.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:inoctets'.$i.'='.$rrd_file.':'.$in.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:outoctets'.$i.'='.$rrd_file.':'.$out.'OCTETS:AVERAGE';
         $in_thing    .= $seperator.'inoctets'.$i.',UN,0,'.'inoctets'.$i.',IF';
         $out_thing   .= $seperator.'outoctets'.$i.',UN,0,'.'outoctets'.$i.',IF';
         $pluses      .= $plus;
@@ -40,19 +40,19 @@ unset($seperator);
 unset($plus);
 
 foreach (explode(',', $_GET['idb']) as $ifid) {
-    $int = dbFetchRow('SELECT `ifIndex`, `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
-    if (is_file($config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd')) {
+    $int = dbFetchRow('SELECT `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
+    $rrd_file = get_port_rrdfile_path($int['hostname'], $ifid);
+    if (rrdtool_check_rrd_exists($rrd_file)) {
         if (strstr($inverse, 'b')) {
             $in  = 'OUT';
             $out = 'IN';
-        }
-        else {
+        } else {
             $in  = 'IN';
             $out = 'OUT';
         }
 
-        $rrd_options .= ' DEF:inoctetsb'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$in.'OCTETS:AVERAGE';
-        $rrd_options .= ' DEF:outoctetsb'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$out.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:inoctetsb'.$i.'='.$rrd_file.':'.$in.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:outoctetsb'.$i.'='.$rrd_file.':'.$out.'OCTETS:AVERAGE';
         $in_thingb   .= $seperator.'inoctetsb'.$i.',UN,0,'.'inoctetsb'.$i.',IF';
         $out_thingb  .= $seperator.'outoctetsb'.$i.',UN,0,'.'outoctetsb'.$i.',IF';
         $plusesb     .= $plus;
@@ -66,19 +66,19 @@ unset($seperator);
 unset($plus);
 
 foreach (explode(',', $_GET['idc']) as $ifid) {
-    $int = dbFetchRow('SELECT `ifIndex`, `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
-    if (is_file($config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd')) {
+    $int = dbFetchRow('SELECT `hostname` FROM `ports` AS I, devices as D WHERE I.port_id = ? AND I.device_id = D.device_id', array($ifid));
+    $rrd_file = get_port_rrdfile_path($int['hostname'], $ifid);
+    if (rrdtool_check_rrd_exists($rrd_file)) {
         if (strstr($inverse, 'c')) {
             $in  = 'OUT';
             $out = 'IN';
-        }
-        else {
+        } else {
             $in  = 'IN';
             $out = 'OUT';
         }
 
-        $rrd_options .= ' DEF:inoctetsc'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$in.'OCTETS:AVERAGE';
-        $rrd_options .= ' DEF:outoctetsc'.$i.'='.$config['rrd_dir'].'/'.$int['hostname'].'/port-'.$int['ifIndex'].'.rrd:'.$out.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:inoctetsc'.$i.'='.$rrd_file.':'.$in.'OCTETS:AVERAGE';
+        $rrd_options .= ' DEF:outoctetsc'.$i.'='.$rrd_file.':'.$out.'OCTETS:AVERAGE';
         $in_thingc   .= $seperator.'inoctetsc'.$i.',UN,0,'.'inoctetsc'.$i.',IF';
         $out_thingc  .= $seperator.'outoctetsc'.$i.',UN,0,'.'outoctetsc'.$i.',IF';
         $plusesc     .= $plus;
@@ -132,8 +132,7 @@ if ($legend == 'no') {
     $rrd_options .= ' LINE1:inbitsb#000099:';
     $rrd_options .= ' LINE1:doutbitsb#000099:';
     $rrd_options .= ' LINE0.5:nothing#555555:';
-}
-else {
+} else {
     $rrd_options .= " COMMENT:bps\ \ \ \ \ \ \ \ \ \ \ \ Current\ \ \ Average\ \ \ \ \ \ Min\ \ \ \ \ \ Max\\\\n";
     $rrd_options .= ' AREA:inbits_tot#cdeb8b:ATM\ \ In\ ';
     $rrd_options .= ' GPRINT:inbits:LAST:%6.2lf%s';

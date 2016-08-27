@@ -1,0 +1,7 @@
+{
+    "require-dev": {
+        "squizlabs/php_codesniffer": "*",
+        "phpunit/phpunit": "4.*"
+    }
+}
+

@@ -16,6 +16,21 @@
  * the source code distribution for details.
  */
 
+function generate_priority_icon($priority) {
+    $map = array(
+        "emerg"     => "server_delete",
+        "alert"     => "cancel",
+        "crit"      => "application_lightning",
+        "err"       => "application_delete",
+        "warning"   => "application_error",
+        "notice"    => "application_edit",
+        "info"      => "application",
+        "debug"     => "bug",
+    );
+
+    return '<img src="images/16/' . $map[$priority] .'.png" title="' . $priority . '">';
+}
+
 function format_number_short($number, $sf) {
     // This formats a number so that we only send back three digits plus an optional decimal point.
     // Example: 723.42 -> 723    72.34 -> 72.3    2.23 -> 2.23
@@ -33,9 +48,25 @@ function format_number_short($number, $sf) {
 }
 
 function external_exec($command) {
-    d_echo($command."\n");
+    global $debug,$vdebug;
+    if ($debug && !$vdebug) {
+        $debug_command = preg_replace('/-c [\S]+/','-c COMMUNITY',$command);
+        $debug_command = preg_replace('/(udp|udp6|tcp|tcp6):(.*):([\d]+)/','\1:HOSTNAME:\3',$debug_command);
+        d_echo($debug_command);
+    }
+    elseif ($vdebug) {
+        d_echo($command."\n");
+    }
+
     $output = shell_exec($command);
-    d_echo($output."\n");
+
+    if ($debug && !$vdebug) {
+        $debug_output = preg_replace('/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/', '*', $output);
+        d_echo("$debug_output\n");
+    }
+    elseif ($vdebug) {
+        d_echo($output."\n");
+    }
 
     return $output;
 }
@@ -65,9 +96,8 @@ function isCli() {
 }
 
 function print_error($text) {
-    global $console_color;
     if (isCli()) {
-        print $console_color->convert("%r".$text."%n\n", false);
+        c_echo("%r".$text."%n\n");
     }
     else {
         echo('<div class="alert alert-danger"><img src="images/16/exclamation.png" align="absmiddle"> '.$text.'</div>');
@@ -76,7 +106,7 @@ function print_error($text) {
 
 function print_message($text) {
     if (isCli()) {
-        print Console_Color2::convert("%g".$text."%n\n", false);
+        c_echo("%g".$text."%n\n");
     }
     else {
         echo('<div class="alert alert-success"><img src="images/16/tick.png" align="absmiddle"> '.$text.'</div>');
@@ -84,8 +114,6 @@ function print_message($text) {
 }
 
 function delete_port($int_id) {
-    global $config;
-
     $interface = dbFetchRow("SELECT * FROM `ports` AS P, `devices` AS D WHERE P.port_id = ? AND D.device_id = P.device_id", array($int_id));
 
     $interface_tables = array('adjacencies', 'ipaddr', 'ip6adjacencies', 'ip6addr', 'mac_accounting', 'bill_ports', 'pseudowires', 'ports');
@@ -98,7 +126,7 @@ function delete_port($int_id) {
     dbDelete('links', "`remote_port_id` =  ?", array($int_id));
     dbDelete('bill_ports', "`port_id` =  ?", array($int_id));
 
-    unlink(trim($config['rrd_dir'])."/".trim($interface['hostname'])."/port-".$interface['ifIndex'].".rrd");
+    unlink(get_port_rrdfile_path ($interface['hostname'], $interface['port_id']));
 }
 
 function sgn($int) {
@@ -113,18 +141,33 @@ function sgn($int) {
     }
 }
 
-function get_sensor_rrd($device, $sensor) {
+function get_sensor_rrd($device, $sensor)
+{
+    return rrd_name($device['hostname'], get_sensor_rrd_name($device, $sensor));
+}
+
+function get_sensor_rrd_name($device, $sensor) {
     global $config;
 
     # For IPMI, sensors tend to change order, and there is no index, so we prefer to use the description as key here.
     if ($config['os'][$device['os']]['sensor_descr'] || $sensor['poller_type'] == "ipmi") {
-        $rrd_file = $config['rrd_dir']."/".$device['hostname']."/".safename("sensor-".$sensor['sensor_class']."-".$sensor['sensor_type']."-".$sensor['sensor_descr'] . ".rrd");
+        return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_descr']);
+    } else {
+        return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_index']);
     }
-    else {
-        $rrd_file = $config['rrd_dir']."/".$device['hostname']."/".safename("sensor-".$sensor['sensor_class']."-".$sensor['sensor_type']."-".$sensor['sensor_index'] . ".rrd");
+}
+
+function getPortRrdName($port_id, $suffix='')
+{
+    if(!empty($suffix)) {
+        $suffix = '-' . $suffix;
     }
 
-    return($rrd_file);
+    return "port-id$port_id$suffix";
+}
+
+function get_port_rrdfile_path ($hostname, $port_id, $suffix = '') {
+    return rrd_name($hostname, getPortRrdName($port_id, $suffix));
 }
 
 function get_port_by_index_cache($device_id, $ifIndex) {
@@ -290,6 +333,19 @@ function device_by_id_cache($device_id, $refresh = '0') {
     }
     else {
         $device = dbFetchRow("SELECT * FROM `devices` WHERE `device_id` = ?", array($device_id));
+		
+		//order vrf_lite_cisco with context, this will help to get the vrf_name and instance_name all the time
+		$vrfs_lite_cisco = dbFetchRows("SELECT * FROM `vrf_lite_cisco` WHERE `device_id` = ?", array($device_id));
+		if(!empty($vrfs_lite_cisco)){
+			$device['vrf_lite_cisco'] = array();
+			foreach ($vrfs_lite_cisco as $vrf){
+				$device['vrf_lite_cisco'][$vrf['context_name']] = $vrf;
+			}
+		}
+
+        if(!empty($device['ip'])) {
+            $device['ip'] = inet6_ntop($device['ip']);
+        }
         $cache['devices']['id'][$device_id] = $device;
     }
     return $device;
@@ -452,7 +508,7 @@ function get_dev_attrib($device, $attrib_type, $attrib_value='') {
 
 function is_dev_attrib_enabled($device, $attrib, $default = true) {
     $val = get_dev_attrib($device, $attrib);
-    if ($val != NULL) {
+    if ($val != null) {
         // attribute is set
         return ($val != 0);
     }
@@ -549,38 +605,6 @@ function is_valid_hostname($hostname) {
     return ctype_alnum(str_replace('_','',str_replace('-','',str_replace('.','',$hostname))));
 }
 
-function add_service($device, $service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_array($device)) {
-        $device = device_by_id_cache($device);
-    }
-
-    if (empty($service_ip)) {
-        $service_ip = $device['hostname'];
-    }
-
-    $insert = array('device_id' => $device['device_id'], 'service_ip' => $service_ip, 'service_type' => $service,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'), 'service_desc' => $descr, 'service_param' => $service_param, 'service_ignore' => $service_ignore);
-
-    return dbInsert($insert, 'services');
-}
-
-function edit_service($service, $descr, $service_ip, $service_param = "", $service_ignore = 0) {
-
-    if (!is_numeric($service)) {
-        return false;
-    }
-
-    $update = array('service_ip' => $service_ip,
-        'service_changed' => array('UNIX_TIMESTAMP(NOW())'),
-        'service_desc' => $descr,
-        'service_param' => $service_param,
-        'service_ignore' => $service_ignore);
-    return dbUpdate($update, 'services', '`service_id`=?', array($service));
-
-}
-
-
 /*
  * convenience function - please use this instead of 'if ($debug) { echo ...; }'
  */
@@ -599,6 +623,26 @@ function d_echo($text, $no_debug_text = null) {
     }
 } // d_echo
 
+/**
+ * Output using console color if possible
+ * https://github.com/pear/Console_Color2/blob/master/examples/documentation
+ *
+ * @param string $string the string to print with console color
+ * @param bool $enabled if set to false, this function does nothing
+ */
+function c_echo($string, $enabled = true)
+{
+    if(!$enabled) {
+        return;
+    }
+    global $console_color;
+
+    if($console_color) {
+        echo $console_color->convert($string);
+    } else {
+        echo preg_replace('/%((%)|.)/', '', $string);
+    }
+}
 
 /*
  * convenience function - please use this instead of 'if ($debug) { print_r ...; }'
@@ -695,8 +739,8 @@ function get_smokeping_files($device) {
         if ($handle = opendir($smokeping_dir)) {
             while (false !== ($file = readdir($handle))) {
                 if ($file != '.' && $file != '..') {
-                    if (eregi('.rrd', $file)) {
-                        if (eregi('~', $file)) {
+                    if (stripos($file, '.rrd') !== false) {
+                        if (strpos($file, '~') !== false) {
                             list($target,$slave) = explode('~', str_replace('.rrd', '', $file));
                             $target = str_replace('_', '.', $target);
                             $smokeping_files['in'][$target][$slave] = $file;
@@ -749,16 +793,11 @@ function round_Nth($val = 0, $round_to) {
  */
 function is_mib_poller_enabled($device)
 {
-    if (!is_module_enabled('poller', 'mib')) {
-        return false;
+    $val = get_dev_attrib($device, 'poll_mib');
+    if ($val == null) {
+        return is_module_enabled('poller', 'mib');
     }
-
-    if (!is_dev_attrib_enabled($device, 'poll_mib')) {
-        d_echo('MIB module disabled for '.$device['hostname']."\n");
-        return false;
-    }
-
-    return true;
+    return $val;
 } // is_mib_poller_enabled
 
 
@@ -876,7 +915,8 @@ function enable_os_graphs($os, &$graph_enable)
 function enable_graphs($device, &$graph_enable)
 {
     // These are standard graphs we should have for all systems
-    $graph_enable['poller']['poller_perf'] = 'device_poller_perf';
+    $graph_enable['poller']['poller_perf']         = 'device_poller_perf';
+    $graph_enable['poller']['poller_modules_perf'] = 'device_poller_modules_perf';
     if (can_ping_device($device) === true) {
         $graph_enable['poller']['ping_perf'] = 'device_ping_perf';
     }
@@ -996,7 +1036,6 @@ Set <tt>$config[\'poller_modules\'][\'mib\'] = 1;</tt> in <tt>config.php</tt> to
 function ceph_rrd($gtype) {
     global $device;
     global $vars;
-    global $config;
 
     if ($gtype == "osd") {
         $var = $vars['osd'];
@@ -1005,8 +1044,7 @@ function ceph_rrd($gtype) {
         $var = $vars['pool'];
     }
 
-    $rrd = join('-', array('app', 'ceph', $vars['id'], $gtype, $var)).'.rrd';
-    return join('/', array($config['rrd_dir'], $device['hostname'], $rrd));
+    return rrd_name($device['hostname'], array('app', 'ceph', $vars['id'], $gtype, $var));
 } // ceph_rrd
 
 /**
@@ -1036,7 +1074,11 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']   = chop(`git rev-parse HEAD`);
+    list($local_sha, $local_date) = explode('|', rtrim(`git show --pretty='%H|%ct' -s HEAD`));
+    $output['local_sha']    = $local_sha;
+    $output['local_date']   = $local_date;
+    $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
+
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');
     $output['php_ver']     = phpversion();
     $output['mysql_ver']   = dbFetchCell('SELECT version()');
@@ -1076,3 +1118,272 @@ function ip_to_sysname($device,$ip) {
     }
     return $ip;
 }//end ip_to_sysname
+
+/**
+ * Return valid port association modes
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ * @return array
+ */
+function get_port_assoc_modes ($no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $assoc_modes = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_modes"));
+        if (! empty ($assoc_modes))
+            return $assoc_modes;
+    }
+
+    $assoc_modes = Null;
+        foreach (dbFetchRows ("SELECT `name` FROM `port_association_mode` ORDER BY pom_id") as $row)
+        $assoc_modes[] = $row['name'];
+
+    if ($config['memcached']['enable'] && $no_cache === false)
+        $config['memcached']['resource']->set (hash ('sha512', "port_assoc_modes"), $assoc_modes, $config['memcached']['ttl']);
+
+    return $assoc_modes;
+}
+
+/**
+ * Validate port_association_mode
+ * @param string $port_assoc_mode
+ * @return bool
+ */
+function is_valid_port_assoc_mode ($port_assoc_mode) {
+    return in_array ($port_assoc_mode, get_port_assoc_modes ());
+}
+
+/**
+ * Get DB id of given port association mode name
+ * @param string $port_assoc_mode
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ */
+function get_port_assoc_mode_id ($port_assoc_mode, $no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $id = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_mode_id|$port_assoc_mode"));
+        if (! empty ($id))
+            return $id;
+    }
+
+    $id = Null;
+    $row = dbFetchRow ("SELECT `pom_id` FROM `port_association_mode` WHERE name = ?", array ($port_assoc_mode));
+    if ($row) {
+        $id = $row['pom_id'];
+        if ($config['memcached']['enable'] && $no_cache === false)
+            $config['memcached']['resource']->set (hash ('sha512', "port_assoc_mode_id|$port_assoc_mode"), $id, $config['memcached']['ttl']);
+    }
+
+    return $id;
+}
+
+/**
+ * Get name of given port association_mode ID
+ * @param int $port_assoc_mode_id Port association mode ID
+ * @param bool $no_cache No-Cache flag (optional, default false)
+ * @return bool
+ */
+function get_port_assoc_mode_name ($port_assoc_mode_id, $no_cache = false) {
+    global $config;
+
+    if ($config['memcached']['enable'] && $no_cache === false) {
+        $name = $config['memcached']['resource']->get (hash ('sha512', "port_assoc_mode_name|$port_assoc_mode_id"));
+        if (! empty ($name))
+            return $name;
+    }
+
+    $name = Null;
+    $row = dbFetchRow ("SELECT `name` FROM `port_association_mode` WHERE pom_id = ?", array ($port_assoc_mode_id));
+    if ($row) {
+        $name = $row['name'];
+        if ($config['memcached']['enable'] && $no_cache === false)
+            $config['memcached']['resource']->set (hash ('sha512', "port_assoc_mode_name|$port_assoc_mode_id"), $name, $config['memcached']['ttl']);
+    }
+
+    return $name;
+}
+
+/**
+ * Query all ports of the given device (by ID) and build port array and
+ * port association maps for ifIndex, ifName, ifDescr. Query port stats
+ * if told to do so, too.
+ * @param int $device_id ID of device to query ports for
+ * @param bool $with_statistics Query port statistics, too. (optional, default false)
+ * @return array
+ */
+function get_ports_mapped ($device_id, $with_statistics = false) {
+    $ports = array();
+    $maps = array(
+        'ifIndex' => array(),
+        'ifName'  => array(),
+        'ifDescr' => array(),
+    );
+
+    /* Query all information available for ports for this device ... */
+    $query = 'SELECT * FROM `ports` WHERE `device_id` = ? ORDER BY port_id';
+    if ($with_statistics) {
+        /* ... including any related ports_statistics if requested */
+        $query = 'SELECT *, `ports_statistics`.`port_id` AS `ports_statistics_port_id`, `ports`.`port_id` AS `port_id` FROM `ports` LEFT OUTER JOIN `ports_statistics` ON `ports`.`port_id` = `ports_statistics`.`port_id` WHERE `ports`.`device_id` = ? ORDER BY ports.port_id';
+    }
+
+    // Query known ports in order of discovery to make sure the latest
+    // discoverd/polled port is in the mapping tables.
+    foreach (dbFetchRows ($query, array ($device_id)) as $port) {
+        // Store port information by ports port_id from DB
+        $ports[$port['port_id']] = $port;
+
+        // Build maps from ifIndex, ifName, ifDescr to port_id
+        $maps['ifIndex'][$port['ifIndex']] = $port['port_id'];
+        $maps['ifName'][$port['ifName']]   = $port['port_id'];
+        $maps['ifDescr'][$port['ifDescr']] = $port['port_id'];
+    }
+
+    return array(
+        'ports' => $ports,
+        'maps'  => $maps,
+    );
+}
+
+/**
+ * Calculate port_id of given port using given devices port information and port association mode
+ * @param array $ports_mapped Port information of device queried by get_ports_mapped()
+ * @param array $port Port information as fetched from DB
+ * @param string $port_association_mode Port association mode to use for mapping
+ * @return int port_id (or Null)
+ */
+function get_port_id ($ports_mapped, $port, $port_association_mode) {
+    // Get port_id according to port_association_mode used for this device
+    $port_id = Null;
+
+    /*
+     * Information an all ports is available through $ports_mapped['ports']
+     * This might come in handy sometime in the future to add you nifty new
+     * port mapping schema:
+     *
+     * $ports = $ports_mapped['ports'];
+    */
+    $maps  = $ports_mapped['maps'];
+
+    if (in_array ($port_association_mode, array ('ifIndex', 'ifName', 'ifDescr', 'ifAlias'))) {
+        $port_id = $maps[$port_association_mode][$port[$port_association_mode]];
+    }
+
+    return $port_id;
+}
+
+/**
+ * Create a glue-chain
+ * @param array $tables Initial Tables to construct glue-chain
+ * @param string $target Glue to find (usual device_id)
+ * @param int $x Recursion Anchor
+ * @param array $hist History of processed tables
+ * @param array $last Glues on the fringe
+ * @return string|boolean
+ */
+function ResolveGlues($tables,$target,$x=0,$hist=array(),$last=array()) {
+    if( sizeof($tables) == 1 && $x != 0 ) {
+        if( dbFetchCell('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_NAME = ? && COLUMN_NAME = ?',array($tables[0],$target)) == 1 ) {
+            return array_merge($last,array($tables[0].'.'.$target));
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        $x++;
+        if( $x > 30 ) {
+            //Too much recursion. Abort.
+            return false;
+        }
+        foreach( $tables as $table ) {
+            $glues = dbFetchRows('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME = ? && COLUMN_NAME LIKE "%\_id"',array($table));
+            if( sizeof($glues) == 1 && $glues[0]['COLUMN_NAME'] != $target ) {
+                //Search for new candidates to expand
+                $ntables = array();
+                list($tmp) = explode('_',$glues[0]['COLUMN_NAME'],2);
+                $ntables[] = $tmp;
+                $ntables[] = $tmp.'s';
+                $tmp = dbFetchRows('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME LIKE "'.substr($table,0,-1).'_%" && TABLE_NAME != "'.$table.'"');
+                foreach( $tmp as $expand ) {
+                    $ntables[] = $expand['TABLE_NAME'];
+                }
+                $tmp = ResolveGlues($ntables,$target,$x++,array_merge($tables,$ntables),array_merge($last,array($table.'.'.$glues[0]['COLUMN_NAME'])));
+                if( is_array($tmp) ) {
+                    return $tmp;
+                }
+            }
+            else {
+                foreach( $glues as $glue ) {
+                    if( $glue['COLUMN_NAME'] == $target ) {
+                        return array_merge($last,array($table.'.'.$target));
+                    }
+                    else {
+                        list($tmp) = explode('_',$glue['COLUMN_NAME']);
+                        $tmp .= 's';
+                        if( !in_array($tmp,$tables) && !in_array($tmp,$hist) ) {
+                            //Expand table
+                            $tmp = ResolveGlues(array($tmp),$target,$x++,array_merge($tables,array($tmp)),array_merge($last,array($table.'.'.$glue['COLUMN_NAME'])));
+                            if( is_array($tmp) ) {
+                                return $tmp;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //You should never get here.
+    return false;
+}
+
+/**
+ * Determine if a given string contains a given substring.
+ *
+ * @param  string  $haystack
+ * @param  string|array  $needles
+ * @return bool
+ */
+function str_contains($haystack, $needles)
+{
+    foreach ((array) $needles as $needle) {
+        if ($needle != '' && strpos($haystack, $needle) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Determine if a given string ends with a given substring.
+ *
+ * @param  string  $haystack
+ * @param  string|array  $needles
+ * @return bool
+ */
+function ends_with($haystack, $needles)
+{
+    foreach ((array)$needles as $needle) {
+        if ((string)$needle === substr($haystack, -strlen($needle))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Determine if a given string starts with a given substring.
+ *
+ * @param  string $haystack
+ * @param  string|array $needles
+ * @return bool
+ */
+function starts_with($haystack, $needles)
+{
+    foreach ((array)$needles as $needle) {
+        if ($needle != '' && strpos($haystack, $needle) === 0) {
+            return true;
+        }
+    }
+    return false;
+}

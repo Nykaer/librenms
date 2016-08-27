@@ -1,7 +1,6 @@
 <?php
 
 if ($config['enable_sla'] && $device['os_group'] == 'cisco') {
-    echo 'SLAs : ';
 
     $slas = snmp_walk($device, 'ciscoRttMonMIB.ciscoRttMonObjects.rttMonCtrl', '-Osq', '+CISCO-RTTMON-MIB');
 
@@ -44,6 +43,7 @@ if ($config['enable_sla'] && $device['os_group'] == 'cisco') {
                  'tag'       => $sla_config['rttMonCtrlAdminTag'],
                  'rtt_type'  => $sla_config['rttMonCtrlAdminRttType'],
                  'status'    => ($sla_config['rttMonCtrlAdminStatus'] == 'active') ? 1 : 0,
+                 'opstatus'  => ($sla_config['rttMonLatestRttOperSense'] == 'ok') ? 0 : 2,
                  'deleted'   => 0,
                 );
 

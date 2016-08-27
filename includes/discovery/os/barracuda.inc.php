@@ -14,4 +14,11 @@ if (!$os) {
     if (stristr($sysDescr, 'Barracuda Load Balancer') || stristr($sysDescr, 'Barracuda Load Balancer ADC')) {
         $os = 'barracudaloadbalancer';
     }
+    if (stristr($sysDescr, 'Barracuda Spam Firewall')) {
+        $os = 'barracudaspamfirewall';
+    }
+    if (stristr($sysDescr, 'Barracuda Firewall')) {
+        $os = 'barracudangfirewall';
+    }
+
 }

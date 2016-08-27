@@ -17,8 +17,7 @@ $filter_range = mres($_POST['range']);
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {
     $query = 'message:"'.$searchPhrase.'"';
-}
-else {
+} else {
     $query = '*';
 }
 
@@ -36,7 +35,11 @@ if (!empty($filter_hostname)) {
         $query .= ' && ';
     }
     $ip = gethostbyname($filter_hostname);
+    $device = device_by_name($filter_hostname);
     $query .= 'source:"'.$filter_hostname.'" || source:"'.$ip.'"';
+    if (isset($device['ip']) && $ip != $device['ip']) {
+        $query .= ' || source:"'.$device['ip'].'"';
+    }
 }
 
 $graylog_url = $config['graylog']['server'] . ':' . $config['graylog']['port'] . '/search/universal/relative?query=' . urlencode($query) . '&range='. $filter_range . $extra_query;
@@ -48,7 +51,7 @@ $context = stream_context_create(array(
     )
 ));
 
-$messages = json_decode(file_get_contents($graylog_url, false, $context),true);
+$messages = json_decode(file_get_contents($graylog_url, false, $context), true);
 
 foreach ($messages['messages'] as $message) {
     $response[] = array(
@@ -62,8 +65,7 @@ foreach ($messages['messages'] as $message) {
 
 if (empty($messages['total_results'])) {
     $total = 0;
-}
-else {
+} else {
     $total = $messages['total_results'];
 }
 

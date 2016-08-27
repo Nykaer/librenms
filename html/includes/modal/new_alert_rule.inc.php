@@ -11,8 +11,7 @@
  * the source code distribution for details.
  */
 
-if(is_admin() !== false) {
-
+if (is_admin() !== false) {
 ?>
 
  <div class="modal fade bs-example-modal-sm" id="create-alert" tabindex="-1" role="dialog" aria-labelledby="Create" aria-hidden="true">
@@ -54,8 +53,8 @@ if(is_admin() !== false) {
                         <select id='condition' name='condition' placeholder='Condition' class='form-control'>
                                 <option value='='>Equals</option>
                                 <option value='!='>Not Equals</option>
-				<option value='~'>Like</option>
-				<option value='!~'>Not Like</option>
+                                <option value='~'>Like</option>
+                                <option value='!~'>Not Like</option>
                                 <option value='>'>Larger than</option>
                                 <option value='>='>Larger than or Equals</option>
                                 <option value='<'>Smaller than</option>
@@ -134,6 +133,12 @@ if(is_admin() !== false) {
                 </div>
             </div>
         </div>
+        <div class='form-group'>
+            <label for='proc' class='col-sm-3 control-label'>Procedure URL: </label>
+            <div class='col-sm-9'>
+                <input type='text' id='proc' name='proc' class='form-control' maxlength='30'>
+            </div>
+        </div>
         <div class="form-group">
                 <div class="col-sm-offset-3 col-sm-3">
                         <button class="btn btn-success btn-sm" type="submit" name="rule-submit" id="rule-submit" value="save">Save Rule</button>
@@ -156,8 +161,8 @@ $('#create-alert').on('hide.bs.modal', function (event) {
 });
 
 $('#add-map').click('',function (event) {
-	$('#map-tags').data('tagmanager').populate([ $('#map-stub').val() ]);
-	$('#map-stub').val('');
+    $('#map-tags').data('tagmanager').populate([ $('#map-stub').val() ]);
+    $('#map-stub').val('');
 });
 
 $('#create-alert').on('show.bs.modal', function (event) {
@@ -219,6 +224,7 @@ $('#create-alert').on('show.bs.modal', function (event) {
             $("[name='mute']").bootstrapSwitch('state',extra['mute']);
             $("[name='invert']").bootstrapSwitch('state',extra['invert']);
             $('#name').val(output['name']);
+            $('#proc').val(output['proc']);
         }
     });
 });
@@ -255,9 +261,10 @@ $('#suggest').typeahead({
   async: true,
   displayKey: 'name',
   valueKey: name,
-    templates: {
-        suggestion: Handlebars.compile('<p>&nbsp;{{name}}</p>')
-    }
+  templates: {
+      suggestion: Handlebars.compile('<p>&nbsp;{{name}}</p>')
+  },
+  limit: 20
 });
 
 var map_devices = new Bloodhound({
@@ -389,5 +396,4 @@ $( "#suggest, #value" ).blur(function() {
 </script>
 
 <?php
-
 }

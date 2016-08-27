@@ -1,3 +1,4 @@
+source: Support/Poller Support.md
 ### poller.php
 
 This document will explain how to use poller.php to debug issues or manually running to process data.
@@ -16,25 +17,28 @@ This document will explain how to use poller.php to debug issues or manually run
 
 Debugging and testing options:
 -r                                           Do not create or update RRDs
+-f                                           Do not insert data into InfluxDB
 -d                                           Enable debugging output
+-v                                           Enable verbose debugging output
 -m                                           Specify module(s) to be run
 ```
 
-`-h` Use this to specify a device via either id or hostname (including wildcard using *). You can also specify odd and 
+`-h` Use this to specify a device via either id or hostname (including wildcard using *). You can also specify odd and
 even. all will run poller against all devices.
 
 `-i` This can be used to stagger the poller process.
 
 `-r` This option will suppress the creation or update of RRD files.
 
-`-d` Enables debugging output (verbose output) so that you can see what is happening during a poller run. This includes 
-things like rrd updates, SQL queries and response from snmp.
+`-d` Enables debugging output (verbose output but with most sensitive data masked) so that you can see what is happening during a poller run. This includes things like rrd updates, SQL queries and response from snmp.
+
+`-v` Enables verbose debugging output with all data in tact.
 
 `-m` This enables you to specify the module you want to run for poller.
 
 #### Poller config
 
-These are the default poller config items. You can globally disable a module by setting it to 0. If you just want to 
+These are the default poller config items. You can globally disable a module by setting it to 0. If you just want to
 disable it for one device then you can do this within the WebUI -> Settings -> Modules.
 
 ```php
@@ -130,8 +134,8 @@ $config['poller_modules']['mib']                          = 0;
 
 `netscaler-vsvr`: Netscaler support.
 
-`aruba-controller`: Arube wireless controller support.
- 
+`aruba-controller`: Aruba wireless controller support.
+
 `entity-physical`: Module to pick up the devices hardware support.
 
 `applications`: Device application support.
@@ -151,7 +155,7 @@ Here are some examples of running poller from within your install directory.
 
 #### Debugging
 
-To provide debugging output you will need to run the poller process with the `-d` flag. You can do this either against 
+To provide debugging output you will need to run the poller process with the `-d` flag. You can do this either against
 all modules, single or multiple modules:
 
 All Modules
@@ -169,8 +173,7 @@ Multiple Modules
 ./poller.php -h localhost -m ports,entity-physical -d
 ```
 
-It is then advisable to sanitise the output before pasting it somewhere as the debug output will contain snmp details 
-amongst other items including port descriptions.
+Using `-d` shouldn't output much sensitive information, `-v` will so it is then advisable to sanitise the output before pasting it somewhere as the debug output will contain snmp details amongst other items including port descriptions.
 
 The output will contain:
 

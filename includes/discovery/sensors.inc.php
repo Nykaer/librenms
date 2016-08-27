@@ -2,7 +2,8 @@
 
 $valid['sensor'] = array();
 
-echo 'Sensors: ';
+// Pre-cache data for later use
+require 'includes/discovery/sensors/pre-cache.inc.php';
 
 require 'includes/discovery/sensors/cisco-entity-sensor.inc.php';
 require 'includes/discovery/sensors/entity-sensor.inc.php';
@@ -26,3 +27,5 @@ require 'includes/discovery/sensors/fanspeeds.inc.php';
 require 'includes/discovery/sensors/charge.inc.php';
 require 'includes/discovery/sensors/load.inc.php';
 require 'includes/discovery/sensors/states.inc.php';
+require 'includes/discovery/sensors/dbm.inc.php';
+require 'includes/discovery/sensors/signal.inc.php';

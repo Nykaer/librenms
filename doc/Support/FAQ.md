@@ -1,3 +1,4 @@
+source: Support/FAQ.md
 ### Getting started
  - [How do I install LibreNMS?](#faq1)
  - [How do I add a device?](#faq2)
@@ -13,9 +14,15 @@
  - [How do I debug the poller process?](#faq12)
  - [Why do I get a lot apache or rrdtool zombies in my process list?](#faq14)
  - [Why do I see traffic spikes in my graphs?](#faq15)
+ - [Why do I see gaps in my graphs?](#faq17)
+ - [How do I change the IP / hostname of a device?](#faq16)
+ - [My device doesn't finish polling within 300 seconds](#faq19)
+ - [Things aren't working correctly?](#faq18)
+ - [What do the values mean in my graphs?](#faq21)
 
 ### Developing
  - [How do I add support for a new OS?](#faq8)
+ - [What information do you need to add a new OS?](#faq20)
  - [What can I do to help?](#faq9)
  - [How can I test another users branch?](#faq13)
 
@@ -23,9 +30,7 @@
 
 This is currently well documented within the doc folder of the installation files.
 
-For Debian / Ubuntu installs follow [Debian / Ubuntu](http://docs.librenms.org/Installation/Installation-(Debian-Ubuntu))
-
-For RedHat / CentOS installs follow [RedHat / CentOS](http://docs.librenms.org/Installation/Installation-(RHEL-CentOS))
+Please see the following [doc](http://docs.librenms.org/Installation/Installing-LibreNMS/)
 
 #### <a name="faq2"> How do I add a device?</a>
 
@@ -71,8 +76,10 @@ If the page you are trying to load has a substantial amount of data in it then i
 
 #### <a name="faq10"> Why do I not see any graphs?</a>
 
-This is usually due to there being blank spaces outside of the `<?php ?>` php tags within config.php. Remove these and retry. 
-It's also worth removing the final `?>` at the end of config.php as this is not required. 
+The easiest way to check if all is well is to run `./validate.php` as root from within your install directory. This should give you info on why things aren't working.
+
+One other reason could be a restricted snmpd.conf file or snmp view which limits the data sent back. If you use net-snmp then we suggest using 
+the (included snmpd.conf)[https://raw.githubusercontent.com/librenms/librenms/master/snmpd.conf.example] file.
 
 #### <a name="faq7"> How do I debug pages not loading correctly?</a>
 
@@ -92,15 +99,69 @@ Please see the [Poller Support](http://docs.librenms.org/Support/Poller Support)
 
 #### <a name="faq14"> Why do I get a lot apache or rrdtool zombies in my process list?</a>
 
-If this is related to your web service for LibreNMS then this has been tracked down to an issue within php which the developers aren't fixing. We have implemented a work around which means you 
+If this is related to your web service for LibreNMS then this has been tracked down to an issue within php which the developers aren't fixing. We have implemented a work around which means you
 shouldn't be seeing this. If you are, please report this in [issue 443](https://github.com/librenms/librenms/issues/443).
 
 #### <a name="faq15"> Why do I see traffic spikes in my graphs?</a>
 
-This occurs either when a counter resets or the device sends back bogus data making it look like a counter reset. We have enabled support for setting a maximum value for rrd files for ports. 
+This occurs either when a counter resets or the device sends back bogus data making it look like a counter reset. We have enabled support for setting a maximum value for rrd files for ports.
 Before this all rrd files were set to 100G max values, now you can enable support to limit this to the actual port speed.
 
 rrdtool tune will change the max value when the interface speed is detected as being changed (min value will be set for anything 10M or over) or when you run the included script (scripts/tune_port.php).
+
+#### <a name="faq17"> Why do I see gaps in my graphs?</a>
+
+This is most commonly due to the poller not being able to complete it's run within 300 seconds. Check which devices are causing this by going to /poll-log/ within the Web interface.
+
+When you find the device(s) which are taking the longest you can then look at the Polling module graph under Graphs -> Poller -> Poller Modules Performance. Take a look at what modules are taking the longest and disabled un used modules.
+
+If you poll a large number of devices / ports then it's recommended to run a local recurisve dns server such as pdns-recursor.
+
+Running RRDCached is also highly advised in larger installs but has benefits no matter the size.
+
+#### <a name="faq16"> How do I change the IP / hostname of a device?</a>
+
+There is a host rename tool called renamehost.php in your librenms root directory. When renaming you are also changing the device's IP / hostname address for monitoring.
+Usage:
+```bash
+./renamehost.php <old hostname> <new hostname>
+```
+
+#### <a name="faq19"> My device doesn't finish polling within 300 seconds</a>
+
+We have a few things you can try:
+
+  - Disable unnecessary polling modules under edit device.
+  - Set a max repeater value within the snmp settings for a device.
+    What to set this to is tricky, you really should run an snmpbulkwalk with -Cr10 through -Cr50 to see what works best. 50 is usually a good choice if the device can cope.
+
+#### <a name="faq18"> Things aren't working correctly?</a>
+
+Run `./validate.php` as root from within your install.
+
+Re-run `./validate.php` once you've resolved any issues raised.
+
+You have an odd issue - we'd suggest you join our irc channel to discuss.
+
+#### <a name="faq22"> What do the values mean in my graphs?</a>
+
+The values you see are reported as metric values. Thanks to a post on [Reddit](https://www.reddit.com/r/networking/comments/4xzpfj/rrd_graph_interface_error_label_what_is_the_m/) 
+here are those values:
+
+```
+10^-18  a - atto
+10^-15  f - femto
+10^-12  p - pico
+10^-9   n - nano
+10^-6   u - micro
+10^-3   m - milli
+0    (no unit)
+10^3    k - kilo
+10^6    M - mega
+10^9    G - giga
+10^12   T - tera
+10^15   P - peta
+```
 
 #### <a name="faq8"> How do I add support for a new OS?</a>
 
@@ -117,6 +178,20 @@ sysObjectID or sysDescr, or the existence of a particular enterprise tree.
 This file will usually set the variables for $version and $hardware gained from an snmp lookup.
 **html/images/os/$os.png**
 This is a 32x32 png format image of the OS you are adding support for.
+
+#### <a name="faq20"> What information do you need to add a new OS?</a>
+
+Please provide the following output as seperate non-expiring pastebin.com links.
+
+Replace the relevant information in these commands such as HOSTNAME and COMMUNITY.
+
+```bash
+./discovery.php -h HOSTNAME -d -m os
+./poller.php -h HOSTNAME -r -f -d -m os
+snmpbulkwalk -On -v2c -c COMMUNITY HOSTNAME .
+```
+
+If possible please also provide what the OS name should be if it doesn't exist already.
 
 #### <a name="faq9"> What can I do to help?</a>
 
@@ -136,7 +211,7 @@ Thanks for asking, sometimes it's not quite so obvious and everyone can contribu
 
 #### <a name="faq13"> How can I test another users branch?</a>
 
-LibreNMS can and is developed by anyone, this means someone may be working on a new feature or support for a device that you want. 
+LibreNMS can and is developed by anyone, this means someone may be working on a new feature or support for a device that you want.
 It can be helpful for others to test these new features, using Git, this is made easy.
 
 ```bash
@@ -151,9 +226,9 @@ git status
 If you see `nothing to commit, working directory clean` then let's go for it :)
 
 Let's say that you want to test a users (f0o) new development branch (issue-1337) then you can do the following:
- 
+
 ```bash
-git remote add f0o https://github.com/librenms/librenms.git
+git remote add f0o https://github.com/f0o/librenms.git
 git remote update f0o
 git checkout issue-1337
 ```

@@ -35,25 +35,14 @@ $peth_oids = array(
     'pethMainPseConsumptionPower',
 );
 
-if ($port_stats[$port['ifIndex']]
-    && $port['ifType'] == 'ethernetCsmacd'
-    && isset($port_stats[$port['ifIndex']]['dot3StatsIndex'])) {
-    // Check to make sure Port data is cached.
-    $this_port = &$port_stats[$port['ifIndex']];
-
-    $rrdfile = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename('port-'.$port['ifIndex'].'-poe.rrd');
-
-    if (!file_exists($rrdfile)) {
-        $rrd_create .= $config['rrd_rra'];
-
-        // FIXME CISCOSPECIFIC
-        $rrd_create .= ' DS:PortPwrAllocated:GAUGE:600:0:U';
-        $rrd_create .= ' DS:PortPwrAvailable:GAUGE:600:0:U';
-        $rrd_create .= ' DS:PortConsumption:DERIVE:600:0:U';
-        $rrd_create .= ' DS:PortMaxPwrDrawn:GAUGE:600:0:U ';
-
-        rrdtool_create($rrdfile, $rrd_create);
-    }
+if ($this_port['dot3StatsIndex'] && $port['ifType'] == 'ethernetCsmacd') {
+    $rrd_name = getPortRrdName($port_id, 'poe');
+    $rrd_def = array(
+        'DS:PortPwrAllocated:GAUGE:600:0:U',
+        'DS:PortPwrAvailable:GAUGE:600:0:U',
+        'DS:PortConsumption:DERIVE:600:0:U',
+        'DS:PortMaxPwrDrawn:GAUGE:600:0:U'
+    );
 
     $upd = "$polled:".$port['cpeExtPsePortPwrAllocated'].':'.$port['cpeExtPsePortPwrAvailable'].':'.$port['cpeExtPsePortPwrConsumption'].':'.$port['cpeExtPsePortMaxPwrDrawn'];
 
@@ -64,10 +53,8 @@ if ($port_stats[$port['ifIndex']]
         'PortMaxPwrDrawn'    => $port['cpeExtPsePortMaxPwrDrawn'],
     );
 
-    $ret = rrdtool_update("$rrdfile", $fields);
-
-    $tags = array('ifName' => $port['ifName']);
-    influx_update($device,'poe',$tags,$fields);
+    $tags = compact('ifName', 'rrd_name', 'rrd_def');
+    data_update($device,'poe',$tags,$fields);
 
     echo 'PoE ';
 }//end if

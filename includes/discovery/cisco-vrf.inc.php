@@ -5,8 +5,6 @@ if ($config['enable_vrfs']) {
     if ($device['os_group'] == 'cisco' || $device['os_group'] == 'junos' || $device['os'] == 'ironware') {
         unset($vrf_count);
 
-        echo 'VRFs : ';
-
         /*
             There are 2 MIBs for VPNs : MPLS-VPN-MIB (oldest) and MPLS-L3VPN-STD-MIB (newest)
             Unfortunately, there is no simple way to find out which one to use, unless we reference
@@ -77,6 +75,17 @@ if ($config['enable_vrfs']) {
                 $vrf_name               = '';
                 for ($i = 1; $i <= $oid_values[0]; $i++) {
                     $vrf_name .= chr($oid_values[$i]);
+                }
+
+                // Brocade Ironware outputs VRF RD values as Hex-STRING rather than string. This has to be converted to decimal
+
+                if ($device['os'] == 'ironware') {
+                    $vrf_rd = substr($oid, -24);  // Grab last 24 characters from $oid, which is the RD hex value
+                    $vrf_rd = str_replace(' ', '', $vrf_rd); // Remove whitespace
+                    $vrf_rd = str_split($vrf_rd, 8); // Split it into an array, with an object for each half of the RD
+                    $vrf_rd[0] = hexdec($vrf_rd[0]); // Convert first object to decimal
+                    $vrf_rd[1] = hexdec($vrf_rd[1]); // Convert second object to deciamal
+                    $vrf_rd = implode(':', $vrf_rd); // Combine back into string, delimiter by colon
                 }
 
                 echo "\n  [VRF $vrf_name] OID   - $vrf_oid";

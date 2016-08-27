@@ -24,6 +24,7 @@ if (isset($options['h'])) {
         -m Any sub modules you want to run, comma separated:
           - mail: this will test your email settings  (uses default_mail option even if default_only is not set).
           - dist-poller: this will test for the install running as a distributed poller.
+          - rrdcheck: this will check to see if your rrd files are corrupt
 
         Example: ./validate.php -m mail.
 
@@ -35,14 +36,14 @@ if (isset($options['h'])) {
 if (strstr(`php -ln config.php`, 'No syntax errors detected')) {
     $first_line = `head -n1 config.php`;
     $last_lines = explode(PHP_EOL, `tail -n2 config.php`);
-    if (strstr($first_line, '\<\?php')) {
+    if (substr($first_line, 0, 5) !== '<?php') {
         print_fail("config.php doesn't start with a <?php - please fix this ($first_line)");
     }
     else if ($last_lines[0] == '?>' && $last_lines[1] == '') {
         print_fail('config.php contains a new line at the end, please remove any whitespace at the end of the file and also remove ?>');
     }
     else if ($last_lines[1] == '?>') {
-        print_warn("It looks like you have ?> at the end of config.php, it's suggested you remove this");
+        print_warn("It looks like you have ?> at the end of config.php, it is suggested you remove this");
     }
 }
 else {
@@ -58,26 +59,51 @@ if ($username !== 'root') {
 // load config.php now
 require_once 'includes/defaults.inc.php';
 require_once 'config.php';
+
+// make sure install_dir is set correctly, or the next includes will fail
+if(!file_exists($config['install_dir'].'/config.php')) {
+    print_fail('$config[\'install_dir\'] is not set correctly.  It should probably be set to: ' . getcwd());
+    exit;
+}
+
+// continue loading includes
 require_once 'includes/definitions.inc.php';
 require_once 'includes/functions.php';
 require_once 'includes/common.php';
 require_once $config['install_dir'].'/includes/alerts.inc.php';
 
 $versions = version_info();
+echo "====================================\n";
 echo "Version info:\n";
 $cur_sha = $versions['local_sha'];
 if ($config['update_channel'] == 'master' && $cur_sha != $versions['github']['sha']) {
-    print_warn("Your install is out of date: $cur_sha");
+    $commit_date = new DateTime('@'.$versions['local_date'], new DateTimeZone(date_default_timezone_get()));
+    print_warn("Your install is out of date: $cur_sha " . $commit_date->format('(r)'));
 }
 else {
     echo "Commit SHA: $cur_sha\n";
 }
+if($versions['local_branch'] != 'master') {
+    print_warn("Your local git branch is not master, this will prevent automatic updates.");
+}
+
+// check for modified files
+$modifiedcmd = 'git diff --name-only --exit-code';
+if($username === 'root') {
+    $modifiedcmd = 'su '.$config['user'].' -c "'.$modifiedcmd.'"';
+}
+exec($modifiedcmd, $cmdoutput, $code);
+if($code !== 0 && !empty($cmdoutput)) {
+    print_warn("Your local git contains modified files, this could prevent automatic updates.\nModified files:");
+    echo('    ' . implode("\n    ", $cmdoutput) . "\n");
+}
+
 echo "DB Schema: ".$versions['db_schema']."\n";
 echo "PHP: ".$versions['php_ver']."\n";
 echo "MySQL: ".$versions['mysql_ver']."\n";
 echo "RRDTool: ".$versions['rrdtool_ver']."\n";
 echo "SNMP: ".$versions['netsnmp_ver']."\n";
-
+echo "====================================\n";
 
 // Check php modules we use to make sure they are loaded
 $extensions = array('pcre','curl','session','snmp','mcrypt');
@@ -104,13 +130,12 @@ if (class_exists('Net_IPv6') === false) {
 if (isset($config['user'])) {
     $tmp_user = $config['user'];
     $tmp_dir = $config['install_dir'];
-    $tmp_log = $config['log_dir'];
-    $find_result = rtrim(`find $tmp_dir \! -user $tmp_user -not -path $tmp_log`);
+    $find_result = rtrim(`find $tmp_dir \! -user $tmp_user`);
     if (!empty($find_result)) {
         // This isn't just the log directory, let's print the list to the user
         $files = explode(PHP_EOL, $find_result);
         if (is_array($files)) {
-            print_fail("We have found some files that are owned by a different user than $tmp_user, this will stop you updating automatically and / or rrd files being updated causing graphs to fail:\n");
+            print_fail("We have found some files that are owned by a different user than $tmp_user, this will stop you updating automatically and / or rrd files being updated causing graphs to fail:\nIf you don't run a bespoke install then you can fix this by running `chown -R $tmp_user:$tmp_user ".$config['install_dir']."`");
             foreach ($files as $file) {
                 echo "$file\n";
             }
@@ -134,14 +159,12 @@ else {
 // Test for MySQL Strict mode
 $strict_mode = dbFetchCell("SELECT @@global.sql_mode");
 if(strstr($strict_mode, 'STRICT_TRANS_TABLES')) {
-    print_warn('You have MySQL STRICT_TRANS_TABLES enabled, it is advisable to disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
+    print_fail('You have MySQL STRICT_TRANS_TABLES enabled, please disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
 }
 
-// Test for MySQL InnoDB buffer size
-$innodb_buffer = innodb_buffer_check();
-if ($innodb_buffer['used'] > $innodb_buffer['size']) {
-    print_fail('Your Innodb buffer size is not big enough...');
-    echo warn_innodb_buffer($innodb_buffer);
+$tz = ini_get('date.timezone');
+if (empty($tz)) {
+    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone');
 }
 
 // Test transports
@@ -161,6 +184,10 @@ if (!$config['rrdcached']) {
     }
 }
 
+if (isset($config['rrdcached'])) {
+    check_rrdcached();
+}
+
 // Disk space and permission checks
 if (substr(sprintf('%o', fileperms($config['temp_dir'])), -3) != 777) {
     print_warn('Your tmp directory ('.$config['temp_dir'].") is not set to 777 so graphs most likely won't be generated");
@@ -176,13 +203,25 @@ if ($space_check < 1) {
 }
 
 // Check programs
-$bins = array('fping');
+$bins = array('fping','rrdtool','snmpwalk','snmpget','snmpbulkwalk');
 foreach ($bins as $bin) {
     if (!is_file($config[$bin])) {
         print_fail("$bin location is incorrect or bin not installed");
     }
-    else {
-        print_ok("$bin has been found");
+}
+
+$disabled_functions = explode(',', ini_get('disable_functions'));
+$required_functions = array('exec','passthru','shell_exec','escapeshellarg','escapeshellcmd','proc_close','proc_open','popen');
+foreach ($required_functions as $function) {
+    if (in_array($function, $disabled_functions)) {
+        print_fail("$function is disabled in php.ini");
+    }
+}
+
+if (!function_exists('openssl_random_pseudo_bytes')) {
+    print_warn("openssl_random_pseudo_bytes is not being used for user password hashing. This is a recommended function (https://secure.php.net/openssl_random_pseudo_bytes)");
+    if (!is_readable('/dev/urandom')) {
+        print_warn("It also looks like we can't use /dev/urandom for user password hashing. We will fall back to generating our own hash - be warned");
     }
 }
 
@@ -198,24 +237,26 @@ foreach ($modules as $module) {
                 $run_test = 0;
             }
             else if ($config['email_backend'] == 'sendmail') {
-                if (empty($config['email_sendmail_path']) || !file_exists($config['email_sendmail_path'])) {
-                    print_fail("You have selected sendmail but not configured email_sendmail_path or it's not valid");
+                if (empty($config['email_sendmail_path'])) {
+                    print_fail("You have selected sendmail but not configured email_sendmail_path");
+                    $run_test = 0;
+                }
+                elseif (!file_exists($config['email_sendmail_path'])) {
+                    print_fail("The configured email_sendmail_path is not valid");
                     $run_test = 0;
                 }
             }
             else if ($config['email_backend'] == 'smtp') {
                 if (empty($config['email_smtp_host'])) {
-                    print_fail('You have selected smtp but not configured an smtp host');
+                    print_fail('You have selected SMTP but not configured an SMTP host');
                     $run_test = 0;
                 }
-
                 if (empty($config['email_smtp_port'])) {
-                    print_fail('You have selected smtp but not configured an smtp port');
+                    print_fail('You have selected SMTP but not configured an SMTP port');
                     $run_test = 0;
                 }
-
                 if (($config['email_smtp_auth'] === true) && (empty($config['email_smtp_username']) || empty($config['email_smtp_password']))) {
-                    print_fail('You have selected smtp but not configured a username or password');
+                    print_fail('You have selected SMTP auth but have not configured both username and password');
                     $run_test = 0;
                 }
             }//end if
@@ -257,17 +298,49 @@ foreach ($modules as $module) {
                 print_fail('You have not configured $config[\'rrd_dir\']');
             }
             else {
-                list($host,$port) = explode(':',$config['rrdcached']);
-                $connection = @fsockopen($host, $port);
-                if (is_resource($connection)) {
-                    fclose($connection);
-                    print_ok('Connection to rrdcached is ok');
-                }
-                else {
-                    print_fail('Cannot connect to rrdcached instance');
-                }
+                check_rrdcached();
             }
         }
+        break;
+    case 'rrdcheck':
+
+        // Loop through the rrd_dir
+        $rrd_directory = new RecursiveDirectoryIterator($config['rrd_dir']);
+        // Filter out any non rrd files
+        $rrd_directory_filter = new LibreNMS\RRDRecursiveFilterIterator($rrd_directory);
+        $rrd_iterator = new RecursiveIteratorIterator($rrd_directory_filter);
+        $rrd_total = iterator_count($rrd_iterator);
+        $rrd_iterator->rewind(); // Rewind iterator in case iterator_count left iterator in unknown state
+
+        echo "\nScanning ".$rrd_total." rrd files in ".$config['rrd_dir']."...\n";
+
+        // Count loops so we can push status to the user
+        $loopcount = 0;
+        $screenpad = 0;
+
+        foreach ($rrd_iterator as $filename => $file) {
+
+                $rrd_test_result = rrdtest($filename, $output, $error);
+
+                $loopcount++;
+                if (($loopcount % 50) == 0 ) {
+                        //This lets us update the previous status update without spamming in most consoles
+                        echo "\033[".$screenpad."D";
+                        $test_status = 'Status: '.$loopcount.'/'.$rrd_total;
+                        echo $test_status;
+                        $screenpad = strlen($test_status);
+                }
+
+                // A non zero result means there was some kind of error
+                if ($rrd_test_result > 0)  {
+                        echo "\033[".$screenpad."D";
+                        print_fail('Error parsing "'.$filename.'" RRD '.trim($error));
+                        $screenpad = 0;
+                }
+        }
+        echo "\033[".$screenpad."D";
+        echo "Status: ".$loopcount."/".$rrd_total." - Complete\n";
+
         break;
     }//end switch
 }//end foreach
@@ -277,17 +350,34 @@ foreach ($modules as $module) {
 
 function print_ok($msg) {
     echo "[OK]      $msg\n";
-
 }//end print_ok()
 
 
 function print_fail($msg) {
     echo "[FAIL]    $msg\n";
-
 }//end print_fail()
 
 
 function print_warn($msg) {
     echo "[WARN]    $msg\n";
-
 }//end print_warn()
+
+function check_rrdcached() {
+    global $config;
+    list($host,$port) = explode(':',$config['rrdcached']);
+    if ($host == 'unix') {
+        // Using socket, check that file exists
+        if (!file_exists($port)) {
+            print_fail("$port doesn't appear to exist, rrdcached test failed");
+        }
+    }
+    else {
+        $connection = @fsockopen($host, $port);
+        if (is_resource($connection)) {
+            fclose($connection);
+        }
+        else {
+            print_fail('Cannot connect to rrdcached instance');
+        }
+    }
+}//end check_rrdcached

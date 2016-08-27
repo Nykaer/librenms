@@ -52,19 +52,22 @@ if ($device['os_group'] == 'unix') {
 
         $graphs['agent'] = true;
 
+        $agentapps = array(
+            "apache",
+            "bind",
+            "ceph",
+            "mysql",
+            "nginx",
+            "ntpd",
+            "powerdns",
+            "powerdns-recursor",
+            "proxmox",
+            "rrdcached",
+            "tinydns");
+
         foreach (explode('<<<', $agent_raw) as $section) {
             list($section, $data) = explode('>>>', $section);
             list($sa, $sb)    = explode('-', $section, 2);
-
-            $agentapps = array(
-                "apache",
-                "ceph",
-                "mysql",
-                "nginx",
-                "bind",
-                "powerdns",
-                "proxmox",
-                "tinydns");
 
             if (in_array($section, $agentapps)) {
                 $agent_data['app'][$section] = trim($data);
@@ -97,7 +100,7 @@ if ($device['os_group'] == 'unix') {
             dbDelete('processes', 'device_id = ?', array($device['device_id']));
             $data=array();
             foreach (explode("\n", $agent_data['ps']) as $process) {
-                $process = preg_replace('/\((.*),([0-9]*),([0-9]*),([0-9\:]*),([0-9]*)\)\ (.*)/', '\\1|\\2|\\3|\\4|\\5|\\6', $process);
+                $process = preg_replace('/\((.*),([0-9]*),([0-9]*),([0-9\:\.]*),([0-9]*)\)\ (.*)/', '\\1|\\2|\\3|\\4|\\5|\\6', $process);
                 list($user, $vsz, $rss, $cputime, $pid, $command) = explode('|', $process, 6);
                 if (!empty($command)) {
                     $data[]=array('device_id' => $device['device_id'], 'pid' => $pid, 'user' => $user, 'vsz' => $vsz, 'rss' => $rss, 'cputime' => $cputime, 'command' => $command);
@@ -113,7 +116,7 @@ if ($device['os_group'] == 'unix') {
             if (file_exists("includes/polling/applications/$key.inc.php")) {
                 d_echo("Enabling $key for ".$device['hostname']." if not yet enabled\n");
 
-                if (in_array($key, array('apache', 'mysql', 'nginx', 'proxmox', 'ceph', 'powerdns'))) {
+                if (in_array($key, $agentapps)) {
                     if (dbFetchCell('SELECT COUNT(*) FROM `applications` WHERE `device_id` = ? AND `app_type` = ?', array($device['device_id'], $key)) == '0') {
                         echo "Found new application '$key'\n";
                         dbInsert(array('device_id' => $device['device_id'], 'app_type' => $key, 'app_status' => '', 'app_instance' => ''), 'applications');

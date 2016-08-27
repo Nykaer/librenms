@@ -46,8 +46,7 @@ if (!empty($_POST['type'])) {
     if ($_POST['type'] == 'generic') {
         $sql    .= " AND ( type = ? OR type = '')";
         $param[] = $_POST['type'];
-    }
-    else {
+    } else {
         $sql    .= ' AND type = ?';
         $param[] = $_POST['type'];
     }
@@ -57,8 +56,7 @@ if (!empty($_POST['state'])) {
     $sql .= ' AND status= ?';
     if (is_numeric($_POST['state'])) {
         $param[] = $_POST['state'];
-    }
-    else {
+    } else {
         $param[] = str_replace(array('up', 'down'), array(1, 0), $_POST['state']);
     }
 }
@@ -87,7 +85,7 @@ if (!empty($_POST['group'])) {
     $sql .= ' AND ( ';
     foreach (GetDevicesFromGroup($_POST['group']) as $dev) {
         $sql    .= '`devices`.`device_id` = ? OR ';
-        $param[] = $dev['device_id'];
+        $param[] = $dev;
     }
 
     $sql  = substr($sql, 0, (strlen($sql) - 3));
@@ -127,16 +125,14 @@ list($format, $subformat) = explode('_', $_POST['format']);
 foreach (dbFetchRows($sql, $param) as $device) {
     if (isset($bg) && $bg == $list_colour_b) {
         $bg = $list_colour_a;
-    }
-    else {
+    } else {
         $bg = $list_colour_b;
     }
 
     if ($device['status'] == '0') {
         $extra = 'danger';
         $msg   = $device['status_reason'];
-    }
-    else {
+    } else {
         $extra = 'success';
         $msg   = 'up';
     }
@@ -197,8 +193,7 @@ foreach (dbFetchRows($sql, $param) as $device) {
     $os       = $device['os_text'].'<br />'.$device['version'];
     if (extension_loaded('mbstring')) {
         $location = mb_substr($device['location'], 0, 32, 'utf8');
-    }
-    else {
+    } else {
         $location = truncate($device['location'], 32, '');
     }
 
@@ -207,6 +202,7 @@ foreach (dbFetchRows($sql, $param) as $device) {
         $hostname .= '<br />'.$device['sysName'];
         if (empty($port_count)) {
             $port_count = 0;
+            $col_port = '';
         }
         if ($port_count) {
             $col_port = ' <img src="images/icons/port.png" align=absmiddle /> '.$port_count.'<br />';
@@ -215,8 +211,7 @@ foreach (dbFetchRows($sql, $param) as $device) {
         if ($sensor_count) {
             $col_port .= ' <img src="images/icons/sensors.png" align=absmiddle /> '.$sensor_count;
         }
-    }
-    else {
+    } else {
     }
 
     $response[] = array(

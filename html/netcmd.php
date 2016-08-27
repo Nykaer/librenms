@@ -1,11 +1,11 @@
 <?php
 
 /*
- * Observium
+ * LibreNMS
  *
- *   This file is part of Observium.
+ *   This file is part of LibreNMS.
  *
- * @package    observium
+ * @package    librenms
  * @subpackage webinterface
  * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
@@ -36,28 +36,27 @@ if (!$_SESSION['authenticated']) {
 $output = '';
 if ($_GET['query'] && $_GET['cmd']) {
     $host = $_GET['query'];
-    if (Net_IPv6::checkIPv6($host) || Net_IPv4::validateip($host) || preg_match('/^[a-zA-Z0-9.-]*$/', $host)) {
+    if (Net_IPv6::checkIPv6($host) || Net_IPv4::validateip($host) || filter_var('http://'.$host, FILTER_VALIDATE_URL)) {
         switch ($_GET['cmd']) {
-        case 'whois':
-            $cmd = $config['whois']." $host | grep -v \%";
-            break;
+            case 'whois':
+                $cmd = $config['whois']." $host | grep -v \%";
+                break;
 
-        case 'ping':
-            $cmd = $config['ping']." -c 5 $host";
-            break;
+            case 'ping':
+                $cmd = $config['ping']." -c 5 $host";
+                break;
 
-        case 'tracert':
-            $cmd = $config['mtr']." -r -c 5 $host";
-            break;
+            case 'tracert':
+                $cmd = $config['mtr']." -r -c 5 $host";
+                break;
 
-        case 'nmap':
-            if ($_SESSION['userlevel'] != '10') {
-                echo 'insufficient privileges';
-            }
-            else {
-                $cmd = $config['nmap']." $host";
-            }
-            break;
+            case 'nmap':
+                if ($_SESSION['userlevel'] != '10') {
+                    echo 'insufficient privileges';
+                } else {
+                    $cmd = $config['nmap']." $host";
+                }
+                break;
         }//end switch
 
         if (!empty($cmd)) {
@@ -66,5 +65,5 @@ if ($_GET['query'] && $_GET['cmd']) {
     }//end if
 }//end if
 
-$output = trim($output);
+$output = htmlentities(trim($output), ENT_QUOTES);
 echo "<pre>$output</pre>";

@@ -1,3 +1,4 @@
+source: Support/Configuration.md
 The options shown below also contain the default values.
 
 If you would like to alter any of these then please add your config option to `config.php`.
@@ -7,7 +8,7 @@ If you would like to alter any of these then please add your config option to `c
 ```php
 $config['install_dir'] = "/opt/librenms";
 ```
-Set the installation directory (defaults to /opt/librenms), if you clone the github branch to another location ensure you alter this.
+Set the installation directory (defaults to /opt/librenms), if you clone the GitHub branch to another location ensure you alter this.
 
 ```php
 $config['temp_dir'] = "/tmp";
@@ -60,7 +61,7 @@ $config['fping_options']['millisec'] = 200;
 * `millisec` (`fping` parameter `-p`): Time in milliseconds that fping waits between successive packets to an individual target.
 
 You can disable the fping / icmp check that is done for a device to be determined to be up on a global or per device basis.
-**We don't advice disabling the fping / icmp check unless you know the impact, at worst if you have a large number of devices down 
+**We don't advice disabling the fping / icmp check unless you know the impact, at worst if you have a large number of devices down
 then it's possible that the poller would no longer complete in 5 minutes due to waiting for snmp to timeout.**
 
 Globally disable fping / icmp check:
@@ -104,11 +105,9 @@ Settings to enable memcached - currently it's not recommended to run memcached u
 
 ```php
 $config['rrdcached']    = "unix:/var/run/rrdcached.sock"; // or a tcp connection 127.0.0.1:42217
-$config['rrdcached_dir'] = FALSE;
 ```
-To enable rrdcached you need to set at least the `rrdcached` option. If `rrdcached` is a tcp socket then you need to configure `rrdcached_dir` as well.
-This should be set based on your base directory for running rrdcached. For instance if -b for rrdcached is set to /var/lib/rrd but you are expecting 
-LibreNMS to store them in /var/lib/rrd/librenms then you would need to set `rrdcached_dir` to librenms.
+To enable rrdcached you need to set at least the `rrdcached` option. Make sure rrdcached is started with the `-b` option set to the correct directoy, 
+as configured in `$config['rrd_dir`]`.
 
 #### WebUI Settings
 
@@ -141,8 +140,18 @@ $config['vertical_summary'] = 0; // Enable to use vertical summary on front page
 $config['top_ports']        = 1; // This enables the top X ports box
 $config['top_devices']      = 1; // This enables the top X devices box
 ```
-A number of home pages are provided within the install and can be found in html/pages/front/. You can change the default by 
+A number of home pages are provided within the install and can be found in html/pages/front/. You can change the default by
 setting `front_page`. The other options are used to alter the look of those pages that support it (default.php supports these options).
+
+```php
+// This option exists in the web UI, edit it under Global Settings -> webui
+$config['webui']['default_dashboard_id'] = 0;
+```
+Allows the specification of a global default dashboard page for any user who
+has not set one in their user preferences.  Should be set to dashboard_id of an
+existing dashboard that is shared or shared(read).  Otherwise, the system will
+automatically create each user an empty dashboard called `Default` on their
+first login.
 
 ```php
 $config['login_message']    = "Unauthorised access or use shall render the user liable to criminal and/or civil prosecution.";
@@ -161,10 +170,10 @@ $config['show_services']           = 0;  # Enable Services on menu
 $config['int_customers']           = 1;  # Enable Customer Port Parsing
 $config['summary_errors']          = 0;  # Show Errored ports in summary boxes on the dashboard
 $config['customers_descr']         = 'cust'; // The description to look for in ifDescr. Can be an array as well array('cust','cid');
-$config['transit_descr']           = ""; // Add custom transit descriptions (can be an array)
-$config['peering_descr']           = ""; // Add custom peering descriptions (can be an array)
-$config['core_descr']              = ""; // Add custom core descriptions (can be an array)
-$config['custom_descr']            = ""; // Add custom interface descriptions (can be an array)
+$config['transit_descr']           = 'transit'; // Add custom transit descriptions (can be an array)
+$config['peering_descr']           = 'peering'; // Add custom peering descriptions (can be an array)
+$config['core_descr']              = 'core'; // Add custom core descriptions (can be an array)
+$config['custom_descr']            = ''; // Add custom interface descriptions (can be an array)
 $config['int_transit']             = 1;  # Enable Transit Types
 $config['int_peering']             = 1;  # Enable Peering Types
 $config['int_core']                = 1;  # Enable Core Port Types
@@ -193,6 +202,11 @@ $config['overview_show_sysDescr'] = TRUE;
 Enable or disable the sysDescr output for a device.
 
 ```php
+$config['force_ip_to_sysname'] = false;
+```
+When using IP addresses as a hostname you can instead represent the devices on the WebUI by its SNMP sysName resulting in an easier to read overview of your network. This would apply on networks where you don't have DNS records for most of your devices.
+
+```php
 $config['device_traffic_iftype'][] = '/loopback/';
 ```
 Interface types that aren't graphed in the WebUI. The default array contains more items, please see includes/defaults.inc.php for the full list.
@@ -210,14 +224,20 @@ Disable the footer of the WebUI by setting `enable_footer` to 0.
 You can enable the old style network map (only available for individual devices with links discovered via xDP) by setting:
 ```php
 $config['gui']['network-map']['style'] = 'old';
-````
+```
 
 #### Add host settings
 The following setting controls how hosts are added.  If a host is added as an ip address it is checked to ensure the ip is not already present.  If the ip is present the host is not added.
-If host is added by hostname this check is not performed.  If the setting is true hostnames are resovled and the check is also performed.  This helps prevents accidental duplicate hosts.
+If host is added by hostname this check is not performed.  If the setting is true hostnames are resolved and the check is also performed.  This helps prevents accidental duplicate hosts.
 ```php
 $config['addhost_alwayscheckip']   = FALSE; #TRUE - check for duplicate ips even when adding host by name.
                                             #FALSE- only check when adding host by ip.
+```
+
+By default we allow hosts to be added with duplicate sysName's, you can disable this with the following config:
+
+```php
+$config['allow_duplicate_sysName'] = false;
 ```
 
 #### SNMP Settings
@@ -289,7 +309,7 @@ $config['email_smtp_auth']            = FALSE;
 $config['email_smtp_username']        = NULL;
 $config['email_smtp_password']        = NULL;
 ```
-What type of mail transport to use for delivering emails. Valid options for `email_backend` are mail, sendmail or smtp. 
+What type of mail transport to use for delivering emails. Valid options for `email_backend` are mail, sendmail or smtp.
 The varying options after that are to support the different transports.
 
 #### Alerting
@@ -308,7 +328,6 @@ $config['enable_syslog']                = 0; # Enable Syslog
 $config['enable_inventory']             = 1; # Enable Inventory
 $config['enable_pseudowires']           = 1; # Enable Pseudowires
 $config['enable_vrfs']                  = 1; # Enable VRFs
-$config['enable_printers']              = 0; # Enable Printer support
 $config['enable_sla']                   = 0; # Enable Cisco SLA collection and display
 ```
 
@@ -333,14 +352,14 @@ Enable / disable additional port statistics.
 $config['rancid_configs'][]             = '/var/lib/rancid/network/configs/';
 $config['rancid_ignorecomments']        = 0;
 ```
-Rancid configuration, `rancid_configs` is an array containing all of the locations of your rancid files. 
+Rancid configuration, `rancid_configs` is an array containing all of the locations of your rancid files.
 Setting `rancid_ignorecomments` will disable showing lines that start with #
 
 ```php
 $config['oxidized']['enabled']         = FALSE;
 $config['oxidized']['url']             = 'http://127.0.0.1:8888';
 ```
-To enable Oxidized support set enabled to `TRUE`. URL needs to be configured to point to the REST API for Oxidized. This 
+To enable Oxidized support set enabled to `TRUE`. URL needs to be configured to point to the REST API for Oxidized. This
 is then used to retrieve the config for devices.
 
 
@@ -379,10 +398,15 @@ NFSen integration support.
 
 #### Location mapping
 
+Exact Matching:
 ```php
 $config['location_map']['Under the Sink'] = "Under The Sink, The Office, London, UK";
 ```
-The above is an example, this will rewrite basic snmp locations so you don't need to configure full location within snmp.
+Regex Matching:
+```php
+$config['location_map_regex']['/Sink/'] = "Under The Sink, The Office, London, UK";
+```
+The above are examples, these will rewrite device snmp locations so you don't need to configure full location within snmp.
 
 #### Interfaces to be ignored
 
@@ -390,11 +414,13 @@ The above is an example, this will rewrite basic snmp locations so you don't nee
 $config['bad_if'][] = "voip-null";
 $config['bad_iftype'][] = "voiceEncap";
 ```
-Numerous defaults exist for this array already (see includes/defaults.inc.php for the full list). You can expand this list 
+Numerous defaults exist for this array already (see includes/defaults.inc.php for the full list). You can expand this list
 by continuing the array.
 `bad_if` is matched against the ifDescr value.
 `bad_iftype` is matched against the ifType value.
 `bad_if_regexp` is matched against the ifDescr value as a regular expression.
+`bad_ifname_regexp` is matched against the ifName value as a regular expression.
+`bad_ifalias_regexp` is matched against the ifAlias value as a regular expression.
 
 #### Interfaces to be rewritten
 
@@ -405,6 +431,17 @@ $config['rewrite_if_regexp']['/cpu /'] = 'Management ';
 Entries defined in `rewrite_if` are being replaced completely.
 Entries defined in `rewrite_if_regexp` only replace the match.
 Matches are compared case-insensitive.
+
+#### Entity sensors to be ignored
+
+Some devices register bogus sensors as they are returned via SNMP but either don't exist or just don't return data.
+This allows you to ignore those based on the descr field in the database. You can either ignore globally or on a per 
+os basis.
+
+```php
+$config['bad_entity_sensor_regex'][] = '/Physical id [0-9]+/';
+$config['os']['cisco']['bad_entity_sensor_regex'] = '/Physical id [0-9]+/';
+```
 
 #### Storage configuration
 
@@ -446,8 +483,8 @@ Please see [IRC Bot](http://docs.librenms.org/Extensions/IRC-Bot/) section of th
 ```php
 $config['auth_mechanism']           = "mysql";
 ```
-This is the authentication type to use for the WebUI. MySQL is the default and configured when following the installation 
-instructions. ldap and http-auth are also valid options. For instructions on the different authentication modules please 
+This is the authentication type to use for the WebUI. MySQL is the default and configured when following the installation
+instructions. ldap and http-auth are also valid options. For instructions on the different authentication modules please
 see [Authentication](http://docs.librenms.org/Extensions/Authentication/).
 
 ```php
@@ -459,7 +496,7 @@ If the user selects to be remembered on the login page, how long in days do we r
 $config['allow_unauth_graphs']      = 0;
 $config['allow_unauth_graphs_cidr'] = array();
 ```
-This option will enable unauthenticated access to the graphs from `allow_unauth_graphs_cidr` ranges that you allow. Use 
+This option will enable unauthenticated access to the graphs from `allow_unauth_graphs_cidr` ranges that you allow. Use
  of this option is highly discouraged in favour of the [API](http://docs.librenms.org/API/API-Docs/) that is now available.
 
 #### Cleanup options
@@ -472,9 +509,13 @@ $config['eventlog_purge']                                 = 30;
 $config['authlog_purge']                                  = 30;
 $config['perf_times_purge']                               = 30;
 $config['device_perf_purge']                              = 30;
+$config['rrd_purge']                                      = 90;// Not set by default
 ```
-This option will ensure data within LibreNMS over 1 month old is automatically purged. You can alter these individually, 
+These options will ensure data within LibreNMS over X days old is automatically purged. You can alter these individually,
 values are in days.
+
+> NOTE: Please be aware that `$config['rrd_purge']` is _NOT_ set by default. This option will remove any old data within 
+the rrd directory automatically - only enable this if you are comfortable with that happening.
 
 #### Syslog options
 
@@ -504,7 +545,7 @@ to indicate how you connect to libvirt.  You also need to:
 
 To test your setup, run `virsh -c qemu+ssh://vmhost/system list` or
 `virsh -c xen+ssh://vmhost list` as your librenms polling user.
- 
+
 #### BGP Support
 
 ```php

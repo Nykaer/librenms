@@ -1,5 +1,7 @@
 <?php
 
+require_once $config['install_dir'].'/includes/device-groups.inc.php';
+
 $where = 1;
 
 $alert_states = array(
@@ -18,6 +20,8 @@ $alert_severities = array(
     'critical' => 3
 );
 
+$show_recovered = false;
+
 if (is_numeric($_POST['device_id']) && $_POST['device_id'] > 0) {
     $where .= ' AND `alerts`.`device_id`='.$_POST['device_id'];
 }
@@ -29,13 +33,15 @@ if (is_numeric($_POST['acknowledged'])) {
 
 if (is_numeric($_POST['state'])) {
     $where .= " AND `alerts`.`state`=".$_POST['state'];
+    if ($_POST['state'] == $alert_states['recovered']) {
+        $show_recovered = true;
+    }
 }
 
 if (isset($_POST['min_severity'])) {
     if (is_numeric($_POST['min_severity'])) {
         $min_severity_id = $_POST['min_severity'];
-    }
-    else if (!empty($_POST['min_severity'])) {
+    } elseif (!empty($_POST['min_severity'])) {
         $min_severity_id = $alert_severities[$_POST['min_severity']];
     }
     if (isset($min_severity_id)) {
@@ -43,8 +49,23 @@ if (isset($_POST['min_severity'])) {
     }
 }
 
+if (is_numeric($_POST['group'])) {
+    $group_pattern = dbFetchCell('SELECT `pattern` FROM `device_groups` WHERE id = '.$_POST['group']);
+    $group_pattern = rtrim($group_pattern, '&&');
+    $group_pattern = rtrim($group_pattern, '||');
+
+    $device_id_sql = GenGroupSQL($group_pattern);
+    if ($device_id_sql) {
+        $where .= " AND devices.device_id IN ($device_id_sql)";
+    }
+}
+
+if (!$show_recovered) {
+    $where .= " AND `alerts`.`state`!=".$alert_states['recovered'];
+}
+
 if (isset($searchPhrase) && !empty($searchPhrase)) {
-    $sql_search .= " AND (`timestamp` LIKE '%$searchPhrase%' OR `rule` LIKE '%$searchPhrase%' OR `name` LIKE '%$searchPhrase%' OR `hostname` LIKE '%$searchPhrase%')";
+    $where .= " AND (`timestamp` LIKE '%$searchPhrase%' OR `rule` LIKE '%$searchPhrase%' OR `name` LIKE '%$searchPhrase%' OR `hostname` LIKE '%$searchPhrase%')";
 }
 
 $sql = ' FROM `alerts` LEFT JOIN `devices` ON `alerts`.`device_id`=`devices`.`device_id`';
@@ -55,7 +76,7 @@ if (is_admin() === false && is_read() === false) {
     $param[] = $_SESSION['user_id'];
 }
 
-$sql .= "  RIGHT JOIN `alert_rules` ON `alerts`.`rule_id`=`alert_rules`.`id` WHERE $where AND `alerts`.`state`!=".$alert_states['recovered']." $sql_search";
+$sql .= "  RIGHT JOIN `alert_rules` ON `alerts`.`rule_id`=`alert_rules`.`id` WHERE $where";
 
 $count_sql = "SELECT COUNT(`alerts`.`id`) $sql";
 $total     = dbFetchCell($count_sql, $param);
@@ -78,7 +99,7 @@ if ($rowCount != -1) {
     $sql .= " LIMIT $limit_low,$limit_high";
 }
 
-$sql = "SELECT `alerts`.*, `devices`.`hostname` AS `hostname`,`alert_rules`.`rule` AS `rule`, `alert_rules`.`name` AS `name`, `alert_rules`.`severity` AS `severity` $sql";
+$sql = "SELECT `alerts`.*, `devices`.`hostname`, `devices`.`sysName`, `devices`.`hardware`, `devices`.`location`, `alert_rules`.`rule`, `alert_rules`.`name`, `alert_rules`.`severity` $sql";
 
 $rulei  = 0;
 $format = $_POST['format'];
@@ -95,20 +116,17 @@ foreach (dbFetchRows($sql, $param) as $alert) {
         $col   = 'green';
         $extra = 'success';
         $msg   = 'ok';
-    }
-    else if ((int) $alert['state'] === 1 || (int) $alert['state'] === 3 || (int) $alert['state'] === 4) {
+    } elseif ((int) $alert['state'] === 1 || (int) $alert['state'] === 3 || (int) $alert['state'] === 4) {
         $ico   = 'volume-up';
         $col   = 'red';
         $extra = 'danger';
         $msg   = 'alert';
         if ((int) $alert['state'] === 3) {
             $msg = 'worse';
-        }
-        else if ((int) $alert['state'] === 4) {
+        } elseif ((int) $alert['state'] === 4) {
             $msg = 'better';
         }
-    }
-    else if ((int) $alert['state'] === 2) {
+    } elseif ((int) $alert['state'] === 2) {
         $ico   = 'volume-off';
         $col   = '#800080';
         $extra = 'warning';
@@ -122,8 +140,7 @@ foreach (dbFetchRows($sql, $param) as $alert) {
     $severity = $alert['severity'];
     if ($alert['state'] == 3) {
         $severity .= ' <strong>+</strong>';
-    }
-    else if ($alert['state'] == 4) {
+    } elseif ($alert['state'] == 4) {
         $severity .= ' <strong>-</strong>';
     }
 
