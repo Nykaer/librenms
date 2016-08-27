@@ -1982,3 +1982,24 @@ table.table.table-striped tr.bg-danger td {
 .label-font-border.label-border {
   margin:0px 2px 0px 2px;
 }
+
+.availability-map-oldview-box-up {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #5CB85C;
+}
+
+.availability-map-oldview-box-warn {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #F0AD4E;
+}
+
+.availability-map-oldview-box-down {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #D9534F;
+}

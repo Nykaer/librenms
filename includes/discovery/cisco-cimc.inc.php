@@ -16,8 +16,7 @@ if ($device['os'] == 'cimc') {
     $module = 'Cisco-CIMC';
     echo $module.': ';
 
-    require_once 'includes/component.php';
-    $component = new component();
+    $component = new LibreNMS\Component();
     $components = $component->getComponents($device['device_id'],array('type'=>$module));
 
     // We only care about our device id.

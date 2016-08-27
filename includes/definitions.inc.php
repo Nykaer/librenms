@@ -1,5 +1,6 @@
 <?php
 
+require_once $config['install_dir'].'/includes/common.php';
 require_once $config['install_dir'].'/includes/dbFacile.php';
 require_once $config['install_dir'].'/includes/mergecnf.inc.php';
 
@@ -603,13 +604,13 @@ $os = "cimc";
 $config['os'][$os]['text']              = "Cisco Integrated Management Controller";
 $config['os'][$os]['group']             = "cisco";
 $config['os'][$os]['type']              = "server";
+$config['os'][$os]['icon']              = "cisco";
 $config['os'][$os]['over'][0]['graph'] = 'device_temperature';
 $config['os'][$os]['over'][0]['text']  = 'Temperature';
 $config['os'][$os]['over'][1]['graph'] = 'device_voltage';
 $config['os'][$os]['over'][1]['text']  = 'Power Voltage';
 $config['os'][$os]['over'][2]['graph'] = 'device_current';
 $config['os'][$os]['over'][2]['text']  = 'Power Current';
-$config['os'][$os]['icon']              = "cisco";
 
 $os = 'vcs';
 $config['os'][$os]['text']		= 'Video Communication Server';
@@ -2007,6 +2008,10 @@ $os = 'hwg-ste2';
 $config['os'][$os]['text']             = 'HWg STE2';
 $config['os'][$os]['type']             = 'environment';
 $config['os'][$os]['icon']             = 'hwg';
+$config['os'][$os]['over'][0]['graph'] = 'device_temperature';
+$config['os'][$os]['over'][0]['text']  = 'Temperature';
+$config['os'][$os]['over'][1]['graph'] = 'device_humidity';
+$config['os'][$os]['over'][1]['text']  = 'Humidity';
 
 // EATON PDU
 $os = 'eatonpdu';
@@ -2094,6 +2099,25 @@ $config['os'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text'] = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text'] = 'Memory Usage';
+
+// Hytera repeaters
+$os = "hytera";
+$config['os'][$os]['text'] = 'Hytera Repeater';
+$config['os'][$os]['type'] = 'wireless';
+$config['os'][$os]['icon'] = 'hytera';
+
+// Sonus GSX
+$os = 'sonus-gsx';
+$config['os'][$os]['text']             = 'Sonus GSX';
+$config['os'][$os]['type']             = 'appliance';
+$config['os'][$os]['icon']             = 'sonus';
+
+// Sonus SBC
+$os = 'sonus-sbc';
+$config['os'][$os]['text']             = 'Sonus SBC';
+$config['os'][$os]['type']             = 'appliance';
+$config['os'][$os]['icon']             = 'sonus';
+
 
 // Graph Types
 require_once $config['install_dir'].'/includes/load_db_graph_types.inc.php';
@@ -2625,12 +2649,10 @@ $config['device_types'][$i]['text'] = 'Storage';
 $config['device_types'][$i]['type'] = 'storage';
 $config['device_types'][$i]['icon'] = 'storage.png';
 
-if (isset($config['enable_printers']) && $config['enable_printers']) {
-    $i++;
-    $config['device_types'][$i]['text'] = 'Printers';
-    $config['device_types'][$i]['type'] = 'printer';
-    $config['device_types'][$i]['icon'] = 'printer.png';
-}
+$i++;
+$config['device_types'][$i]['text'] = 'Printers';
+$config['device_types'][$i]['type'] = 'printer';
+$config['device_types'][$i]['icon'] = 'printer.png';
 
 $i++;
 $config['device_types'][$i]['text'] = 'Appliance';
@@ -2640,8 +2662,7 @@ $config['device_types'][$i]['icon'] = 'appliance.png';
 //
 // No changes below this line #
 //
-$config['version']              = '2015.master';
-$config['project_name_version'] = $config['project_name'].' '.$config['version'];
+$config['project_name_version'] = $config['project_name'];
 
 if (isset($config['rrdgraph_def_text'])) {
     $config['rrdgraph_def_text'] = str_replace('  ', ' ', $config['rrdgraph_def_text']);
