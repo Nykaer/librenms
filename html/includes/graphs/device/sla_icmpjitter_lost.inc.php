@@ -20,6 +20,12 @@ $rrd_filename = rrd_name($device['hostname'], array('sla', $sla['sla_nr'], 'icmp
 if (file_exists($rrd_filename)) {
     $rrd_options .= " COMMENT:'                            Cur   Min  Max\\n'";
 
+    $rrd_options .= " DEF:PL=" . $rrd_filename . ":PacketLoss:AVERAGE ";
+    $rrd_options .= " LINE1.25:PL#008C00:'Packets Lost               ' ";
+    $rrd_options .= " GPRINT:PL:LAST:%3.0lf ";
+    $rrd_options .= " GPRINT:PL:MIN:%3.0lf ";
+    $rrd_options .= " GPRINT:PL:MAX:%3.0lf\\\l ";
+
     $rrd_options .= " DEF:PS=" . $rrd_filename . ":PacketSkipped:AVERAGE ";
     $rrd_options .= " LINE1.25:PS#008C00:'Packets Skipped            ' ";
     $rrd_options .= " GPRINT:PS:LAST:%3.0lf ";
