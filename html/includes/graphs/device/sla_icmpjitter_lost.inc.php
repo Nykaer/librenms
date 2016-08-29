@@ -15,16 +15,10 @@ $sla = dbFetchRow('SELECT `sla_nr` FROM `slas` WHERE `sla_id` = ?', array($vars[
 
 require 'includes/graphs/common.inc.php';
 $rrd_options .= ' -l 0 -E ';
-$rrd_filename = rrd_name($device['hostname'], array('sla', $sla['sla_nr'], 'jitter'));
+$rrd_filename = rrd_name($device['hostname'], array('sla', $sla['sla_nr'], 'icmpjitter'));
 
 if (file_exists($rrd_filename)) {
     $rrd_options .= " COMMENT:'                            Cur   Min  Max\\n'";
-
-    $rrd_options .= " DEF:PL=" . $rrd_filename . ":PacketLoss:AVERAGE ";
-    $rrd_options .= " LINE1.25:PL#0000ee:'Packet Loss              ' ";
-    $rrd_options .= " GPRINT:PL:LAST:%3.0lf ";
-    $rrd_options .= " GPRINT:PL:MIN:%3.0lf ";
-    $rrd_options .= " GPRINT:PL:MAX:%3.0lf\\\l ";
 
     $rrd_options .= " DEF:PS=" . $rrd_filename . ":PacketSkipped:AVERAGE ";
     $rrd_options .= " LINE1.25:PS#008C00:'Packets Skipped            ' ";
