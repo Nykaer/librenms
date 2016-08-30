@@ -26,12 +26,6 @@ if (file_exists($rrd_filename)) {
     $rrd_options .= " GPRINT:PL:MIN:%3.0lf ";
     $rrd_options .= " GPRINT:PL:MAX:%3.0lf\\\l ";
 
-    $rrd_options .= " DEF:PS=" . $rrd_filename . ":PacketSkipped:AVERAGE ";
-    $rrd_options .= " LINE1.25:PS#008C00:'Packets Skipped            ' ";
-    $rrd_options .= " GPRINT:PS:LAST:%3.0lf ";
-    $rrd_options .= " GPRINT:PS:MIN:%3.0lf ";
-    $rrd_options .= " GPRINT:PS:MAX:%3.0lf\\\l ";
-
     $rrd_options .= " DEF:PLA=" . $rrd_filename . ":PacketLateArrival:AVERAGE ";
     $rrd_options .= " LINE1.25:PLA#CC0000:'Late Arrival                 ' ";
     $rrd_options .= " GPRINT:PLA:LAST:%3.0lf ";

@@ -38,7 +38,7 @@ if (count($slas > 0)) {
         $rtt = $rttMonLatestRttOperTable['1.3.6.1.4.1.9.9.42.1.2.10.1.1'][$sla_nr];
         echo 'SLA '.$sla_nr.': '.$rtt_type.' '.$sla['owner'].' '.$sla['tag'].'... '.$rtt.'ms at '.$time.'\n';
 
-        $fields = array(
+        $metrics = array(
             'rtt' => $rtt,
         );
 
@@ -46,7 +46,7 @@ if (count($slas > 0)) {
         $rrd_name = array('sla', $sla_nr);
         $rrd_def = 'DS:rtt:GAUGE:600:0:300000';
         $tags = compact('sla_nr', 'rrd_name', 'rrd_def');
-        data_update($device, 'sla', $tags, $fields);
+        data_update($device, 'sla', $tags, $metrics);
 
         // Let's gather some per-type metrics.
         switch ($rtt_type) {
@@ -87,7 +87,6 @@ if (count($slas > 0)) {
                     'PacketLoss' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.26'][$sla_nr],
                     'PacketOosSD' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.28'][$sla_nr],
                     'PacketOosDS' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.29'][$sla_nr],
-                    'PacketSkipped' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.30'][$sla_nr],
                     'PacketLateArrival' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.32'][$sla_nr],
                     'JitterAvgSD' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.45'][$sla_nr],
                     'JitterAvgDS' => $rttMonLatestOper['1.3.6.1.4.1.9.9.42.1.5.4.1.46'][$sla_nr],
@@ -101,7 +100,6 @@ if (count($slas > 0)) {
                     'DS:PacketLoss:GAUGE:600:0:U',
                     'DS:PacketOosSD:GAUGE:600:0:U',
                     'DS:PacketOosDS:GAUGE:600:0:U',
-                    'DS:PacketSkipped:GAUGE:600:0:U',
                     'DS:PacketLateArrival:GAUGE:600:0:U',
                     'DS:JitterAvgSD:GAUGE:600:0:U',
                     'DS:JitterAvgDS:GAUGE:600:0:U',
