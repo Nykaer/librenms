@@ -1886,6 +1886,7 @@ table.table.table-striped tr.bg-danger td {
   padding:8px;
   border-radius:5px;
   text-align:center;
+  white-space: nowrap;
 }
 
 .device-availability.up, .service-availability.up {
@@ -1951,11 +1952,6 @@ table.table.table-striped tr.bg-danger td {
   float:right;
   text-align:right;
   padding-left:10px;
-}
-
-.page-availability-report-service {
-  float:right;
-  text-align:right;
 }
 
 .widget-availability {
