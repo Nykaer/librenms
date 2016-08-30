@@ -109,8 +109,8 @@ if (count($slas > 0)) {
                     'DS:JitterIAJIn:GAUGE:600:0:U',
                 );
                 $tags = compact('rrd_name', 'rrd_def', 'sla_nr', 'rtt_type');
-                data_update($device,'sla',$tags,$icmpjitter);
-                $metrics = array_merge($metrics,$icmpjitter);
+                data_update($device, 'sla', $tags, $icmpjitter);
+                $metrics = array_merge($metrics, $icmpjitter);
                 break;
         }
 
