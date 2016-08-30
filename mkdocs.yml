@@ -24,10 +24,6 @@ pages:
     - CentOS 7 (Nginx): Installation/Installation-CentOS-7-Nginx.md
     - CentOS 7 (Apache): Installation/Installation-CentOS-7-Apache.md
     - Older Docs: Installation/Installing-LibreNMS.md
-#    - Ubuntu 14.04 (Nginx): Installation/Installation-Ubuntu-1404-Nginx.md
-#    - Ubuntu 14.04 (Apache): Installation/Installation-Ubuntu-1404-Apache.md
-#    - Ubuntu 14.04 (Lighttpd): Installation/Installation-Ubuntu-1404-Lighttpd.md
-#    - CentOS 6 (Apache/Nginx): Installation/Installation-CentOS-6-Apache-Nginx.md
     - Migrating from Observium: Installation/Migrating-from-Observium.md
 - General:
     - General/Acknowledgement.md
@@ -36,6 +32,7 @@ pages:
     - General/Contributing.md
     - General/Credits.md
     - General/Updating.md
+    - General/Releases.md
     - General/Welcome-to-Observium-users.md
 - Extensions:
     - Extensions/Alerting.md
@@ -75,10 +72,14 @@ pages:
 - Developing:
     - Developing/Code-Guidelines.md
     - Developing/Code-Structure.md
+    - Developing/Creating-Documentation.md
+    - Developing/Merging-Pull-Requests.md
+    - Developing/Creating-Release.md
     - Developing/Dynamic-Config.md
     - Developing/Sensor-State-Support.md
     - Developing/Style-Guidelines.md
     - Developing/Using-Git.md
+    - Developing/Validating-Code.md
 - API: API/API-Docs.md
 - Support:
     - Support/Configuration.md
@@ -89,3 +90,10 @@ pages:
     - Support/Performance.md
     - Support/Poller Support.md
     - Support/Support-New-OS.md
+- hidden:
+    - Ubuntu 14.04 (Nginx): Installation/Installation-Ubuntu-1404-Nginx.md
+    - Ubuntu 14.04 (Apache): Installation/Installation-Ubuntu-1404-Apache.md
+    - Ubuntu 14.04 (Lighttpd): Installation/Installation-Ubuntu-1404-Lighttpd.md
+    - CentOS 6 (Apache/Nginx): Installation/Installation-CentOS-6-Apache-Nginx.md
+    - Installation/Installation-(Debian-Ubuntu).md
+    - Installation/Installation-(RHEL-CentOS).md

@@ -1881,6 +1881,7 @@ label {
   padding:8px;
   border-radius:5px;
   text-align:center;
+  white-space: nowrap;
 }
 
 .device-availability.up, .service-availability.up {
@@ -1948,11 +1949,6 @@ label {
   padding-left:10px;
 }
 
-.page-availability-report-service {
-  float:right;
-  text-align:right;
-}
-
 .widget-availability {
   float:left;
   margin:2px;
@@ -1976,4 +1972,25 @@ label {
 
 .label-font-border.label-border {
   margin:0px 2px 0px 2px;
+}
+
+.availability-map-oldview-box-up {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #5CB85C;
+}
+
+.availability-map-oldview-box-warn {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #F0AD4E;
+}
+
+.availability-map-oldview-box-down {
+  height:12px;
+  width:12px;
+  float:left;
+  background-color: #D9534F;
 }
