@@ -6,35 +6,8 @@ $options['filter']['ignore'] = array('=',0);
 $options['type'] = 'ntp';
 $components = $component->getComponents(null, $options);
 
-/**********************************************************************
- *  Begin Temp Code
- *********************************************************************/
-$comp_temp = array();
-for ($i=0;$i<20;$i++) {
-    foreach ($components as $devid => $array) {
-        $comp_temp[$devid][] = $array;
-    }
-}
-$components = $comp_temp;
-$components = $component->getComponents(null, $options);
-//print_r($_POST);
-/*
-$POST = Array
-(
-    [current] => 1
-    [rowCount] => 10
-    [searchPhrase] => .99.
-    [id] => app_ntp
-    [view] => all
-    [graph] => stratum
-)
-*/
-/**********************************************************************
- *  End Temp Code
- *********************************************************************/
-
-$first = $_POST['current']-1;   // Which record to we start on.
-$last = $first + $_POST['rowCount'];
+$first = $_POST['current']-1;           // Which record do we start on.
+$last = $first + $_POST['rowCount'];    // Which record do we end on.
 $count = 0;
 // Loop through each device in the component array
 foreach ($components as $devid => $comp) {
@@ -97,20 +70,25 @@ foreach ($components as $devid => $comp) {
                     unset($graph_array);
                 }
 
-                // Do we want a graph.
-                if (is_array($graph_array)) {
-                    $return_data = true;
-                    require 'includes/print-minigraph.inc.php';
-                } else {
-                    $minigraph = "&nbsp;";
-                }
                 $response[] = array(
                     'device'    => $device_link,
                     'peer'      => $array['peer'],
                     'stratum'   => $array['stratum'],
-                    'graph'     => $minigraph,
                     'error'     => $array['error'],
                 );
+
+                // Do we want a graphrow.
+                if (is_array($graph_array)) {
+                    $return_data = true;
+                    require 'includes/print-graphrow.inc.php';
+                    unset($return_data);
+                    $response[] = array(
+                        'device'    => $graph_data[0],
+                        'peer'      => $graph_data[1],
+                        'stratum'   => $graph_data[2],
+                        'error'     => $graph_data[3],
+                    );
+                }
             } // End if in range
         } // End if display
     } // End foreach component

@@ -79,15 +79,13 @@ unset($sep);
 echo '</div>';
 print_optionbar_end();
 
-$graph_options['none'] = '&nbsp;';
 ?>
 <table id='ntp-table' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
-        <th data-column-id="device" data-formatter="link">Device</th>
+        <th data-column-id="device">Device</th>
         <th data-column-id="peer">Peer</th>
         <th data-column-id="stratum" data-type="numeric">Stratum</th>
-        <th data-column-id="graph" data-sortable="false" data-searchable="false"><?php echo $graph_options[$vars['graph']] ?></th>
         <th data-column-id="error">Error</th>
     </tr>
     </thead>
