@@ -12,6 +12,7 @@
  */
 
 if ($device['os'] == 'cimc') {
+    echo "CIMC device - running discovery\n";
 
     $module = 'Cisco-CIMC';
     echo $module.': ';
@@ -21,12 +22,14 @@ if ($device['os'] == 'cimc') {
 
     // We only care about our device id.
     $components = $components[$device['device_id']];
+    echo " Got Components\n";
 
     // Begin our master array, all other values will be processed into this array.
     $tblCIMC = array();
 
     // Let's gather some data..
     $tblUCSObjects = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.719.1', 2);
+    echo "Got SNMP Data\n";
 
     /*
      * False == no object found - this is not an error, there is no QOS configured
