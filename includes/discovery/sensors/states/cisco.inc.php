@@ -11,7 +11,6 @@
  */
 
 if ($device['os_group'] == 'cisco') {
-
     $tables = array(
         array('ciscoEnvMonVoltageStatusTable','.1.3.6.1.4.1.9.9.13.1.2.1.7.','ciscoEnvMonVoltageState','ciscoEnvMonVoltageStatusDescr', 'CISCO-ENVMON-MIB') ,
         array('ciscoEnvMonTemperatureStatusTable','.1.3.6.1.4.1.9.9.13.1.3.1.6.','ciscoEnvMonTemperatureState','ciscoEnvMonTemperatureStatusDescr', 'CISCO-ENVMON-MIB') ,
@@ -19,14 +18,18 @@ if ($device['os_group'] == 'cisco') {
         array('ciscoEnvMonSupplyStatusTable','.1.3.6.1.4.1.9.9.13.1.5.1.3.','ciscoEnvMonSupplyState','ciscoEnvMonSupplyStatusDescr', 'CISCO-ENVMON-MIB') ,
         array('cRFCfgRedundancyOperMode','.1.3.6.1.4.1.9.9.176.1.2.14.','cRFCfgRedundancyOperMode','VSS Mode', 'CISCO-RF-MIB') ,
         array('cRFStatusUnitState','.1.3.6.1.4.1.9.9.176.1.1.2.','cRFStatusUnitState','VSS Device State', 'CISCO-RF-MIB') ,
-        array('cRFStatusPeerUnitState','.1.3.6.1.4.1.9.9.176.1.1.4.','cRFStatusPeerUnitState','VSS Peer State', 'CISCO-RF-MIB') 
+        array('cRFStatusPeerUnitState','.1.3.6.1.4.1.9.9.176.1.1.4.','cRFStatusPeerUnitState','VSS Peer State', 'CISCO-RF-MIB')
     );
 
-    foreach($tables as $tablevalue){
+    foreach ($tables as $tablevalue) {
         $temp = snmpwalk_cache_multi_oid($device, $tablevalue[0], array(), $tablevalue[4]);
         $cur_oid = $tablevalue[1];
 
         if (is_array($temp)) {
+            if ($temp[0][$tablevalue[2]] == 'nonRedundant') {
+                break;
+            }
+
             //Create State Index
             $state_name = $tablevalue[2];
             $state_index_id = create_state_index($state_name);
@@ -51,8 +54,7 @@ if ($device['os_group'] == 'cisco') {
                         array($state_index_id,'active',0,14,0) ,
                         array($state_index_id,'activeExtraload',0,15,1) ,
                         array($state_index_id,'activeHandback',0,16,1)
-                );
-
+                    );
                 } elseif ($state_name == 'cRFCfgRedundancyOperMode') {
                     $states = array(
                         array($state_index_id,'nonRedundant',0,1,0) ,
@@ -75,7 +77,7 @@ if ($device['os_group'] == 'cisco') {
                     );
                 }
 
-                foreach($states as $value){ 
+                foreach ($states as $value) {
                     $insert = array(
                         'state_index_id' => $value[0],
                         'state_descr' => $value[1],
