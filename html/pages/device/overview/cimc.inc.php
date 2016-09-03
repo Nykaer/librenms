@@ -1,7 +1,6 @@
 <?php
 
-require_once '../includes/component.php';
-$component = new component();
+$component = new LibreNMS\Component();
 $components = $component->getComponents($device['device_id'],array('type'=>'Cisco-CIMC'));
 
 // We only care about our device id.
