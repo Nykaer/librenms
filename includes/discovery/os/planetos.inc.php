@@ -11,7 +11,7 @@
  */
  
 if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
+    if (str_contains($sysObjectId, '1.3.6.1.4.1.10456.1.1516')) {
+        $os = 'planetos';
     }
 }

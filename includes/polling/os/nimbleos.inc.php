@@ -10,8 +10,5 @@
  * the source code distribution for details.
  */
  
-if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
-    }
-}
+preg_match('/version (.*)/', $poll_device['sysDescr'], $data);
+$version = $data[1];

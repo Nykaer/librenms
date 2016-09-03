@@ -10,8 +10,6 @@
  * the source code distribution for details.
  */
  
-if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
-    }
-}
+$data = explode(" ", $poll_device['sysDescr']);
+$hardware = $data[0];
+$version = $data[9];

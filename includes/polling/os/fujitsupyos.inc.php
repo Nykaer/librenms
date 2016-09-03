@@ -9,9 +9,7 @@
  * option) any later version.  Please see LICENSE.txt at the top level of
  * the source code distribution for details.
  */
- 
-if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
-    }
-}
+
+$data = str_replace(array('Fujitsu ', ' Runtime Code '), '', explode(',', $poll_device['sysDescr']));
+$hardware = $data[0];
+$version = $data[1];

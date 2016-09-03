@@ -11,7 +11,7 @@
  */
  
 if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
+    if (stristr($sysDescr, 'Fujitsu PY CB Eth Switch')) {
+        $os = 'fujitsupyos';
     }
 }

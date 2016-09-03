@@ -11,7 +11,7 @@
  */
  
 if (!$os) {
-    if (stristr($sysDescr, 'Cisco Integrated Management Controller')) {
-        $os = 'cimc';
+    if (str_contains($sysDescr, 'Nimble Storage')) {
+        $os = 'nimbleos';
     }
 }

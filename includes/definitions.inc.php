@@ -307,6 +307,17 @@ $config['os'][$os]['over'][1]['text']  = 'Processor Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
+$os = 'nimbleos';
+$config['os'][$os]['text']             = 'Nimble OS';
+$config['os'][$os]['type']             = 'storage';
+$config['os'][$os]['icon']             = 'nimble';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'Processor Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
 // Other Unix-based OSes here please.
 $os = 'freebsd';
 $config['os'][$os]['type']  = 'server';
@@ -440,6 +451,7 @@ $config['os'][$os]['over'][1]['text']  = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 $config['os'][$os]['icon']             = 'cisco';
+$config['os'][$os]['bad_ifXEntry'][]   = 'cisco1941';
 
 $os = 'acsw';
 // $config['os'][$os]['group']            = "cisco";
@@ -756,6 +768,17 @@ $os = 'tpconductor';
 $config['os'][$os]['text']      = 'TelePresence Conductor';
 $config['os'][$os]['type']      = 'collaboration';
 $config['os'][$os]['icon']      = 'cisco';
+
+$os = 'cimc';
+$config['os'][$os]['text']             = 'Cisco Integrated Management Controller';
+$config['os'][$os]['type']             = 'server';
+$config['os'][$os]['icon']             = 'cisco';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
 // Brocade NOS
 $os = 'nos';
@@ -1603,6 +1626,15 @@ $config['os'][$os]['icon']             = 'ricoh';
 $config['os'][$os]['over'][0]['graph'] = 'device_toner';
 $config['os'][$os]['over'][0]['text']  = 'Toner';
 
+// lanier is a rebadged ricoh
+$os = 'lanier';
+$config['os'][$os]['group']            = 'printer';
+$config['os'][$os]['text']             = 'Lanier Printer';
+$config['os'][$os]['type']             = 'printer';
+$config['os'][$os]['icon']             = 'lanier';
+$config['os'][$os]['over'][0]['graph'] = 'device_toner';
+$config['os'][$os]['over'][0]['text']  = 'Toner';
+
 $os = 'nrg';
 $config['os'][$os]['group']            = 'printer';
 $config['os'][$os]['text']             = 'NRG Printer';
@@ -1633,13 +1665,6 @@ $config['os'][$os]['text']             = 'HP Print server';
 $config['os'][$os]['ifname']           = 1;
 $config['os'][$os]['type']             = 'printer';
 $config['os'][$os]['icon']             = 'hp';
-$config['os'][$os]['over'][0]['graph'] = 'device_toner';
-$config['os'][$os]['over'][0]['text']  = 'Toner';
-
-$os = 'richoh';
-$config['os'][$os]['group']            = 'printer';
-$config['os'][$os]['text']             = 'Ricoh Printer';
-$config['os'][$os]['type']             = 'printer';
 $config['os'][$os]['over'][0]['graph'] = 'device_toner';
 $config['os'][$os]['over'][0]['text']  = 'Toner';
 
@@ -2129,6 +2154,29 @@ $config['os'][$os]['text']             = 'Sonus SBC';
 $config['os'][$os]['type']             = 'appliance';
 $config['os'][$os]['icon']             = 'sonus';
 
+// Fujitsu Primergy Switch
+$os = 'fujitsupyos';
+$config['os'][$os]['text']             = 'Fujitsu';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'fujitsu';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
+// PLANET Networking & Communication Switch
+$os = 'planetos';
+$config['os'][$os]['text']             = 'PLANET';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'planet';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
 // Graph Types
 require_once $config['install_dir'].'/includes/load_db_graph_types.inc.php';
