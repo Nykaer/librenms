@@ -18,17 +18,19 @@ $rrd_options .= ' -l 0 -E ';
 $rrd_filename = rrd_name($device['hostname'], array('sla', $sla['sla_nr'], 'icmpjitter'));
 
 if (file_exists($rrd_filename)) {
-    $rrd_options .= " COMMENT:'                            Cur   Min  Max\\n'";
+    $rrd_options .= " COMMENT:'                          Cur    Min    Max    Avg\\n'";
 
     $rrd_options .= " DEF:SD=" . $rrd_filename . ":JitterIAJOut:AVERAGE ";
-    $rrd_options .= " LINE1.25:SD#0000ee:'Responder              ' ";
-    $rrd_options .= " GPRINT:SD:LAST:%3.0lf ";
-    $rrd_options .= " GPRINT:SD:MIN:%3.0lf ";
-    $rrd_options .= " GPRINT:SD:MAX:%3.0lf\\\l ";
+    $rrd_options .= " LINE1.25:SD#0000ee:'Responder (ms)     ' ";
+    $rrd_options .= " GPRINT:SD:LAST:'%5.2lf' ";
+    $rrd_options .= " GPRINT:SD:MIN:'%5.2lf' ";
+    $rrd_options .= " GPRINT:SD:MAX:'%5.2lf' ";
+    $rrd_options .= " GPRINT:SD:AVERAGE:'%5.2lf'\\\l ";
 
     $rrd_options .= " DEF:DS=" . $rrd_filename . ":JitterIAJIn:AVERAGE ";
-    $rrd_options .= " LINE1.25:DS#008C00:'Source              ' ";
-    $rrd_options .= " GPRINT:DS:LAST:%3.0lf ";
-    $rrd_options .= " GPRINT:DS:MIN:%3.0lf ";
-    $rrd_options .= " GPRINT:DS:MAX:%3.0lf\\\l ";
+    $rrd_options .= " LINE1.25:DS#008C00:'Source (ms)        ' ";
+    $rrd_options .= " GPRINT:DS:LAST:'%5.2lf' ";
+    $rrd_options .= " GPRINT:DS:MIN:'%5.2lf' ";
+    $rrd_options .= " GPRINT:DS:MAX:'%5.2lf' ";
+    $rrd_options .= " GPRINT:DS:AVERAGE:'%5.2lf'\\\l ";
 }
