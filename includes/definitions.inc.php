@@ -594,18 +594,6 @@ $config['os'][$os]['over'][4]['graph'] = 'device_ciscowlc_numclients';
 $config['os'][$os]['over'][4]['text']  = 'Number of Clients';
 $config['os'][$os]['icon']             = 'cisco';
 
-$os = "cimc";
-$config['os'][$os]['text']              = "Cisco Integrated Management Controller";
-$config['os'][$os]['group']             = "cisco";
-$config['os'][$os]['type']              = "server";
-$config['os'][$os]['icon']              = "cisco";
-$config['os'][$os]['over'][0]['graph'] = 'device_temperature';
-$config['os'][$os]['over'][0]['text']  = 'Temperature';
-$config['os'][$os]['over'][1]['graph'] = 'device_voltage';
-$config['os'][$os]['over'][1]['text']  = 'Power Voltage';
-$config['os'][$os]['over'][2]['graph'] = 'device_current';
-$config['os'][$os]['over'][2]['text']  = 'Power Current';
-
 $os = 'vcs';
 $config['os'][$os]['text']      = 'Video Communication Server';
 $config['os'][$os]['type']      = 'collaboration';
@@ -617,7 +605,7 @@ $config['os'][$os]['text']             = 'Acano OS';
 $config['os'][$os]['type']             = 'collaboration';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Device Traffic';
-$config['os'][$os]['over'][1]['graph'] = 'device_processor';
+$config['osu'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text']  = 'CPU Usage';
 $config['os'][$os]['icon']             = 'cisco';
 
@@ -683,12 +671,13 @@ $os = 'cimc';
 $config['os'][$os]['text']             = 'Cisco Integrated Management Controller';
 $config['os'][$os]['type']             = 'server';
 $config['os'][$os]['icon']             = 'cisco';
-$config['os'][$os]['over'][0]['graph'] = 'device_bits';
-$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
-$config['os'][$os]['over'][1]['graph'] = 'device_processor';
-$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
-$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
-$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+$config['os'][$os]['group']            = "cisco";
+$config['os'][$os]['over'][0]['graph'] = 'device_temperature';
+$config['os'][$os]['over'][0]['text']  = 'Temperature';
+$config['os'][$os]['over'][1]['graph'] = 'device_voltage';
+$config['os'][$os]['over'][1]['text']  = 'Power Voltage';
+$config['os'][$os]['over'][2]['graph'] = 'device_current';
+$config['os'][$os]['over'][2]['text']  = 'Power Current';
 
 // Brocade NOS
 $os = 'nos';
