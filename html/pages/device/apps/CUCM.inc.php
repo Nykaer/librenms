@@ -1,8 +1,6 @@
 <?php
 
-require_once "../includes/component.php";
-
-$COMPONENT = new component();
+$COMPONENT = new LibreNMS\Component();
 $CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
 $CUCM_ELCAC = $CUCM_ELCAC[$device['device_id']];
 $CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));

@@ -12,8 +12,7 @@
  */
 
 if ($device['os_group'] == "ucos") {
-    require_once 'includes/component.php';
-    $COMPONENT = new component();
+    $COMPONENT = new LibreNMS\Component();
 
     /*
      * UCOS Services
