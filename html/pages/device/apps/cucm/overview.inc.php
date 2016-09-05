@@ -1,7 +1,6 @@
 <?php
 
-require_once '../includes/component.php';
-$COMPONENT = new component();
+$COMPONENT = new LibreNMS\Component();
 $options = array();
 $options['type'] = 'CUCM-BASIC';
 $options['filter']['ignore'] = array('=',0);

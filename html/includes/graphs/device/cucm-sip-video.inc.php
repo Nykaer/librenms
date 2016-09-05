@@ -11,8 +11,7 @@
  * the source code distribution for details.
  */
 
-require_once "../includes/component.php";
-$COMPONENT = new component();
+$COMPONENT = new LibreNMS\Component();
 $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
 
 // We only care about our device id.
