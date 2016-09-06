@@ -20,10 +20,40 @@ if ($device['os'] == 'junos' || $device['os_group'] == 'junos') {
                 $descr = str_replace('sensor', '', $descr);
                 $descr = trim($descr);
 
-                discover_sensor($valid['sensor'], 'temperature', $device,
-                    $temperature_oid, $oid, 'junos',
-                    $descr, '1', '1', null, null, null, null, $temperature);
+                discover_sensor(
+                    $valid['sensor'],
+                    'temperature',
+                    $device,
+                    $temperature_oid,
+                    $oid,
+                    'junos',
+                    $descr,
+                    '1',
+                    '1',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $temperature
+                );
             }
+        }
+    }
+
+    $multiplier = 1;
+    $divisor    = 1;
+    foreach ($junos_oids as $index => $entry) {
+        if (is_numeric($entry['jnxDomCurrentModuleTemperature'])) {
+            $oid = '.1.3.6.1.4.1.2636.3.60.1.1.1.1.8.'.$index;
+            $descr = dbFetchCell('SELECT `ifDescr` FROM `ports` WHERE `ifIndex`= ? AND `device_id` = ?', array($index, $device['device_id'])) . ' Temperature';
+            $limit_low = $entry['jnxDomCurrentModuleTemperatureLowAlarmThreshold']/$divisor;
+            $warn_limit_low = $entry['jnxDomCurrentModuleTemperatureLowWarningThreshold']/$divisor;
+            $limit = $entry['jnxDomCurrentModuleTemperatureHighAlarmThreshold']/$divisor;
+            $warn_limit = $entry['jnxDomCurrentModuleTemperatureHighWarningThreshold']/$divisor;
+            $current = $entry['jnxDomCurrentModuleTemperature'];
+            $entPhysicalIndex = $index;
+            $entPhysicalIndex_measured = 'ports';
+            discover_sensor($valid['sensor'], 'temperature', $device, $oid, 'rx-'.$index, 'junos', $descr, $divisor, $multiplier, $limit_low, $warn_limit_low, $warn_limit, $limit, $current, 'snmp', $entPhysicalIndex, $entPhysicalIndex_measured);
         }
     }
 }

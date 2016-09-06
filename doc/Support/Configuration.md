@@ -1,3 +1,4 @@
+source: Support/Configuration.md
 The options shown below also contain the default values.
 
 If you would like to alter any of these then please add your config option to `config.php`.
@@ -104,11 +105,9 @@ Settings to enable memcached - currently it's not recommended to run memcached u
 
 ```php
 $config['rrdcached']    = "unix:/var/run/rrdcached.sock"; // or a tcp connection 127.0.0.1:42217
-$config['rrdcached_dir'] = FALSE;
 ```
-To enable rrdcached you need to set at least the `rrdcached` option. If `rrdcached` is a tcp socket then you need to configure `rrdcached_dir` as well.
-This should be set based on your base directory for running rrdcached. For instance if -b for rrdcached is set to /var/lib/rrd but you are expecting
-LibreNMS to store them in /var/lib/rrd/librenms then you would need to set `rrdcached_dir` to librenms.
+To enable rrdcached you need to set at least the `rrdcached` option. Make sure rrdcached is started with the `-b` option set to the correct directoy, 
+as configured in `$config['rrd_dir`]`.
 
 #### WebUI Settings
 
@@ -145,6 +144,16 @@ A number of home pages are provided within the install and can be found in html/
 setting `front_page`. The other options are used to alter the look of those pages that support it (default.php supports these options).
 
 ```php
+// This option exists in the web UI, edit it under Global Settings -> webui
+$config['webui']['default_dashboard_id'] = 0;
+```
+Allows the specification of a global default dashboard page for any user who
+has not set one in their user preferences.  Should be set to dashboard_id of an
+existing dashboard that is shared or shared(read).  Otherwise, the system will
+automatically create each user an empty dashboard called `Default` on their
+first login.
+
+```php
 $config['login_message']    = "Unauthorised access or use shall render the user liable to criminal and/or civil prosecution.";
 ```
 This is the default message on the login page displayed to users.
@@ -161,10 +170,10 @@ $config['show_services']           = 0;  # Enable Services on menu
 $config['int_customers']           = 1;  # Enable Customer Port Parsing
 $config['summary_errors']          = 0;  # Show Errored ports in summary boxes on the dashboard
 $config['customers_descr']         = 'cust'; // The description to look for in ifDescr. Can be an array as well array('cust','cid');
-$config['transit_descr']           = ""; // Add custom transit descriptions (can be an array)
-$config['peering_descr']           = ""; // Add custom peering descriptions (can be an array)
-$config['core_descr']              = ""; // Add custom core descriptions (can be an array)
-$config['custom_descr']            = ""; // Add custom interface descriptions (can be an array)
+$config['transit_descr']           = 'transit'; // Add custom transit descriptions (can be an array)
+$config['peering_descr']           = 'peering'; // Add custom peering descriptions (can be an array)
+$config['core_descr']              = 'core'; // Add custom core descriptions (can be an array)
+$config['custom_descr']            = ''; // Add custom interface descriptions (can be an array)
 $config['int_transit']             = 1;  # Enable Transit Types
 $config['int_peering']             = 1;  # Enable Peering Types
 $config['int_core']                = 1;  # Enable Core Port Types
@@ -193,6 +202,11 @@ $config['overview_show_sysDescr'] = TRUE;
 Enable or disable the sysDescr output for a device.
 
 ```php
+$config['force_ip_to_sysname'] = false;
+```
+When using IP addresses as a hostname you can instead represent the devices on the WebUI by its SNMP sysName resulting in an easier to read overview of your network. This would apply on networks where you don't have DNS records for most of your devices.
+
+```php
 $config['device_traffic_iftype'][] = '/loopback/';
 ```
 Interface types that aren't graphed in the WebUI. The default array contains more items, please see includes/defaults.inc.php for the full list.
@@ -210,7 +224,7 @@ Disable the footer of the WebUI by setting `enable_footer` to 0.
 You can enable the old style network map (only available for individual devices with links discovered via xDP) by setting:
 ```php
 $config['gui']['network-map']['style'] = 'old';
-````
+```
 
 #### Add host settings
 The following setting controls how hosts are added.  If a host is added as an ip address it is checked to ensure the ip is not already present.  If the ip is present the host is not added.
@@ -218,6 +232,12 @@ If host is added by hostname this check is not performed.  If the setting is tru
 ```php
 $config['addhost_alwayscheckip']   = FALSE; #TRUE - check for duplicate ips even when adding host by name.
                                             #FALSE- only check when adding host by ip.
+```
+
+By default we allow hosts to be added with duplicate sysName's, you can disable this with the following config:
+
+```php
+$config['allow_duplicate_sysName'] = false;
 ```
 
 #### SNMP Settings
@@ -308,7 +328,6 @@ $config['enable_syslog']                = 0; # Enable Syslog
 $config['enable_inventory']             = 1; # Enable Inventory
 $config['enable_pseudowires']           = 1; # Enable Pseudowires
 $config['enable_vrfs']                  = 1; # Enable VRFs
-$config['enable_printers']              = 0; # Enable Printer support
 $config['enable_sla']                   = 0; # Enable Cisco SLA collection and display
 ```
 
@@ -400,6 +419,8 @@ by continuing the array.
 `bad_if` is matched against the ifDescr value.
 `bad_iftype` is matched against the ifType value.
 `bad_if_regexp` is matched against the ifDescr value as a regular expression.
+`bad_ifname_regexp` is matched against the ifName value as a regular expression.
+`bad_ifalias_regexp` is matched against the ifAlias value as a regular expression.
 
 #### Interfaces to be rewritten
 
@@ -488,9 +509,13 @@ $config['eventlog_purge']                                 = 30;
 $config['authlog_purge']                                  = 30;
 $config['perf_times_purge']                               = 30;
 $config['device_perf_purge']                              = 30;
+$config['rrd_purge']                                      = 90;// Not set by default
 ```
-This option will ensure data within LibreNMS over 1 month old is automatically purged. You can alter these individually,
+These options will ensure data within LibreNMS over X days old is automatically purged. You can alter these individually,
 values are in days.
+
+> NOTE: Please be aware that `$config['rrd_purge']` is _NOT_ set by default. This option will remove any old data within 
+the rrd directory automatically - only enable this if you are comfortable with that happening.
 
 #### Syslog options
 

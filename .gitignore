@@ -5,10 +5,13 @@
 !/.editorconfig
 !/.scrutinizer.yml
 !/.travis.yml
+!/.php_cs
+!/.github/
 
 # Others #
 ##########
 *.swp
+/composer.lock
 Thumbs.db
 config.php
 html/plugins/*
@@ -18,4 +21,5 @@ logs
 nbproject
 patches
 rrd
-
+/vendor
+composer.phar

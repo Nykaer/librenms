@@ -6,6 +6,7 @@ LibreNMS core team:
 - Daniel Preussker <f0o@librenms.org> (f0o)
 - Søren Friis Rosiak <sorenrosiak@gmail.com> (rosiak)
 - Mike Rostermund <mike@kollegienet.dk> (SaaldjorMike)
+- Tony Murray <tonym@librenms.org> (murrant)
 
 LibreNMS contributors:
 - Bohdan Sanders <git@bohdans.com> (bohdan-s)
@@ -26,7 +27,7 @@ LibreNMS contributors:
 - Mohammad Al-Shami <mohammad@al-shami.net> (mohshami)
 - Rudy Hardeman <zarya@gigafreak.net> (zarya)
 - Freddie Cash <fjwcash@gmail.com> (fjwcash)
-- Thom Seddon <thom@seddonmedia.co.uk> (thomseddon) 
+- Thom Seddon <thom@seddonmedia.co.uk> (thomseddon)
 - Vitali Kari <vitali.kari@gmail.com> (vitalisator)
 - James Campbell <neokjames@gmail.com> (neokjames)
 - Steve Calvário <calvario.steve@gmail.com> (Calvario)
@@ -67,7 +68,6 @@ LibreNMS contributors:
 - Robert Gornall <roblnm@khobbits.co.uk> (KHobbits)
 - Rob Gormley <robert@gormley.me> (rgormley)
 - Richard Kojedzinszky <krichy@nmdps.net> (rkojedzinszky)
-- Tony Murray <murraytony@gmail.com> (murrant)
 - Peter Lamperud <peter.lamperud@gmail.com> (vizay)
 - Louis Bailleul <louis.bailleul@gmail.com> (alucardfh)
 - Rick Hodger <rick@fuzzi.org.uk> (Tatermen)
@@ -92,11 +92,43 @@ LibreNMS contributors:
 - Marco Di Cerbo <marco@dottoremoe.com> (marcodc)
 - David Bell <me@geordish.org> (geordish)
 - Ibrahim Tachijian <barhom@netsat.se> (barhom)
+- Guillaume Coeugnet <aliasprotect-git@yahoo.fr> (gcoeugnet)
+- Jared Newell <jared.newell@gmail.com> (Jaredn)
+- Karsten Nerdinger <karsten-git-librenms@nerdinger.net> (piratonym)
+- Michael Nguyen <mnguyen1289@gmail.com> (mnguyen1289)
+- Casey Schoonover <casey.schoonover@llcc.edu> (cschoonover91)
+- Chris A. Evans <thecityofguanyu@outlook.com> (thecityofguanyu)
+- Rainer Schüler <github@layer3.de> (rschueler)
+- Jussi Sorjonen <mieleton@mieleton.net> (mieleton)
+- Jens Langhammer <jens@beryju.org> (BeryJu)
+- Robert Verspuy <robert@exa.nl> (exarv)
+- Peter Tkatchenko <peter@flytrace.com> (Peter2121)
+- Marc Runkel <marc@runkel.org> (mrunkel)
+- Josh Driver <keeperofdakeys@gmail.com> (keeperofdakeys)
+- Felix Eckhofer <felix@eckhofer.com> (tribut)
+- Vikram Adukia <adukia@dropbox.com> (justmedude)
+- Tijmen de Mes <tijmen@ag-projects.com> (tijmenNL)
+- Benjamin Busche <benjamin.busche@gmail.com> (optic00)
+- Brandon Boudrias <bt.boudrias@gmail.com> (brandune)
+- Andy Noyland <andrew@noyland.co.uk> (Zappatron)
+- Cercel Valentin <crc@nuamchefazi.ro> (crcro)
+- Ahmed Sajid <ahmed4343@hotmail.com> (ahmedsajid)
+- Karsten Schmidt <git@guggemand.dk> (guggemand)
+- Maxence POULAIN <maxence.poulain@eriador.info> (Linutux42)
+- Florian Beer <fb@42dev.eu> (florianbeer)
+- Vladislav Solovei <vladsol2009@gmail.com> (vladsol)
+- Daniel van Dorp <daniel@vandorp.biz> (djvdorp)
+- Phil Regnauld <regnauld@x0.dk> (reegnauld)
+- Russell Morris <github@rkmorris.us> (arrmo)
+- Bennett Blodinger <bennett.blodinger@gmail.com> (benwa)
+- Michael Hansen <nerdalertdk@gmail.com> (nerdalertdk)
+- Daniel Cox <danielcoxman@gmail.com> (ospfbgp) 
+- Joseph Cunningham <joey.was@gmail.com> (joeywas)
+- Michael Van Delft <librenms@xo.tc> (HybridAU)
+- Piotr Jurga <deutor1361@gmail.com> (deutor)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
 - Adam Armstrong
 - Tom Laermans
 - various others as indicated in the file contents and commit logs
-
- 

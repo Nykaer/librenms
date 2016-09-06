@@ -18,17 +18,18 @@
       </tr>
 <?php
 
-foreach ($config['poller_modules'] as $module => $module_status) {
+$poller_modules = $config['poller_modules'];
+ksort($poller_modules);
+foreach ($poller_modules as $module => $module_status) {
     echo('
       <tr>
         <td><strong>'.$module.'</strong></td>
         <td>
         ');
 
-    if($module_status == 1) {
+    if ($module_status == 1) {
         echo('<span class="text-success">Enabled</span>');
-    }
-    else {
+    } else {
         echo('<span class="text-danger">Disabled</span>');
     }
 
@@ -41,18 +42,15 @@ foreach ($config['poller_modules'] as $module => $module_status) {
         if ($attribs['poll_'.$module]) {
             echo('<span id="poller-module-'.$module.'" class="text-success">Enabled</span>');
             $module_checked = 'checked';
-        }
-        else {
+        } else {
             echo('<span id="poller-module-'.$module.'"class="text-danger">Disabled</span>');
             $module_checked = '';
         }
-    }
-    else {
-        if($module_status == 1) {
+    } else {
+        if ($module_status == 1) {
             echo('<span id="poller-module-'.$module.'"class="text-success">Enabled</span>');
             $module_checked = 'checked';
-        }
-        else {
+        } else {
             echo('<span id="poller-module-'.$module.'"class="text-danger">Disabled</span>');
             $module_checked = '';
         }
@@ -86,7 +84,9 @@ foreach ($config['poller_modules'] as $module => $module_status) {
 
 <?php
 
-foreach ($config['discovery_modules'] as $module => $module_status) {
+$discovery_modules = $config['discovery_modules'];
+ksort($discovery_modules);
+foreach ($discovery_modules as $module => $module_status) {
     echo('
       <tr>
         <td>
@@ -95,10 +95,9 @@ foreach ($config['discovery_modules'] as $module => $module_status) {
         <td>
         ');
 
-    if($module_status == 1) {
+    if ($module_status == 1) {
         echo('<span class="text-success">Enabled</span>');
-    }
-    else {
+    } else {
         echo('<span class="text-danger">Disabled</span>');
     }
 
@@ -107,21 +106,18 @@ foreach ($config['discovery_modules'] as $module => $module_status) {
         <td>');
 
     if (isset($attribs['discover_'.$module])) {
-        if($attribs['discover_'.$module]) {
+        if ($attribs['discover_'.$module]) {
             echo('<span id="discovery-module-'.$module.'" class="text-success">Enabled</span>');
             $module_checked = 'checked';
-        }
-        else {
+        } else {
             echo('<span id="discovery-module-'.$module.'" class="text-danger">Disabled</span>');
             $module_checked = '';
         }
-    }
-    else {
-        if($module_status == 1) {
+    } else {
+        if ($module_status == 1) {
             echo('<span id="discovery-module-'.$module.'" class="text-success">Enabled</span>');
             $module_checked = 'checked';
-        }
-        else {
+        } else {
             echo('<span id="discovery-module-'.$module.'" class="text-danger">Disabled</span>');
             $module_checked = '';
         }
@@ -136,7 +132,6 @@ foreach ($config['discovery_modules'] as $module => $module_status) {
     echo('
         </td>
       </tr>');
-
 }
 echo('
     </table>

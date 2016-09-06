@@ -1,7 +1,5 @@
 <?php
 
-echo "VLANs:\n";
-
 // Pre-cache the existing state of VLANs for this device from the database
 $vlans_db_raw = dbFetchRows('SELECT * FROM `vlans` WHERE `device_id` = ?', array($device['device_id']));
 foreach ($vlans_db_raw as $vlan_db) {
@@ -57,8 +55,7 @@ foreach ($device['vlans'] as $domain_id => $vlans) {
                 if ($from_db['port_vlan_id']) {
                     dbUpdate($db_a, 'ports_vlans', '`port_vlan_id` = ?', array($from_db['port_vlan_id']));
                     echo 'Updated';
-                }
-                else {
+                } else {
                     dbInsert(array_merge($db_w, $db_a), 'ports_vlans');
                     echo 'Inserted';
                 }

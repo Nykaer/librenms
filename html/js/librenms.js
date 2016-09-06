@@ -224,6 +224,29 @@ $(document).on("click", '.collapse-neighbors', function(event)
     continued.toggle();
 });
 
+//availability-map mode change
+$(document).on("change", '#mode', function() {
+    $.post('ajax_mapview.php',
+        {
+            map_view: $(this).val()
+        },
+        function(data) {
+                location.reload();
+        },'json'
+    );
+});
+
+//availability-map device group
+$(document).on("change", '#group', function() {
+    $.post('ajax_mapview.php',
+        {
+            group_view: $(this).val()
+        },
+        function(data){
+            location.reload();
+        },'json'
+    );
+});
 
 $(document).ready(function() {
     var lines = 'on';

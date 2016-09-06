@@ -44,13 +44,27 @@
                 event.preventDefault();
                 $('.ignore-check').prop('checked', true);
             });
-            $('#alert-select').click(function (event) {
-                // select ignore buttons for all ports which are down
+            $('#warning-select').click(function (event) {
+                // select ignore button for all components that are in a warning state.
                 event.preventDefault();
                 $('[name^="status_"]').each(function () {
                     var name = $(this).attr('name');
                     var text = $(this).text();
-                    if (name && text == 'Alert') {
+                    if (name && text == 'Warning') {
+                        // get the component number from the object name
+                        var id = name.split('_')[1];
+                        // find its corresponding checkbox and toggle it
+                        $('input[name="ign_' + id + '"]').trigger('click');
+                    }
+                });
+            });
+            $('#critical-select').click(function (event) {
+                // select ignore button for all components that are in a critical state.
+                event.preventDefault();
+                $('[name^="status_"]').each(function () {
+                    var name = $(this).attr('name');
+                    var text = $(this).text();
+                    if (name && text == 'Critical') {
                         // get the component number from the object name
                         var id = name.split('_')[1];
                         // find its corresponding checkbox and toggle it
@@ -67,7 +81,7 @@
                 event.preventDefault();
                 $.ajax({
                     type: "POST",
-                    url: "/ajax_form.php",
+                    url: "ajax_form.php",
                     data: $('form#components').serialize(),
                     dataType: "json",
                     success: function(data){
@@ -97,6 +111,6 @@
                 device_id: "<?php echo $device['device_id']; ?>"
             };
         },
-        url: "/ajax_table.php"
+        url: "ajax_table.php"
     });
 </script>

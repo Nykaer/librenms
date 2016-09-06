@@ -45,8 +45,7 @@ if ($device['os'] == 'apc') {
                 // No / $precision here! Nice, APC!
                 if (count(explode("\n", $oids)) != 1) {
                     $descr = "Phase $phase";
-                }
-                else {
+                } else {
                     $descr = 'Output';
                 }
 
@@ -58,7 +57,10 @@ if ($device['os'] == 'apc') {
     unset($oids);
 
     // v2 firmware- first bank is total, v3 firmware, 3rd bank is total
-    $oids = snmp_walk($device, 'rPDULoadStatusIndex', '-OsqnU', 'PowerNet-MIB');
+    $bank_count = snmp_get($device, 'rPDULoadDevNumBanks.0', '-Oqv', 'PowerNet-MIB');
+    if ($bank_count > 0) {
+        $oids = snmp_walk($device, 'rPDULoadStatusIndex', '-OsqnU', 'PowerNet-MIB');
+    }
     // should work with firmware v2 and v3
     if ($oids) {
         echo 'APC PowerNet-MIB Banks ';
@@ -225,8 +227,7 @@ if ($device['os'] == 'apc') {
         if (empty($oids)) {
             $oids        = snmp_get($device, $item['AdvOid'].'.'.$item['index'], '-OsqnU', $item['mib']);
             $current_oid = $item['AdvOid'];
-        }
-        else {
+        } else {
             $current_oid = $item['HighPrecOid'];
         }
 
@@ -240,8 +241,7 @@ if ($device['os'] == 'apc') {
 
             if (stristr($current_oid, 'HighPrec')) {
                 $current = ($oids / $item['divisor']);
-            }
-            else {
+            } else {
                 $current         = $oids;
                 $item['divisor'] = 1;
             }

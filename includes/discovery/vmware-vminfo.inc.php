@@ -16,8 +16,6 @@ if (($device['os'] == 'vmware') || ($device['os'] == 'linux')) {
      * CONSOLE: Start the VMware discovery process.
      */
 
-    echo 'VMware VM: ';
-
     /*
      * Fetch information about Virtual Machines.
      */
@@ -47,8 +45,7 @@ if (($device['os'] == 'vmware') || ($device['os'] == 'linux')) {
             log_event(mres($vmwVmDisplayName)." ($vmwVmMemSize GB / $vmwVmCpus vCPU) Discovered", $device, 'system', $vmid);
             echo '+';
             // FIXME eventlog
-        }
-        else {
+        } else {
             echo '.';
         }
 

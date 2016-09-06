@@ -1,6 +1,6 @@
 <?php
 
-if ($device['os'] == 'linux' || $device['os'] == 'pktj') {
+if ($device['os'] == 'linux' || $device['os'] == 'pktj' || $device['os'] == 'cumulus') {
     $oids = snmp_walk($device, 'lmTempSensorsDevice', '-Osqn', 'LM-SENSORS-MIB');
     d_echo($oids."\n");
 
@@ -21,9 +21,22 @@ if ($device['os'] == 'linux' || $device['os'] == 'pktj') {
             $descr            = str_ireplace('temp-', '', $descr);
             $descr            = trim($descr);
             if ($temperature != '0' && $temperature <= '1000') {
-                discover_sensor($valid['sensor'], 'temperature', $device,
-                    $temperature_oid, $temperature_id, 'lmsensors',
-                    $descr, '1000', '1', null, null, null, null, $temperature);
+                discover_sensor(
+                    $valid['sensor'],
+                    'temperature',
+                    $device,
+                    $temperature_oid,
+                    $temperature_id,
+                    'lmsensors',
+                    $descr,
+                    '1000',
+                    '1',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $temperature
+                );
             }
         }
     }

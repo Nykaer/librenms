@@ -13,13 +13,12 @@
 
 $module = 'LDAP_UsersPerOU';
 
-require_once "../includes/component.php";
-$component = new component();
+$component = new LibreNMS\Component();
 $options = array();
 $options['filter']['type'] = array('=',$module);
 $options['filter']['disabled'] = array('=',0);
 $options['filter']['ignore'] = array('=',0);
-$components = $component->getComponents($device['device_id'],$options);
+$components = $component->getComponents($device['device_id'], $options);
 
 // We only care about our device id.
 $components = $components[$device['device_id']];
@@ -35,15 +34,14 @@ foreach ($components as $id => $array) {
 
     if (file_exists($rrd_filename)) {
         // Grab a color from the array.
-        if ( isset($config['graph_colours']['mixed'][$count]) ) {
+        if (isset($config['graph_colours']['mixed'][$count])) {
             $color = $config['graph_colours']['mixed'][$count];
-        }
-        else {
+        } else {
             $color = $config['graph_colours']['oranges'][$count-7];
         }
 
         $rrd_additions .= " DEF:DS" . $count . "=" . $rrd_filename . ":users:AVERAGE ";
-        $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['dn'],0,15),15) . "' ";
+        $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['dn'], 0, 15), 15) . "' ";
         $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%6.0lf%s ";
         $rrd_additions .= " GPRINT:DS" . $count . ":MIN:%6.0lf%s ";
         $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%6.0lf%s\\\l ";
@@ -53,7 +51,6 @@ foreach ($components as $id => $array) {
 
 if ($rrd_additions == "") {
     // We didn't add any data points.
-}
-else {
+} else {
     $rrd_options .= $rrd_additions;
 }

@@ -1,10 +1,8 @@
 <?php
 
-echo 'IPv6 Addresses : ';
-if( key_exists('vrf_lite_cisco', $device) && (count($device['vrf_lite_cisco'])!=0) ){
+if (key_exists('vrf_lite_cisco', $device) && (count($device['vrf_lite_cisco'])!=0)) {
     $vrfs_lite_cisco = $device['vrf_lite_cisco'];
-} 
-else {
+} else {
     $vrfs_lite_cisco = array(array('context_name'=>null));
 }
 foreach ($vrfs_lite_cisco as $vrf) {
@@ -34,8 +32,7 @@ foreach ($vrfs_lite_cisco as $vrf) {
                 if ($do == 2) {
                     $adsep = ':';
                     $do    = '0';
-                }
-                else {
+                } else {
                     $adsep = '';
                 }
             }

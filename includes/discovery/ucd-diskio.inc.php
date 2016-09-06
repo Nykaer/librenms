@@ -1,6 +1,5 @@
 <?php
 
-echo 'UCD Disk IO : ';
 $diskio_array = snmpwalk_cache_oid($device, 'diskIOEntry', array(), 'UCD-DISKIO-MIB', '+'.$config['install_dir'].'/mibs/');
 $valid_diskio = array();
 if (is_array($diskio_array)) {
@@ -12,8 +11,7 @@ if (is_array($diskio_array)) {
                 $inserted = dbInsert(array('device_id' => $device['device_id'], 'diskio_index' => $index, 'diskio_descr' => $entry['diskIODevice']), 'ucd_diskio');
                 echo '+';
                 d_echo($sql." - $inserted inserted ");
-            }
-            else {
+            } else {
                   echo '.';
                   // FIXME Need update code here!
             }

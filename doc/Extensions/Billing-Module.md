@@ -1,4 +1,9 @@
+source: Extensions/Billing-Module.md
 # Billing Module
+
+With the billing module you can create a bill, assign a quota to it and add ports to it.  
+It then tracks the ports usage and shows you the usage in the bill, including any overage.  
+Accounting by both total transferred data and 95th percentile is supported.
 
 To enable and use the billing module you need to perform the following steps:
 

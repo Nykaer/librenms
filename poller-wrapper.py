@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 """
  poller-wrapper A small tool which wraps around the poller and tries to
                 guide the polling process with a more modern approach with a
@@ -146,7 +146,7 @@ if ('distributed_poller' in config and
         memc = memcache.Client([config['distributed_poller_memcached_host'] + ':' +
             str(config['distributed_poller_memcached_port'])])
         if str(memc.get("poller.master")) == config['distributed_poller_name']:
-            print "This sytem is already joined as the poller master."
+            print "This system is already joined as the poller master."
             sys.exit(2)
         if memc_alive():
             if memc.get("poller.master") is None:

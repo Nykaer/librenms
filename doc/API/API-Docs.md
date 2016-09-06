@@ -1,3 +1,4 @@
+source: API/API-Docs.md
 - API
 <a name="top"></a>
 - [`Structure`](#api-structure)
@@ -13,7 +14,11 @@
         - [`get_graphs`](#api-route-5)
         - [`get_graph_generic_by_hostname`](#api-route-6)
         - [`get_port_graphs`](#api-route-7)
+        - [`get_port_stack`](#api-route-29)
         - [`get_components`](#api-route-25)
+        - [`add_components`](#api-route-26)
+        - [`edit_components`](#api-route-27)
+        - [`delete_components`](#api-route-28)
         - [`get_port_stats_by_port_hostname`](#api-route-8)
         - [`get_graph_by_port_hostname`](#api-route-9)
         - [`list_devices`](#api-route-10)
@@ -26,6 +31,7 @@
         - [`get_devices_by_group`](#api-route-get_devices_by_group)
     - [`routing`](#api-routing)
         - [`list_bgp`](#api-route-1)
+        - [`list_ipsec`](#list_ipsec)
     - [`switching`](#api-switching)
         - [`get_vlans`](#api-route-4)
     - [`alerts`](#api-alerts)
@@ -44,6 +50,12 @@
     - [`bills`](#api-bills)
         - [`list_bills`](#api-route-22)
         - [`get_bill`](#api-route-23)
+    - [`resources`](#api-resources)
+        - [`list_arp`](#api-resources-list_arp)
+    - [`services`](#api-services)
+        - [`list_services`](#api-services-list_services)
+        - [`get_service_for_host`](#api-services-get_service_for_host)
+
 Describes the API structure.
 
 # <a name="api-structure">`Structure`</a> [`top`](#top)
@@ -272,6 +284,47 @@ Output:
 }
 ```
 
+### <a name="api-route-29">Function: `get_port_stack`</a> [`top`](#top)
+
+Get a list of port mappings for a device.  This is useful for showing physical ports that are in a virtual port-channel.
+
+Route: /api/v0/devices/:hostname/port_stack
+
+- hostname can be either the device hostname or id
+
+Input:
+
+ - valid_mappings: Filter the result by only showing valid mappings ("0" values not shown).
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/port_stack?valid_mappings
+```
+
+Output:
+
+```text
+{
+  "status": "ok",
+  "err-msg": "",
+  "count": 2,
+  "mappings": [
+    {
+      "device_id": "3742",
+      "port_id_high": "1001000",
+      "port_id_low": "51001",
+      "ifStackStatus": "active"
+    },
+    {
+      "device_id": "3742",
+      "port_id_high": "1001000",
+      "port_id_low": "52001",
+      "ifStackStatus": "active"
+    }
+  ]
+}
+```
+
 ### <a name="api-route-25">Function: `get_components`</a> [`top`](#top)
 
 Get a list of components for a particular device.
@@ -333,6 +386,88 @@ Output:
             "disabled": "0"
         }
     }
+}
+```
+
+### <a name="api-route-26">Function: `add_components`</a> [`top`](#top)
+
+Create a new component of a type on a particular device.
+
+Route: /api/v0/devices/:hostname/components/:type
+
+- hostname can be either the device hostname or id
+- type is the type of component to add
+
+Example:
+```curl
+curl -X POST -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/APITEST
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1,
+    "components": {
+        "4459": {
+            "type": "APITEST",
+            "label": "",
+            "status": 1,
+            "ignore": 0,
+            "disabled": 0,
+            "error": ""
+        }
+    }
+}
+```
+
+### <a name="api-route-27">Function: `edit_components`</a> [`top`](#top)
+
+Edit an existing component on a particular device.
+
+Route: /api/v0/devices/:hostname/components
+
+- hostname can be either the device hostname or id
+
+In this example we set the label and add a new field: TestField:
+```curl
+curl -X PUT -d '{"4459": {"type": "APITEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1
+}
+```
+
+Just take the JSON array from add_components or edit_components, edit as you wish and submit it back to edit_components.
+
+### <a name="api-route-28">Function: `delete_components`</a> [`top`](#top)
+
+Delete an existing component on a particular device.
+
+Route: /api/v0/devices/:hostname/components/:component
+
+- hostname can be either the device hostname or id
+- component is the component ID to be deleted.
+
+Example:
+```curl
+curl -X DELETE -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/components/4459
+```
+
+Output:
+
+```text
+{
+    "status": "ok",
+    "err-msg": ""
 }
 ```
 
@@ -499,7 +634,7 @@ Output:
 ```text
 {
     "status": "ok",
-    "message": "Device localhost.localdomain has been added successfully"
+    "message": "Device localhost.localdomain (57) has been added successfully"
 }
 ```
 
@@ -655,56 +790,19 @@ Output:
 ```text
 [
      {
-         "status": "error",
-         "message": "Found 1 in group LinuxServers",
-         "count": 1,
+         "status": "ok",
+         "message": "Found 3 in group LinuxServers",
+         "count": 3,
          "devices": [
-             {
-                 "device_id": "1",
-                 "hostname": "localhost",
-                 "sysName": "hostname",
-                 "community": "librenms",
-                 "authlevel": null,
-                 "authname": null,
-                 "authpass": null,
-                 "authalgo": null,
-                 "cryptopass": null,
-                 "cryptoalgo": null,
-                 "snmpver": "v2c",
-                 "port": "161",
-                 "transport": "udp",
-                 "timeout": null,
-                 "retries": null,
-                 "bgpLocalAs": null,
-                 "sysObjectID": ".1.3.6.1.4.1.8072.3.2.10",
-                 "sysDescr": "Linux li1045-133.members.linode.com 4.1.5-x86_64-linode61 #7 SMP Mon Aug 24 13:46:31 EDT 2015 x86_64",
-                 "sysContact": "",
-                 "version": "4.1.5-x86_64-linode61",
-                 "hardware": "Generic x86 64-bit",
-                 "features": "CentOS 7.1.1503",
-                 "location": "",
-                 "os": "linux",
-                 "status": "1",
-                 "status_reason": "",
-                 "ignore": "0",
-                 "disabled": "0",
-                 "uptime": "4615964",
-                 "agent_uptime": "0",
-                 "last_polled": "2015-12-12 13:20:04",
-                 "last_poll_attempted": null,
-                 "last_polled_timetaken": "1.90",
-                 "last_discovered_timetaken": "79.53",
-                 "last_discovered": "2015-12-12 12:34:21",
-                 "last_ping": "2015-12-12 13:20:04",
-                 "last_ping_timetaken": "0.08",
-                 "purpose": null,
-                 "type": "server",
-                 "serial": null,
-                 "icon": null,
-                 "poller_group": "0",
-                 "override_sysLocation": "0",
-                 "notes": "Nope"
-             }
+            {
+                "device_id": "15"
+            },
+            {
+                "device_id": "18"
+            },
+            {
+                "device_id": "20"
+            }
          ]
      }
 ]
@@ -738,6 +836,43 @@ Output:
  ]
 }
 ```
+
+### <a name="list_ipsec">Function: `list_ipsec`</a> [`top`](#top)
+
+List the current IPSec tunnels which are active.
+
+Route: /api/v0/routing/ipsec/data/:hostname
+
+- hostname can be either the device hostname or id
+
+Input:
+
+ -
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/routing/ipsec/data/localhost
+```
+
+Output:
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 0,
+    "ipsec": [
+        "tunnel_id": "1",
+        "device_id": "1",
+        "peer_port": "0",
+        "peer_addr": "127.0.0.1",
+        "local_addr": "127.0.0.2",
+        "local_port": "0",
+        "tunnel_name": "",
+        "tunnel_status": "active"
+    ]
+}
+```
+> Please note, this will only show active VPN sessions not all configured.
 
 ## <a name="api-switching">`Switching`</a> [`top`](#top)
 
@@ -1238,3 +1373,144 @@ Output:
 }
 ```
 
+### <a name="api-resources-list_arp">Function: `list_arp`</a> [`top`](#top)
+
+Retrieve a specific ARP entry or all ARP enties for a device
+
+Route: /api/v0/resources/ip/arp/:ip
+
+ - ip is the specific IP you would like to query, if this is all then you need to pass ?device=_hostname_ (or device id)
+
+Input:
+
+ - device if you specify all for the IP then you need to populate this with the hostname or id of the device.
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/ip/arp/1.1.1.1
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/ip/arp/1.1.1.1?device=localhost
+```
+
+Output:
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1,
+    "arp": [
+        {
+            "port_id": "229",
+            "mac_address": "da160e5c2002",
+            "ipv4_address": "1.1.1.1",
+            "context_name": ""
+        }
+    ]
+}
+```
+
+### <a name="api-services-list_services">Function: `list_services`</a> [`top`](#top)
+
+Retrieve all services
+
+Route: /api/v0/services
+
+Input:
+
+ - state: only which have a certain state (valid options are 0=Ok, 1=Warning, 2=Critical).
+ - type: service type, used sql LIKE to find services, so for tcp, use type=tcp for http use type=http
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services?state=2
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services?state=0&type=tcp
+```
+
+Output:
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1,
+    "services": [
+        [
+            {
+                "service_id": "13",
+                "device_id": "1",
+                "service_ip": "demo1.yourdomian.net",
+                "service_type": "ntp_peer",
+                "service_desc": "NTP",
+                "service_param": "-H 192.168.1.10",
+                "service_ignore": "0",
+                "service_status": "0",
+                "service_changed": "1470962470",
+                "service_message": "NTP OK: Offset -0.000717 secs",
+                "service_disabled": "0",
+                "service_ds": "{\"offset\":\"s\"}"
+            }
+        ],
+        [
+            {
+                "service_id": "2",
+                "device_id": "2",
+                "service_ip": "demo2.yourdomian.net",
+                "service_type": "esxi_hardware.py",
+                "service_desc": "vmware hardware",
+                "service_param": "-H 192.168.1.11 -U USER -P PASS -p",
+                "service_ignore": "0",
+                "service_status": "0",
+                "service_changed": "1471702206",
+                "service_message": "OK - Server: Supermicro X9SCL/X9SCM s/n: 0123456789 System BIOS: 2.2 2015-02-20",
+                "service_disabled": "0",
+                "service_ds": "{\"P2Vol_0_Processor_1_Vcore\":\"\",\"P2Vol_1_System_Board_1_-12V\":\"\",\"P2Vol_2_System_Board_1_12V\":\"\",\"P2Vol_3_System_Board_1_3.3VCC\":\"\",\"P2Vol_4_System_Board_1_5VCC\":\"\",\"P2Vol_5_System_Board_1_AVCC\":\"\",\"P2Vol_6_System_Board_1_VBAT\":\"\",\"P2Vol_7_System_Board_1_"
+            }
+        ]
+    ]
+}
+```
+### <a name="api-services-get_service_for_host">Function: `get_service_for_host`</a> [`top`](#top)
+
+Retrieve services for device
+
+Route: /api/v0/services/:hostname
+
+ - id or hostname is the specific device
+
+Input:
+
+ - state: only which have a certain state (valid options are 0=Ok, 1=Warning, 2=Critical).
+ - type: service type, used sql LIKE to find services, so for tcp, use type=tcp for http use type=http
+
+Example:
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services/:hostname
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services/:hostname?state=2
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/services/:hostname?state=0&type=tcp
+```
+
+Output:
+```text
+{
+    "status": "ok",
+    "err-msg": "",
+    "count": 1,
+    "services": [
+        [
+            {
+                "service_id": "2",
+                "device_id": "2",
+                "service_ip": "demo2.yourdomian.net",
+                "service_type": "esxi_hardware.py",
+                "service_desc": "vmware hardware",
+                "service_param": "-H 192.168.1.11 -U USER -P PASS -p",
+                "service_ignore": "0",
+                "service_status": "0",
+                "service_changed": "1471702206",
+                "service_message": "OK - Server: Supermicro X9SCL/X9SCM s/n: 0123456789 System BIOS: 2.2 2015-02-20",
+                "service_disabled": "0",
+                "service_ds": "{\"P2Vol_0_Processor_1_Vcore\":\"\",\"P2Vol_1_System_Board_1_-12V\":\"\",\"P2Vol_2_System_Board_1_12V\":\"\",\"P2Vol_3_System_Board_1_3.3VCC\":\"\",\"P2Vol_4_System_Board_1_5VCC\":\"\",\"P2Vol_5_System_Board_1_AVCC\":\"\",\"P2Vol_6_System_Board_1_VBAT\":\"\",\"P2Vol_7_System_Board_1_"
+            }
+        ]
+    ]
+}
+```

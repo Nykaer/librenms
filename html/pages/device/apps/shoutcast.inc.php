@@ -4,19 +4,6 @@ global $config;
 
 $total = true;
 
-$rrddir = $config['rrd_dir'].'/'.$device['hostname'];
-$files  = array();
-
-if ($handle = opendir($rrddir)) {
-    while (false !== ($file = readdir($handle))) {
-        if ($file != '.' && $file != '..') {
-            if (eregi('app-shoutcast-'.$app['app_id'], $file)) {
-                array_push($files, $file);
-            }
-        }
-    }
-}
-
 if (isset($total) && $total === true) {
     $graphs = array(
         'shoutcast_multi_bits'  => 'Traffic Statistics - Total of all Shoutcast servers',
@@ -44,9 +31,10 @@ if (isset($total) && $total === true) {
     }
 }
 
-foreach ($files as $id => $file) {
-    $hostname          = eregi_replace('app-shoutcast-'.$app['app_id'].'-', '', $file);
-    $hostname          = eregi_replace('.rrd', '', $hostname);
+$files = glob(rrd_name($device['hostname'], array('app', 'shoutcast', $app['app_id']), '*.rrd'));
+foreach ($files as $file) {
+    $pieces = explode('-', basename($file, '.rrd'));
+    $hostname = end($pieces);
     list($host, $port) = explode('_', $hostname, 2);
     $graphs            = array(
         'shoutcast_bits'  => 'Traffic Statistics - '.$host.' (Port: '.$port.')',

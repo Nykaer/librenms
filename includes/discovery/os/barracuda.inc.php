@@ -17,4 +17,7 @@ if (!$os) {
     if (stristr($sysDescr, 'Barracuda Spam Firewall')) {
         $os = 'barracudaspamfirewall';
     }
+    if (stristr($sysDescr, 'Barracuda Firewall')) {
+        $os = 'barracudangfirewall';
+    }
 }
