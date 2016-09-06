@@ -26,11 +26,10 @@ $components = $components[$device['device_id']];
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:' Users per OU           Now      Min      Max\\n'";
-$rrd_additions = "";
 
 $count = 0;
 foreach ($components as $id => $array) {
-    $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("ldap-".$array['UID'].".rrd");
+    $rrd_filename = rrd_name($device['hostname'], array('ldap', 'users', $array['label']));
 
     if (file_exists($rrd_filename)) {
         // Grab a color from the array.
@@ -40,17 +39,11 @@ foreach ($components as $id => $array) {
             $color = $config['graph_colours']['oranges'][$count-7];
         }
 
-        $rrd_additions .= " DEF:DS" . $count . "=" . $rrd_filename . ":users:AVERAGE ";
-        $rrd_additions .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['dn'], 0, 15), 15) . "' ";
-        $rrd_additions .= " GPRINT:DS" . $count . ":LAST:%6.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count . ":MIN:%6.0lf%s ";
-        $rrd_additions .= " GPRINT:DS" . $count . ":MAX:%6.0lf%s\\\l ";
+        $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":users:AVERAGE ";
+        $rrd_options .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['dn'], 0, 15), 15) . "' ";
+        $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.0lf%s ";
+        $rrd_options .= " GPRINT:DS" . $count . ":MIN:%6.0lf%s ";
+        $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.0lf%s\\\l ";
         $count++;
     }
-}
-
-if ($rrd_additions == "") {
-    // We didn't add any data points.
-} else {
-    $rrd_options .= $rrd_additions;
 }

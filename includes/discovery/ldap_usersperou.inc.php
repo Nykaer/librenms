@@ -14,6 +14,7 @@
 // config
 $ldapuser = get_dev_attrib($device, 'ldap_user');
 $ldappass = get_dev_attrib($device, 'ldap_pass');
+$ldapport = get_dev_attrib($device, 'ldap_port');
 $base = get_dev_attrib($device, 'ldap_search_base');
 
 $module = 'LDAP_UsersPerOU';
@@ -29,7 +30,7 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
     // Begin our master array, all other values will be processed into this array.
     $OUs = array();
 
-    $ldapconn = ldap_connect($device['hostname']) or d_echo("Could not connect to LDAP server.\n");
+    $ldapconn = ldap_connect($device['hostname'].":".$ldapport) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
     if ($ldapconn) {
         // binding to ldap server
         $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or d_echo("Error trying to bind: ".ldap_error($ldapconn)."\n");
