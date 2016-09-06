@@ -14,30 +14,29 @@
 // Get the config
 $ldapuser = get_dev_attrib($device, 'ldap_user');
 $ldappass = get_dev_attrib($device, 'ldap_pass');
+$ldapport = get_dev_attrib($device, 'ldap_port');
 $base = get_dev_attrib($device, 'ldap_search_base');
 
 $module = 'LDAP_UsersPerOU';
 echo $module.': ';
 
-if (isset($ldapuser) && isset($ldappass) && isset($base)) {
-    require_once 'includes/component.php';
-    $component = new component();
+if (isset($ldapuser) && isset($ldappass) && isset($ldapport) && isset($base)) {
+    $component = new LibreNMS\Component();
     $options['filter']['type'] = array('=',$module);
     $options['filter']['disabled'] = array('=',0);
     $options['filter']['ignore'] = array('=',0);
-    $components = $component->getComponents($device['device_id'],$options);
+    $components = $component->getComponents($device['device_id'], $options);
 
-// We only care about our device id.
+    // We only care about our device id.
     $components = $components[$device['device_id']];
 
-// Only collect SNMP data if we have enabled components
+    // Only collect SNMP data if we have enabled components
     if (count($components > 0)) {
         // Let's gather the stats..
-        $ldapconn = ldap_connect ($device['hostname']) or d_echo ("Could not connect to LDAP server.\n");
+        $ldapconn = ldap_connect($device['hostname'].":".$ldapport) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
         if ($ldapconn) {
-
             // binding to ldap server
-            $ldapbind = ldap_bind ($ldapconn, $ldapuser, $ldappass) or d_echo ("Error trying to bind: " . ldap_error ($ldapconn) . "\n");
+            $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or d_echo("Error trying to bind: " . ldap_error($ldapconn) . "\n");
 
             // verify binding
             if ($ldapbind) {
@@ -48,51 +47,41 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
 
                 // Loop through the components and extract the data.
                 foreach ($components as $key => &$array) {
-
                     // extract all records of type CN
-                    $CNSEARCH = ldap_search($ldapconn, $array['label'], "(cn=*)") or d_echo("Error in search query: ".ldap_error($ldapconn)."\n");
+                    $ou = $array['label'];
+                    $CNSEARCH = ldap_search($ldapconn, $ou, "(cn=*)") or d_echo("Error in search query: ".ldap_error($ldapconn)."\n");
 
                     // Add the count to the array.
                     $count = ldap_count_entries($ldapconn, $CNSEARCH);
 
+                    $fields = array(
+                        'users' => $count,
+                    );
+
                     // Let's make sure the rrd is setup for this class.
-                    $filename = "ldap-" . $array['UID'] . ".rrd";
-                    $rrd_filename = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($filename);
-
-                    if (!file_exists ($rrd_filename)) {
-                        rrdtool_create ($rrd_filename, " DS:users:GAUGE:600:0:U" . $config['rrd_rra']);
-                    }
-
+                    $rrd_name = array('ldap', 'users', $ou);
+                    $rrd_def = 'DS:users:GAUGE:600:0:U';
+                    $tags = compact('uid', 'rrd_name', 'rrd_def');
+                    data_update($device, 'ldap', $tags, $fields);
+                    
                     // Let's print some debugging info.
-                    d_echo ("\n\nComponent: " . $key . "\n");
-                    d_echo ("    OU:     " . $array['label'] . "\n");
-                    d_echo ("    Count:  " . $count . "\n");
-
-                    $rrd['count'] = $count;
-
-                    // Update rrd
-                    rrdtool_update ($rrd_filename, $rrd);
-
-                    // Clean-up after yourself!
-                    unset($filename, $rrd_filename);
+                    d_echo("\n\nComponent: " . $key . "\n");
+                    d_echo("    OU:     " . $ou . "\n");
+                    d_echo("    Count:  " . $count . "\n");
                 }
-
             } else {
-                d_echo ("LDAP bind failed...\n");
+                d_echo("LDAP bind failed...\n");
             }
         }
 
         // all done? clean up
-        ldap_close ($ldapconn);
-
+        ldap_close($ldapconn);
 
         echo $module." ";
 
         // Clean-up after yourself!
         unset($type, $components, $component, $options, $module);
     } // end if count components
-}
-else {
+} else {
     d_echo("LDAP Attributes not set\n");
 }
-

@@ -14,26 +14,24 @@
 // config
 $ldapuser = get_dev_attrib($device, 'ldap_user');
 $ldappass = get_dev_attrib($device, 'ldap_pass');
+$ldapport = get_dev_attrib($device, 'ldap_port');
 $base = get_dev_attrib($device, 'ldap_search_base');
 
 $module = 'LDAP_UsersPerOU';
 echo $module.': ';
 
 if (isset($ldapuser) && isset($ldappass) && isset($base)) {
-    require_once 'includes/component.php';
-    $component = new component();
-    $components = $component->getComponents($device['device_id'],array('type'=>$module));
+    $component = new LibreNMS\Component();
+    $components = $component->getComponents($device['device_id'], array('type'=>$module));
 
-// We only care about our device id.
+    // We only care about our device id.
     $components = $components[$device['device_id']];
 
-
-// Begin our master array, all other values will be processed into this array.
+    // Begin our master array, all other values will be processed into this array.
     $OUs = array();
 
-    $ldapconn = ldap_connect($device['hostname']) or d_echo("Could not connect to LDAP server.\n");
-    if($ldapconn) {
-
+    $ldapconn = ldap_connect($device['hostname'].":".$ldapport) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
+    if ($ldapconn) {
         // binding to ldap server
         $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or d_echo("Error trying to bind: ".ldap_error($ldapconn)."\n");
 
@@ -77,17 +75,15 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
 
                 if (!$component_key) {
                     // The component doesn't exist, we need to ADD it - ADD.
-                    $new_component = $component->createComponent($device['device_id'],$module);
+                    $new_component = $component->createComponent($device['device_id'], $module);
                     $component_key = key($new_component);
                     $components[$component_key] = array_merge($new_component[$component_key], $array);
                     echo "+";
-                }
-                else {
+                } else {
                     // The component does exist, merge the details in - UPDATE.
                     $components[$component_key] = array_merge($components[$component_key], $array);
                     echo ".";
                 }
-
             }
 
             /*
@@ -112,18 +108,14 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
             }
 
             // Write the Components back to the DB.
-            $component->setComponentPrefs($device['device_id'],$components);
+            $component->setComponentPrefs($device['device_id'], $components);
             echo "\n";
-
         } else {
             d_echo("LDAP bind failed...\n");
         }
     }
-
 // all done? clean up
     ldap_close($ldapconn);
-}
-else {
+} else {
     d_echo("LDAP Attributes not set\n");
 }
-
