@@ -14,28 +14,20 @@
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Phone Registration        Now  Avg  Max\\n'";
-$rrd_additions = "";
+$rrd_options = "";
 
 $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
 
 if (file_exists($rrd_filename)) {
-    $rrd_additions .= " DEF:SIP" . $COUNT . "=" . $rrd_filename . ":phone-sip:AVERAGE";
-    $rrd_additions .= " AREA:SIP" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'SIP Phones          '";
-    $rrd_additions .= " GPRINT:SIP" . $COUNT . ":LAST:%3.0lf";
-    $rrd_additions .= " GPRINT:SIP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_additions .= " GPRINT:SIP" . $COUNT . ":MAX:%3.0lf\\\l ";
+    $rrd_options .= " DEF:SIP" . $COUNT . "=" . $rrd_filename . ":phone-sip:AVERAGE";
+    $rrd_options .= " AREA:SIP" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'SIP Phones          '";
+    $rrd_options .= " GPRINT:SIP" . $COUNT . ":LAST:%3.0lf";
+    $rrd_options .= " GPRINT:SIP" . $COUNT . ":AVERAGE:%3.0lf";
+    $rrd_options .= " GPRINT:SIP" . $COUNT . ":MAX:%3.0lf\\\l ";
 
-    $rrd_additions .= " DEF:SCCP" . $COUNT . "=" . $rrd_filename . ":phone-sccp:AVERAGE";
-    $rrd_additions .= " AREA:SCCP" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'SCCP Phones         ':STACK";
-    $rrd_additions .= " GPRINT:SCCP" . $COUNT . ":LAST:%3.0lf";
-    $rrd_additions .= " GPRINT:SCCP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_additions .= " GPRINT:SCCP" . $COUNT . ":MAX:%3.0lf\\\l ";
-
-}
-
-if ($rrd_additions == "") {
-    // We didn't add any data points.
-}
-else {
-    $rrd_options .= $rrd_additions;
+    $rrd_options .= " DEF:SCCP" . $COUNT . "=" . $rrd_filename . ":phone-sccp:AVERAGE";
+    $rrd_options .= " AREA:SCCP" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'SCCP Phones         ':STACK";
+    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":LAST:%3.0lf";
+    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":AVERAGE:%3.0lf";
+    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":MAX:%3.0lf\\\l ";
 }

@@ -12,7 +12,7 @@
  */
 
 $COMPONENT = new LibreNMS\Component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
+$COMPONENTS = $COMPONENT->getComponents($device['device_id'], array('type'=>'CUCM-ELCAC', 'ignore'=>0));
 
 // We only care about our device id.
 $COMPONENTS = $COMPONENTS[$device['device_id']];
@@ -28,7 +28,6 @@ if (!isset($vars['item'])) {
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Voice Bandwidth (kbps)   Now  Avg  Max\\n'";
-$rrd_additions = "";
 
 if (isset($vars['item'])) {
     $ID = $vars['item'];
@@ -36,25 +35,18 @@ if (isset($vars['item'])) {
     $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-ELCAC-".$COMPONENTS[$ID]['label'].".rrd");
 
     if (file_exists($rrd_filename)) {
-        $rrd_additions .= " DEF:TOT" . $COUNT . "=" . $rrd_filename . ":totalvoice:AVERAGE";
-        $rrd_additions .= " DEF:AVA" . $COUNT . "=" . $rrd_filename . ":availablevoice:AVERAGE";
-        $rrd_additions .= " CDEF:ACT" . $COUNT . "=TOT" . $COUNT . ",AVA,- ";
+        $rrd_options .= " DEF:TOT" . $COUNT . "=" . $rrd_filename . ":totalvoice:AVERAGE";
+        $rrd_options .= " DEF:AVA" . $COUNT . "=" . $rrd_filename . ":availablevoice:AVERAGE";
+        $rrd_options .= " CDEF:ACT" . $COUNT . "=TOT" . $COUNT . ",AVA,- ";
 
-        $rrd_additions .= " AREA:TOT" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total               '";
-        $rrd_additions .= " GPRINT:TOT" . $COUNT . ":LAST:%3.0lf";
-        $rrd_additions .= " GPRINT:TOT" . $COUNT . ":AVERAGE:%3.0lf";
-        $rrd_additions .= " GPRINT:TOT" . $COUNT . ":MAX:%3.0lf\\\l ";
+        $rrd_options .= " AREA:TOT" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total               '";
+        $rrd_options .= " GPRINT:TOT" . $COUNT . ":LAST:%3.0lf";
+        $rrd_options .= " GPRINT:TOT" . $COUNT . ":AVERAGE:%3.0lf";
+        $rrd_options .= " GPRINT:TOT" . $COUNT . ":MAX:%3.0lf\\\l ";
 
-        $rrd_additions .= " AREA:ACT" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Used                '";
-        $rrd_additions .= " GPRINT:ACT" . $COUNT . ":LAST:%3.0lf";
-        $rrd_additions .= " GPRINT:ACT" . $COUNT . ":AVERAGE:%3.0lf";
-        $rrd_additions .= " GPRINT:ACT" . $COUNT . ":MAX:%3.0lf\\\l";
+        $rrd_options .= " AREA:ACT" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Used                '";
+        $rrd_options .= " GPRINT:ACT" . $COUNT . ":LAST:%3.0lf";
+        $rrd_options .= " GPRINT:ACT" . $COUNT . ":AVERAGE:%3.0lf";
+        $rrd_options .= " GPRINT:ACT" . $COUNT . ":MAX:%3.0lf\\\l";
     }
-}
-
-if ($rrd_additions == "") {
-    // We didn't add any data points.
-}
-else {
-    $rrd_options .= $rrd_additions;
 }

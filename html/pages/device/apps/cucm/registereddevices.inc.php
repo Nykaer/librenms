@@ -1,7 +1,7 @@
 <?php
 
 $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
-if (file_exists ($rrd_filename)) {
+if (file_exists($rrd_filename)) {
     $graph_array['device'] = $device['device_id'];
 
     ?>

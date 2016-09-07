@@ -1,11 +1,11 @@
 <?php
 
 $COMPONENT = new LibreNMS\Component();
-$CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC','ignore'=>0));
+$CUCM_ELCAC = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-ELCAC', 'ignore'=>0));
 $CUCM_ELCAC = $CUCM_ELCAC[$device['device_id']];
-$CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
+$CUCM_SIP = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP', 'ignore'=>0));
 $CUCM_SIP = $CUCM_SIP[$device['device_id']];
-$CUCM_H323 = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-H323','ignore'=>0));
+$CUCM_H323 = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-H323', 'ignore'=>0));
 $CUCM_H323 = $CUCM_H323[$device['device_id']];
 $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
 
@@ -17,7 +17,7 @@ if (count($CUCM_ELCAC) > 0) {
 if ((count($CUCM_SIP) > 0) || (count($CUCM_H323) > 0)) {
     $datas[] = 'trunk';
 }
-if (file_exists ($rrd_filename)) {
+if (file_exists($rrd_filename)) {
     $datas[] = 'registereddevices';
 }
 
@@ -61,8 +61,7 @@ print_optionbar_end();
 
 if (is_file('pages/device/apps/cucm/'.mres($vars['metric']).'.inc.php')) {
     include 'pages/device/apps/cucm/'.mres($vars['metric']).'.inc.php';
-}
-else {
+} else {
     echo "<div class='col-md-12'>Error: The desired metric (".mres($vars['metric']).") does not exist.</div>";
 }
 

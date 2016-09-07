@@ -12,7 +12,7 @@
  */
 
 $COMPONENT = new LibreNMS\Component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-Basic','ignore'=>0));
+$COMPONENTS = $COMPONENT->getComponents($device['device_id'], array('type'=>'CUCM-Basic', 'ignore'=>0));
 
 // We only care about our device id.
 $COMPONENTS = $COMPONENTS[$device['device_id']];
@@ -20,37 +20,28 @@ $COMPONENTS = $COMPONENTS[$device['device_id']];
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'System Calls         Now   Avg   Max\\n'";
-$rrd_additions = "";
 
 foreach ($COMPONENTS as $ID => $ARRAY) {
     if ($ARRAY['label'] == 'Calls') {
         $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-Basic-".$ARRAY['label'].".rrd");
         if (file_exists($rrd_filename)) {
+            $rrd_options .= " DEF:DS1" . $COUNT . "=" . $rrd_filename . ":calls:AVERAGE ";
+            $rrd_options .= " AREA:DS1" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total Calls    '";
+            $rrd_options .= " GPRINT:DS1" . $COUNT . ":LAST:%3.0lf ";
+            $rrd_options .= " GPRINT:DS1" . $COUNT . ":AVERAGE:%3.0lf ";
+            $rrd_options .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\\\l ";
 
-            $rrd_additions .= " DEF:DS1" . $COUNT . "=" . $rrd_filename . ":calls:AVERAGE ";
-            $rrd_additions .= " AREA:DS1" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total Calls    '";
-            $rrd_additions .= " GPRINT:DS1" . $COUNT . ":LAST:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS1" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " DEF:DS2" . $COUNT . "=" . $rrd_filename . ":videocalls:AVERAGE ";
+            $rrd_options .= " AREA:DS2" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Video Calls    '";
+            $rrd_options .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
+            $rrd_options .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
+            $rrd_options .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
 
-            $rrd_additions .= " DEF:DS2" . $COUNT . "=" . $rrd_filename . ":videocalls:AVERAGE ";
-            $rrd_additions .= " AREA:DS2" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Video Calls    '";
-            $rrd_additions .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
-
-            $rrd_additions .= " DEF:DS3" . $COUNT . "=" . $rrd_filename . ":encryptedcalls:AVERAGE ";
-            $rrd_additions .= " AREA:DS3" . $COUNT . "#" . $config['graph_colours']['mixed'][1] . ":'Encrypted Calls'";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":LAST:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_additions .= " GPRINT:DS3" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " DEF:DS3" . $COUNT . "=" . $rrd_filename . ":encryptedcalls:AVERAGE ";
+            $rrd_options .= " AREA:DS3" . $COUNT . "#" . $config['graph_colours']['mixed'][1] . ":'Encrypted Calls'";
+            $rrd_options .= " GPRINT:DS3" . $COUNT . ":LAST:%3.0lf ";
+            $rrd_options .= " GPRINT:DS3" . $COUNT . ":AVERAGE:%3.0lf ";
+            $rrd_options .= " GPRINT:DS3" . $COUNT . ":MAX:%3.0lf\\\l ";
         }
     }
-}
-
-if ($rrd_additions == "") {
-    // We didn't add any data points.
-}
-else {
-    $rrd_options .= $rrd_additions;
 }

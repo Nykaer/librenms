@@ -12,37 +12,32 @@ if ($_POST['editing']) {
 
         if ($attribs['ucosaxl_host'] != '') {
             set_dev_attrib($device, 'ucosaxl_host', $attribs['ucosaxl_host']);
-        }
-        else {
+        } else {
             del_dev_attrib($device, 'ucosaxl_host');
         }
 
         if ($attribs['ucosaxl_user'] != '') {
             set_dev_attrib($device, 'ucosaxl_user', $attribs['ucosaxl_user']);
-        }
-        else {
+        } else {
             del_dev_attrib($device, 'ucosaxl_user');
         }
 
         if ($attribs['ucosaxl_pass'] != '') {
             set_dev_attrib($device, 'ucosaxl_pass', $attribs['ucosaxl_pass']);
-        }
-        else {
+        } else {
             del_dev_attrib($device, 'ucosaxl_pass');
         }
 
         $update_message = 'AXL Credentials Updated.';
         $updated        = 1;
-    }
-    else {
+    } else {
         include 'includes/error-no-perm.inc.php';
     }//end if
 }//end if
 
 if ($updated && $update_message) {
     print_message($update_message);
-}
-else if ($update_message) {
+} else if ($update_message) {
     print_error($update_message);
 }
 
