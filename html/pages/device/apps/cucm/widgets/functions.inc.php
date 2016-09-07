@@ -1,6 +1,7 @@
 <?php
 
-function generate_widget_part($graph_array,$device,$title=null) {
+function generate_widget_part($graph_array, $device, $title = null)
+{
     $graph = generate_lazy_graph_tag($graph_array);
     $link_array         = $graph_array;
     $link_array['page'] = 'graphs';
@@ -11,15 +12,15 @@ function generate_widget_part($graph_array,$device,$title=null) {
     if (!is_null($title)) {
         echo "                <strong>".$title."</strong><br>\n";
         $text = $device['hostname'].' - '.$title;
-    }
-    else {
+    } else {
         $text = $device['hostname'];
     }
     $overlib_content      = generate_overlib_content($graph_array, $text);
     echo "                ".overlib_link($link, $graph, $overlib_content, null)."\n";
 }
 
-function component_exists($ARRAY,$labels=array()) {
+function component_exists($ARRAY, $labels = array())
+{
     // Search $ARRAY for any components containing $label
     foreach ($labels as $label) {
         foreach ($ARRAY as $VALUE) {

@@ -1,7 +1,6 @@
 <?php
 
 if (count($CUCM_BASIC) > 0) {
-
     $graph_array['height'] = '100';
     $graph_array['width']  = '485';
     $graph_array['to']     = $config['time']['now'];
@@ -25,7 +24,7 @@ if (count($CUCM_BASIC) > 0) {
             <strong>System Calls</strong>
         </div>
         <div class="panel-body">
-            <?= overlib_link($link, $graph, $overlib_content, null); ?>
+            <?php= overlib_link($link, $graph, $overlib_content, null); ?>
         </div>
     </div>
     <?php
