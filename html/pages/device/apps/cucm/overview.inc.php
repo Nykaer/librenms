@@ -4,7 +4,7 @@ $COMPONENT = new LibreNMS\Component();
 $options = array();
 $options['type'] = 'CUCM-BASIC';
 $options['filter']['ignore'] = array('=',0);
-$CUCM_BASIC = $COMPONENT->getComponents($device['device_id'],$options);
+$CUCM_BASIC = $COMPONENT->getComponents($device['device_id'], $options);
 $CUCM_BASIC = $CUCM_BASIC[$device['device_id']];
 
 ?>

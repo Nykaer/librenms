@@ -12,7 +12,7 @@
  */
 
 $COMPONENT = new LibreNMS\Component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>'CUCM-SIP','ignore'=>0));
+$COMPONENTS = $COMPONENT->getComponents($device['device_id'], array('type'=>'CUCM-SIP', 'ignore'=>0));
 
 // We only care about our device id.
 $COMPONENTS = $COMPONENTS[$device['device_id']];
@@ -20,7 +20,6 @@ $COMPONENTS = $COMPONENTS[$device['device_id']];
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Video Calls                    Now      Avg      Max\\n'";
-$rrd_additions = "";
 
 $COUNT = 0;
 foreach ($COMPONENTS as $ID => $ARRAY) {
@@ -34,27 +33,19 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
         }
 
         // Grab a color from the array.
-        if ( isset($config['graph_colours']['mixed'][$COUNT]) ) {
+        if (isset($config['graph_colours']['mixed'][$COUNT])) {
             $COLOR = $config['graph_colours']['mixed'][$COUNT];
-        }
-        else {
+        } else {
             $COLOR = $config['graph_colours']['oranges'][$COUNT-7];
         }
 
-        $rrd_additions .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":callsvideo:AVERAGE ";
-        $rrd_additions .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
-        $rrd_additions .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'],0,25),25) . "'" . $STACK;
-        $rrd_additions .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
-        $rrd_additions .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\\\l ";
+        $rrd_options .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":callsvideo:AVERAGE ";
+        $rrd_options .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
+        $rrd_options .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'], 0, 25), 25) . "'" . $STACK;
+        $rrd_options .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
+        $rrd_options .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
+        $rrd_options .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\\\l ";
 
         $COUNT++;
     }
-}
-
-if ($rrd_additions == "") {
-    // We didn't add any data points.
-}
-else {
-    $rrd_options .= $rrd_additions;
 }

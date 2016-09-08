@@ -5,7 +5,7 @@ $options = array();
 $options['filter']['ignore'] = array('=',0);
 $graph_array['device'] = $device['device_id'];
 $options['type'] = 'UCOS-SERVICES';
-$SERVICES = $COMPONENT->getComponents($device['device_id'],$options);
+$SERVICES = $COMPONENT->getComponents($device['device_id'], $options);
 $SERVICES = $SERVICES[$device['device_id']];
 
 ?>
@@ -23,8 +23,7 @@ $SERVICES = $SERVICES[$device['device_id']];
             if ($VALUE['status'] == 1) {
                 $STATUS = "Ok";
                 $CLASS = "";
-            }
-            else {
+            } else {
                 $STATUS = "Alert";
                 $CLASS = 'bg-danger';
             }

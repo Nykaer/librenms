@@ -94,6 +94,7 @@ class api_ucos_ast extends \transport_http {
                         return true;
                     }
                 }
+                d_echo("Error: We were looking for \"".$this->sHOST."\" in value1, but we couldnt find it.\n");
                 return false;
             }
         } // End if is_null
