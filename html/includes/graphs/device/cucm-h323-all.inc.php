@@ -33,7 +33,7 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
         }
 
         // Grab a color from the array.
-        if ( isset($config['graph_colours']['mixed'][$COUNT]) ) {
+        if (isset($config['graph_colours']['mixed'][$COUNT])) {
             $COLOR = $config['graph_colours']['mixed'][$COUNT];
         } else {
             $COLOR = $config['graph_colours']['oranges'][$COUNT-7];

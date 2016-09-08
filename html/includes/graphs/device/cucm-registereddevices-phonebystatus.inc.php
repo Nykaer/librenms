@@ -35,5 +35,4 @@ if (file_exists($rrd_filename)) {
     $rrd_options .= " GPRINT:UNREG" . $COUNT . ":LAST:%3.0lf";
     $rrd_options .= " GPRINT:UNREG" . $COUNT . ":AVERAGE:%3.0lf";
     $rrd_options .= " GPRINT:UNREG" . $COUNT . ":MAX:%3.0lf\\\l ";
-
 }
