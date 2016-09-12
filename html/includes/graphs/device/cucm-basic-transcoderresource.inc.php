@@ -21,7 +21,7 @@ include "includes/graphs/common.inc.php";
 
 foreach ($COMPONENTS as $ID => $ARRAY) {
     if ($ARRAY['label'] == 'TranscoderResource') {
-        $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-Basic-".$ARRAY['label'].".rrd");
+        $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'Basic', $ARRAY['label']));
         if (file_exists($rrd_filename)) {
             $rrd_options .= " -l 0 -E ";
             $rrd_options .= " COMMENT:'Transcoder Resources       Now   Avg   Max\\n'";

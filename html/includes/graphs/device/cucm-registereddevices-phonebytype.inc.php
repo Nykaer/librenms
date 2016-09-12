@@ -16,7 +16,7 @@ $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Phone Registration        Now  Avg  Max\\n'";
 $rrd_options = "";
 
-$rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
+$rrd_filename = rrd_name($device['hostname'], array('CUCM', 'RegisteredDevices'));
 
 if (file_exists($rrd_filename)) {
     $rrd_options .= " DEF:SIP" . $COUNT . "=" . $rrd_filename . ":phone-sip:AVERAGE";
