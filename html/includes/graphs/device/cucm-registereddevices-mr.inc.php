@@ -15,7 +15,7 @@ include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Registered Media Resources   Now  Avg  Max\\n'";
 
-$rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-RegisteredDevices.rrd");
+$rrd_filename = rrd_name($device['hostname'], array('CUCM', 'RegisteredDevices'));
 
 if (file_exists($rrd_filename)) {
     $rrd_options .= " DEF:MOH" . $COUNT . "=" . $rrd_filename . ":mr-moh:AVERAGE";

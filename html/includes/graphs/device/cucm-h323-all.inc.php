@@ -23,8 +23,7 @@ $rrd_options .= " COMMENT:'All Calls                    Now      Avg      Max\\n
 
 $COUNT = 0;
 foreach ($COMPONENTS as $ID => $ARRAY) {
-    $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-H323-".$ARRAY['label'].".rrd");
-
+    $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'H323', $ARRAY['label']));
     if (file_exists($rrd_filename)) {
         // Stack the area on the second and subsequent DS's
         $STACK = "";

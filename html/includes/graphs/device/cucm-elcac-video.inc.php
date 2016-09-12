@@ -32,7 +32,7 @@ $rrd_options .= " COMMENT:'Video Bandwidth (kbps)   Now  Avg  Max\\n'";
 if (isset($vars['item'])) {
     $ID = $vars['item'];
     // Have we found a valid location to display?
-    $rrd_filename = $config['rrd_dir'].'/'.$device['hostname'].'/'.safename("CUCM-ELCAC-".$COMPONENTS[$ID]['label'].".rrd");
+    $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'ELCAC', $ARRAY['label']));
 
     if (file_exists($rrd_filename)) {
         $rrd_options .= " DEF:TOT" . $COUNT . "=" . $rrd_filename . ":totalvideo:AVERAGE";

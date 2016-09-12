@@ -29,148 +29,126 @@ if ($device['os'] == "cucm") {
     $RESULT = $API->getRegisteredDevices();
 
     if (isset($RESULT['RegisteredPhone'])) {
-        $RRD = array();
-        $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE.".rrd");
+        $rrd_name = $module;
+        unset($fields);
 
-        $RRD['create'] = " DS:phone-total:GAUGE:600:0:U DS:phone-sip:GAUGE:600:0:U DS:phone-sccp:GAUGE:600:0:U DS:phone-partial:GAUGE:600:0:U DS:phone-failed:GAUGE:600:0:U DS:gw-total:GAUGE:600:0:U DS:gw-fxs:GAUGE:600:0:U DS:gw-fxo:GAUGE:600:0:U DS:gw-t1cas:GAUGE:600:0:U DS:gw-pri:GAUGE:600:0:U DS:mr-total:GAUGE:600:0:U DS:mr-moh:GAUGE:600:0:U DS:mr-mtp:GAUGE:600:0:U DS:mr-xcode:GAUGE:600:0:U DS:mr-cfb:GAUGE:600:0:U DS:h323-total:GAUGE:600:0:U";
+        $rrd_def = array(
+            'DS:phone-total:GAUGE:600:0:U',
+            'DS:phone-sip:GAUGE:600:0:U',
+            'DS:phone-sccp:GAUGE:600:0:U',
+            'DS:phone-partial:GAUGE:600:0:U',
+            'DS:phone-failed:GAUGE:600:0:U',
+            'DS:gw-total:GAUGE:600:0:U',
+            'DS:gw-fxs:GAUGE:600:0:U',
+            'DS:gw-fxo:GAUGE:600:0:U',
+            'DS:gw-t1cas:GAUGE:600:0:U',
+            'DS:gw-pri:GAUGE:600:0:U',
+            'DS:mr-total:GAUGE:600:0:U',
+            'DS:mr-moh:GAUGE:600:0:U',
+            'DS:mr-mtp:GAUGE:600:0:U',
+            'DS:mr-xcode:GAUGE:600:0:U',
+            'DS:mr-cfb:GAUGE:600:0:U',
+            'DS:h323-total:GAUGE:600:0:U',
+        );
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['Total'])) {
-            $VALUE = $RESULT['RegisteredPhone']["@attributes"]['Total'];
+            $fields['phone-total'] = $RESULT['RegisteredPhone']["@attributes"]['Total'];
+        } else {
+            $fields['phone-total'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSIP'])) {
-            $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalSIP'];
+            $fields['phone-sip'] = $RESULT['RegisteredPhone']["@attributes"]['TotalSIP'];
+        } else {
+            $fields['phone-sip'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'])) {
-            $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'];
+            $fields['phone-sccp'] = $RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'];
+        } else {
+            $fields['phone-sccp'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'])) {
-            $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'];
+            $fields['phone-partial'] = $RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'];
+        } else {
+            $fields['phone-partial'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'])) {
-            $VALUE = $RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'];
+            $fields['phone-failed'] = $RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'];
+        } else {
+            $fields['phone-failed'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['Total'])) {
-            $VALUE = $RESULT['RegisteredGateway']["@attributes"]['Total'];
+            $fields['gw-total'] = $RESULT['RegisteredGateway']["@attributes"]['Total'];
+        } else {
+            $fields['gw-total'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['FXS'])) {
-            $VALUE = $RESULT['RegisteredGateway']["@attributes"]['FXS'];
+            $fields['gw-fxs'] = $RESULT['RegisteredGateway']["@attributes"]['FXS'];
+        } else {
+            $fields['gw-fxs'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['FXO'])) {
-            $VALUE = $RESULT['RegisteredGateway']["@attributes"]['FXO'];
+            $fields['gw-fxo'] = $RESULT['RegisteredGateway']["@attributes"]['FXO'];
+        } else {
+            $fields['gw-fxo'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['T1CAS'])) {
-            $VALUE = $RESULT['RegisteredGateway']["@attributes"]['T1CAS'];
+            $fields['gw-t1cas'] = $RESULT['RegisteredGateway']["@attributes"]['T1CAS'];
+        } else {
+            $fields['gw-t1cas'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredGateway']["@attributes"]['PRI'])) {
-            $VALUE = $RESULT['RegisteredGateway']["@attributes"]['PRI'];
+            $fields['gw-pri'] = $RESULT['RegisteredGateway']["@attributes"]['PRI'];
+        } else {
+            $fields['gw-pri'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['Total'])) {
-            $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['Total'];
+            $fields['mr-total'] = $RESULT['RegisteredMediaResource']["@attributes"]['Total'];
+        } else {
+            $fields['mr-total'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MOH'])) {
-            $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['MOH'];
+            $fields['mr-moh'] = $RESULT['RegisteredMediaResource']["@attributes"]['MOH'];
+        } else {
+            $fields['mr-moh'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MTP'])) {
-            $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['MTP'];
+            $fields['mr-mtp'] = $RESULT['RegisteredMediaResource']["@attributes"]['MTP'];
+        } else {
+            $fields['mr-mtp'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['XCODE'])) {
-            $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['XCODE'];
+            $fields['mr-xcode'] = $RESULT['RegisteredMediaResource']["@attributes"]['XCODE'];
+        } else {
+            $fields['mr-xcode'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['RegisteredMediaResource']["@attributes"]['CFB'])) {
-            $VALUE = $RESULT['RegisteredMediaResource']["@attributes"]['CFB'];
+            $fields['mr-cfb'] = $RESULT['RegisteredMediaResource']["@attributes"]['CFB'];
+        } else {
+            $fields['mr-cfb'] = "U";
         }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
 
         if (isset($RESULT['H323']["@attributes"]['Total'])) {
-            $VALUE = $RESULT['H323']["@attributes"]['Total'];
-        }
-        else {
-            $VALUE = "U";
-        }
-        $RRD['data'][] = $VALUE;
-
-        // Create the RRD if it doesn't exist.
-        if (!file_exists ($RRD['filename'])) {
-            rrdtool_create ($RRD['filename'], $RRD['create'] . $config['rrd_rra']);
+            $fields['h323-total'] = $RESULT['H323']["@attributes"]['Total'];
+        } else {
+            $fields['h323-total'] = "U";
         }
 
-        // Add the data to the RRD if it exists.
-        if (is_array($RRD['data'])) {
-            rrdtool_update ($RRD['filename'], $RRD['data']);
-        }
+        $tags = compact('rrd_name', 'rrd_def');
+        data_update($device, $module, $tags, $fields);
     }
 
     // Enable the graphs.
@@ -182,5 +160,5 @@ if ($device['os'] == "cucm") {
     $graphs[$MODULE.'-h323'] = TRUE;
 
     echo $MODULE.' ';
-    unset($RRD, $RESULT, $MODULE, $API);
+    unset($RESULT, $MODULE, $API);
 }

@@ -62,25 +62,21 @@ if ($device['os'] == "cucm") {
             // We should be able to retrieve the counter data now..
             foreach($COMPONENTS as $COMPID => $ARRAY) {
                 // If we need to create the RRD, MODULE-Label is the convention.
-                $RRD = array();
-                $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
+                $label = $ARRAY['label'];
+                $rrd_name = array($module, $label);
+                unset($fields);
 
-                $RRD['create'] = " DS:callsall:GAUGE:600:0:U DS:callsvideo:GAUGE:600:0:U";
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\CallsActive');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$ARRAY['label'].')\VideoCallsActive');
+                $fields = array(
+                    'callsall' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$label.')\CallsActive'),
+                    'callsvideo' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco SIP('.$label.')\VideoCallsActive'),
+                );
+                $rrd_def = array(
+                    'DS:callsall:GAUGE:600:0:U',
+                    'DS:callsvideo:GAUGE:600:0:U',
+                );
 
-                // Do we need to do anything with the RRD?
-                if (isset($RRD)) {
-                    // Create the RRD if it doesn't exist.
-                    if (!file_exists ($RRD['filename'])) {
-                        rrdtool_create ($RRD['filename'], $RRD['create'] . $config['rrd_rra']);
-                    }
-
-                    // Add the data to the RRD if it exists.
-                    if (is_array($RRD['data'])) {
-                        rrdtool_update ($RRD['filename'], $RRD['data']);
-                    }
-                }
+                $tags = compact('label', 'rrd_name', 'rrd_def');
+                data_update($device, $module, $label, $tags, $fields);
             } // End foreach COMPONENT
 
             // Enable the graph.
@@ -90,5 +86,5 @@ if ($device['os'] == "cucm") {
             echo $MODULE.' ';
         } // End if RESULTS
     }
-    unset($RRD, $COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
+    unset($COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
 }

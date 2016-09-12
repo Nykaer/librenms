@@ -66,29 +66,29 @@ if ($device['os'] == "cucm") {
             // We should be able to retrieve the counter data now..
             foreach($COMPONENTS as $COMPID => $ARRAY) {
                 // If we need to create the RRD, MODULE-Label is the convention.
-                $RRD = array();
-                $RRD['filename'] = $config['rrd_dir'] . "/" . $device['hostname'] . "/" . safename ($MODULE."-".$ARRAY['label'].".rrd");
+                $label = $ARRAY['label'];
+                $rrd_name = array($module, $label);
+                unset($fields);
 
-                $RRD['create'] = " DS:totalvoice:GAUGE:600:0:U DS:availablevoice:GAUGE:600:0:U DS:totalimmersive:GAUGE:600:0:U DS:availableimmersive:GAUGE:600:0:U DS:totalvideo:GAUGE:600:0:U DS:availablevideo:GAUGE:600:0:U";
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthMaximum');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthAvailable');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthMaximum');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthAvailable');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthMaximum');
-                $RRD['data'][] = $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthAvailable');
+                $fields = array(
+                    'totalvoice' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\BandwidthMaximum'),
+                    'availablevoice' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\BandwidthAvailable'),
+                    'totalimmersive' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthMaximum'),
+                    'availableimmersive' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthAvailable'),
+                    'totalvideo' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\VideoBandwidthMaximum'),
+                    'availablevideo' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\VideoBandwidthAvailable'),
+                );
+                $rrd_def = array(
+                    'DS:totalvoice:GAUGE:600:0:U',
+                    'DS:availablevoice:GAUGE:600:0:U',
+                    'DS:totalimmersive:GAUGE:600:0:U',
+                    'DS:availableimmersive:GAUGE:600:0:U',
+                    'DS:totalvideo:GAUGE:600:0:U',
+                    'DS:availablevideo:GAUGE:600:0:U',
+                );
 
-                // Do we need to do anything with the RRD?
-                if (isset($RRD)) {
-                    // Create the RRD if it doesn't exist.
-                    if (!file_exists ($RRD['filename'])) {
-                        rrdtool_create ($RRD['filename'], $RRD['create'] . $config['rrd_rra']);
-                    }
-
-                    // Add the data to the RRD if it exists.
-                    if (is_array($RRD['data'])) {
-                        rrdtool_update ($RRD['filename'], $RRD['data']);
-                    }
-                }
+                $tags = compact('label', 'rrd_name', 'rrd_def');
+                data_update($device, $module, $label, $tags, $fields);
             } // End foreach COMPONENT
 
             // Enable the graph.
@@ -99,5 +99,5 @@ if ($device['os'] == "cucm") {
             echo $MODULE.' ';
         } // End if RESULTS
     }
-    unset($RRD, $COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
+    unset($COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
 }
