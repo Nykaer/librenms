@@ -41,7 +41,7 @@ foreach ($components as $id => $array) {
         }
 
         $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":users:AVERAGE ";
-        $rrd_options .= " LINE1.25:DS" . $count . "#" . $color . ":'" . str_pad(substr($array['dn'], 0, 15), 15) . "' ";
+        $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad(substr($array['dn'], 0, 15), 15) . "' ";
         $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.0lf%s ";
         $rrd_options .= " GPRINT:DS" . $count . ":MIN:%6.0lf%s ";
         $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.0lf%s\\\l ";
