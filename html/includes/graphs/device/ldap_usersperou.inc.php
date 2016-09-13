@@ -27,16 +27,17 @@ include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:' Users per OU           Now      Min      Max\\n'";
 
+$colours = array_merge($config['graph_colours']['mixed'], $config['graph_colours']['manycolours'], $config['graph_colours']['manycolours']);
 $count = 0;
 foreach ($components as $id => $array) {
     $rrd_filename = rrd_name($device['hostname'], array('ldap', 'users', $array['label']));
 
     if (file_exists($rrd_filename)) {
-        // Grab a color from the array.
-        if (isset($config['graph_colours']['mixed'][$count])) {
-            $color = $config['graph_colours']['mixed'][$count];
+        // Grab a colour from the array.
+        if (isset($colours[$count])) {
+            $colour = $colours[$count];
         } else {
-            $color = $config['graph_colours']['oranges'][$count-7];
+            d_echo("\nError: Out of colours. Have: ".(count($colours)-1).", Requesting:".$count);
         }
 
         $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":users:AVERAGE ";
