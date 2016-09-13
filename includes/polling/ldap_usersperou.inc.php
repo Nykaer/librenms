@@ -63,6 +63,7 @@ if (isset($ldapuser) && isset($ldappass) && isset($ldapport) && isset($base)) {
                     $rrd_def = 'DS:users:GAUGE:600:0:U';
                     $tags = compact('uid', 'rrd_name', 'rrd_def');
                     data_update($device, 'ldap', $tags, $fields);
+                    $graphs['ldap_usersperou'] = true;
                     
                     // Let's print some debugging info.
                     d_echo("\n\nComponent: " . $key . "\n");

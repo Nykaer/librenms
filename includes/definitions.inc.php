@@ -2575,6 +2575,10 @@ $config['graph_types']['device']['cisco-iosxcode']['section']  = 'voice';
 $config['graph_types']['device']['cisco-iosxcode']['order']    = '0';
 $config['graph_types']['device']['cisco-iosxcode']['descr']    = 'Transcoder Utilisation';
 
+$config['graph_types']['device']['ldap_usersperou']['section']  = 'LDAP';
+$config['graph_types']['device']['ldap_usersperou']['order']    = '0';
+$config['graph_types']['device']['ldap_usersperou']['descr']    = 'Users per OU';
+
 $config['graph_descr']['device_smokeping_in_all'] = 'This is an aggregate graph of the incoming smokeping tests to this host. The line corresponds to the average RTT. The shaded area around each line denotes the standard deviation.';
 $config['graph_descr']['device_processor']        = 'This is an aggregate graph of all processors in the system.';
 
