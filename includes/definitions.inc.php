@@ -2539,7 +2539,7 @@ $config['graph_types']['device']['cisco-iosxcode']['section']  = 'voice';
 $config['graph_types']['device']['cisco-iosxcode']['order']    = '0';
 $config['graph_types']['device']['cisco-iosxcode']['descr']    = 'Transcoder Utilisation';
 
-$config['graph_types']['device']['ldap_usersperou']['section']  = 'LDAP';
+$config['graph_types']['device']['ldap_usersperou']['section']  = 'ldap';
 $config['graph_types']['device']['ldap_usersperou']['order']    = '0';
 $config['graph_types']['device']['ldap_usersperou']['descr']    = 'Users per OU';
 
