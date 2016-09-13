@@ -30,6 +30,7 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
     // Begin our master array, all other values will be processed into this array.
     $OUs = array();
 
+    d_echo("Trying to connect to: ".$device['hostname'].":".$ldapport."\n");
     $ldapconn = ldap_connect($device['hostname'].":".$ldapport) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
     if ($ldapconn) {
         // binding to ldap server
