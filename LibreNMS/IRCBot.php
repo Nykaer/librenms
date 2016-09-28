@@ -372,7 +372,7 @@ class IRCBot
             return die();
         }
 
-        $this->log('Trying to connect to '.$this->server.':'.$this->port.($this->ssl ? ' (SSL)' : ''));
+        $this->log('Trying to connect ('.($try + 1).') to '.$this->server.':'.$this->port.($this->ssl ? ' (SSL)' : ''));
         if ($this->socket['irc']) {
             fclose($this->socket['irc']);
         }
@@ -392,6 +392,13 @@ class IRCBot
         }
 
         if (!is_resource($this->socket['irc'])) {
+            if ($try < 5) {
+                sleep(5);
+            } elseif ($try < 10) {
+                sleep(60);
+            } else {
+                sleep(300);
+            }
             return $this->connect($try + 1);
         } else {
             stream_set_blocking($this->socket['irc'], false);
@@ -471,7 +478,8 @@ class IRCBot
         if (strlen($params[0]) == 64) {
             if ($this->tokens[$this->getUser($this->data)] == $params[0]) {
                 $this->user['expire'] = (time() + ($this->config['irc_authtime'] * 3600));
-                $tmp                  = dbFetchRow('SELECT level FROM users WHERE user_id = ?', array($this->user['id']));
+                $tmp_user = get_user($this->user['id']);
+                $tmp = get_userlevel($tmp_user['username']);
                 $this->user['level']  = $tmp['level'];
                 if ($this->user['level'] < 5) {
                     foreach (dbFetchRows('SELECT device_id FROM devices_perms WHERE user_id = ?', array($this->user['id'])) as $tmp) {
@@ -488,7 +496,8 @@ class IRCBot
                 return $this->respond('Nope.');
             }
         } else {
-            $user = dbFetchRow('SELECT `user_id`,`username`,`email` FROM `users` WHERE `username` = ?', array(mres($params[0])));
+            $user_id = get_userid(mres($params[0]));
+            $user = get_user($user_id);
             if ($user['email'] && $user['username'] == $params[0]) {
                 $token = hash('gost', openssl_random_pseudo_bytes(1024));
                 $this->tokens[$this->getUser($this->data)] = $token;
@@ -562,7 +571,12 @@ class IRCBot
 
     private function _version($params)
     {
-        return $this->respond($this->config['project_name_version'].', PHP: '.PHP_VERSION);
+        $versions       = version_info(false);
+        $schema_version = $versions['db_schema'];
+        $version        = substr($versions['local_sha'], 0, 7);
+
+        $msg = $this->config['project_name_version'].', Version: '.$version.', DB schema: #'.$schema_version.', PHP: '.PHP_VERSION;
+        return $this->respond($msg);
     }//end _version()
 
 

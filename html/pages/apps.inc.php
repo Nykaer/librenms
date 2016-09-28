@@ -66,6 +66,21 @@ $graphs['powerdns'] = array(
     'queries_udp',
 );
 
+$graphs['ntp-client'] = array(
+    'stats',
+    'freq',
+);
+
+$graphs['ntp-server'] = array(
+    'stats',
+    'freq',
+    'stratum',
+    'buffer',
+    'bits',
+    'packets',
+    'uptime',
+);
+
 $graphs['nfs-v3-stats'] = array(
     'stats',
     'io',
@@ -87,6 +102,14 @@ $graphs['freeswitch'] = array(
     'peak',
     'callsIn',
     'callsOut',
+);
+
+$graphs['ups-nut'] = array(
+    'remaining',
+    'load',
+    'voltage_battery',
+    'charge',
+    'voltage_input',
 );
 
 print_optionbar_start();

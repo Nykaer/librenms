@@ -2,17 +2,16 @@
 <?php
 
 /*
- * Observium
+ * LibreNMS
  *
- *   This file is part of Observium.
+ *   This file is part of LibreNMS.
  *
- * @package    observium
+ * @package    LibreNMS
  * @subpackage billing
- * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  */
 
-chdir(dirname($argv[0]));
+chdir(__DIR__); // cwd to the directory containing this script
 
 // FIXME - implement cli switches, debugging, etc.
 require 'includes/defaults.inc.php';

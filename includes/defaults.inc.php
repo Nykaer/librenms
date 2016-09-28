@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Observium Network Management and Monitoring System
+ * LibreNMS Network Management and Monitoring System
  * Copyright (C) 2006-2011, Observium Developers - http://www.observium.org
  *
  * This program is free software: you can redistribute it and/or modify
@@ -11,9 +11,8 @@
  *
  * See COPYING for more details.
  *
- * @package    observium
+ * @package    LibreNMS
  * @subpackage config
- * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  * @license    http://gnu.org/copyleft/gpl.html GNU GPL
  */
@@ -22,17 +21,6 @@
 // Please don't edit this file -- make changes to the configuration array in config.php
 //
 error_reporting(E_ERROR|E_PARSE|E_CORE_ERROR|E_COMPILE_ERROR);
-
-function set_debug($debug)
-{
-    if (isset($debug)) {
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 0);
-        ini_set('log_errors', 0);
-        ini_set('allow_url_fopen', 0);
-        ini_set('error_reporting', E_ALL);
-    }
-}//end set_debug()
 
 // set install_dir
 $config['install_dir'] = realpath(__DIR__ . '/..');
@@ -55,7 +43,7 @@ $config['temp_dir']    = '/tmp';
 $config['log_dir']     = $config['install_dir'].'/logs';
 
 // MySQL extension to use
-$config['db']['extension']       = 'mysql';//mysql and mysqli available
+$config['db']['extension']       = 'mysqli';//mysql and mysqli available
 
 // What is my own hostname (used to identify this host in its own database)
 $config['own_hostname'] = 'localhost';

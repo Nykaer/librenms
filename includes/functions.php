@@ -1,13 +1,12 @@
 <?php
 
 /**
- * Observium
+ * LibreNMS
  *
- *   This file is part of Observium.
+ *   This file is part of LibreNMS.
  *
- * @package    observium
+ * @package    LibreNMS
  * @subpackage functions
- * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  *
  */
@@ -36,6 +35,17 @@ include_once($config['install_dir'] . "/includes/snmp.inc.php");
 include_once($config['install_dir'] . "/includes/services.inc.php");
 
 $console_color = new Console_Color2();
+
+function set_debug($debug)
+{
+    if (isset($debug)) {
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 0);
+        ini_set('log_errors', 0);
+        ini_set('allow_url_fopen', 0);
+        ini_set('error_reporting', E_ALL);
+    }
+}//end set_debug()
 
 function array_sort($array, $on, $order = SORT_ASC)
 {
@@ -104,22 +114,17 @@ function getHostOS($device)
     $sysDescr    = snmp_get($device, "SNMPv2-MIB::sysDescr.0", "-Ovq");
     $sysObjectId = snmp_get($device, "SNMPv2-MIB::sysObjectID.0", "-Ovqn");
 
-    d_echo("| $sysDescr | $sysObjectId | ");
+    d_echo("| $sysDescr | $sysObjectId | \n");
 
-    $path = $config['install_dir'] . "/includes/discovery/os";
-    $dir_handle = @opendir($path) or die("Unable to open $path");
-    while ($file = readdir($dir_handle)) {
-        if (preg_match("/.php$/", $file)) {
-            include($config['install_dir'] . "/includes/discovery/os/" . $file);
+    $pattern = $config['install_dir'] . '/includes/discovery/os/*.inc.php';
+    foreach (glob($pattern) as $file) {
+        include $file;
+        if (isset($os)) {
+            return $os;
         }
     }
-    closedir($dir_handle);
 
-    if ($os) {
-        return $os;
-    } else {
-        return "generic";
-    }
+    return "generic";
 }
 
 function percent_colour($perc)
@@ -1554,3 +1559,82 @@ function hytera_h2f($number, $nd)
 
     return number_format($floatfinal, $nd, '.', '');
 }
+
+/*
+ * Cisco CIMC functions
+ */
+// Create an entry in the entPhysical table if it doesnt already exist.
+function setCIMCentPhysical($location, $data, &$entphysical, &$index)
+{
+    // Go get the location, this will create it if it doesnt exist.
+    $entPhysicalIndex = getCIMCentPhysical($location, $entphysical, $index);
+
+    // See if we need to update
+    $update = array();
+    foreach ($data as $key => $value) {
+        // Is the Array(DB) value different to the supplied data
+        if ($entphysical[$location][$key] != $value) {
+            $update[$key] = $value;
+            $entphysical[$location][$key] = $value;
+        } // End if
+    } // end foreach
+
+    // Do we need to update
+    if (count($update) > 0) {
+        dbUpdate($update, 'entPhysical', '`entPhysical_id` = ?', array($entphysical[$location]['entPhysical_id']));
+    }
+    $entPhysicalId = $entphysical[$location]['entPhysical_id'];
+    return array($entPhysicalId, $entPhysicalIndex);
+}
+
+function getCIMCentPhysical($location, &$entphysical, &$index)
+{
+    global $device;
+
+    // Level 1 - Does the location exist
+    if (isset($entphysical[$location])) {
+        // Yes, return the entPhysicalIndex.
+        return $entphysical[$location]['entPhysicalIndex'];
+    } else {
+        /*
+         * No, the entry doesnt exist.
+         * Find its parent so we can create it.
+         */
+
+        // Pull apart the location
+        $parts = explode('/', $location);
+
+        // Level 2 - Are we at the root
+        if (count($parts) == 1) {
+            // Level 2 - Yes. We are the root, there is no parent
+            d_echo("ROOT - ".$location."\n");
+            $shortlocation = $location;
+            $parent = 0;
+        } else {
+            // Level 2 - No. Need to go deeper.
+            d_echo("NON-ROOT - ".$location."\n");
+            $shortlocation = array_pop($parts);
+            $parentlocation = implode('/', $parts);
+            d_echo("Decend - parent location: ".$parentlocation."\n");
+            $parent = getCIMCentPhysical($parentlocation, $entphysical, $index);
+        } // end if - Level 2
+        d_echo("Parent: ".$parent."\n");
+
+        // Now we have an ID, create the entry.
+        $index++;
+        $insert = array(
+            'device_id'                 => $device['device_id'],
+            'entPhysicalIndex'          => $index,
+            'entPhysicalClass'          => 'container',
+            'entPhysicalVendorType'     => $location,
+            'entPhysicalName'           => $shortlocation,
+            'entPhysicalContainedIn'    => $parent,
+            'entPhysicalParentRelPos'   => '-1',
+        );
+
+        // Add to the DB and Array.
+        $id = dbInsert($insert, 'entPhysical');
+        $entphysical[$location] = dbFetchRow('SELECT * FROM entPhysical WHERE entPhysical_id=?', array($id));
+        return $index;
+    } // end if - Level 1
+} // end function

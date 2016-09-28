@@ -97,7 +97,7 @@ foreach ($slas as $sla) {
     }
 
     // These Types have more graphs. Display a sub-page
-    if ( ($sla['rtt_type'] == 'jitter') || ($sla['rtt_type'] == 'icmpjitter') ) {
+    if (($sla['rtt_type'] == 'jitter') || ($sla['rtt_type'] == 'icmpjitter')) {
         $name = '<a href="'.generate_url($vars, array('tab' => "sla", 'id' => $sla['sla_id'])).'">'.$name.'</a>';
     } else {
         $name = htmlentities($name);

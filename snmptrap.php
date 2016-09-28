@@ -2,15 +2,16 @@
 <?php
 
 /**
- * Observium
+ * LibreNMS
  *
- *   This file is part of Observium.
+ *   This file is part of LibreNMS.
  *
- * @package    observium
+ * @package    LibreNMS
  * @subpackage snmptraps
- * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  */
+
+chdir(__DIR__); // cwd to the directory containing this script
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);

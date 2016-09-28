@@ -1,11 +1,13 @@
 #!/usr/bin/env php
 <?php
 
+chdir(realpath(__DIR__ . '/..')); // cwd to the parent directory of this script
+
 require 'includes/defaults.inc.php';
 require 'config.php';
 require 'includes/definitions.inc.php';
 require 'includes/functions.php';
-rrdtool_pipe_open($rrd_process, $rrd_pipes);
+rrdtool_initialize();
 
 $options = getopt('h:p:');
 
@@ -26,3 +28,5 @@ foreach (dbFetchRows("SELECT `device_id`,`hostname` FROM `devices` WHERE `hostna
         rrdtool_tune('port', $rrdfile, $port['ifSpeed']);
     }
 }
+
+rrdtool_close();

@@ -30,7 +30,25 @@ function generate_priority_icon($priority)
         ""          => "application",
     );
 
-    return '<img src="images/16/' . $map[$priority] .'.png" title="' . $priority . '">';
+    $image = isset($map[$priority]) ? $map[$priority] : 'application';
+    return '<img src="images/16/' . $image .'.png" title="' . $priority . '">';
+}
+
+function generate_priority_status($priority)
+{
+    $map = array(
+        "emerg"     => 2,
+        "alert"     => 2,
+        "crit"      => 2,
+        "err"       => 2,
+        "warning"   => 1,
+        "notice"    => 0,
+        "info"      => 0,
+        "debug"     => 3,
+        ""          => 0,
+    );
+
+    return isset($map[$priority]) ? $map[$priority] : 0;
 }
 
 function format_number_short($number, $sf)
@@ -633,12 +651,12 @@ function is_valid_hostname($hostname)
  */
 function d_echo($text, $no_debug_text = null)
 {
-    global $debug;
+    global $debug, $php_debug;
     if ($debug) {
-        if (is_array($text)) {
-            print_r($text);
+        if (isset($php_debug)) {
+            $php_debug[] = $text;
         } else {
-            echo "$text";
+            print_r($text);
         }
     } elseif ($no_debug_text) {
         echo "$no_debug_text";
@@ -665,19 +683,6 @@ function c_echo($string, $enabled = true)
         echo preg_replace('/%((%)|.)/', '', $string);
     }
 }
-
-/*
- * convenience function - please use this instead of 'if ($debug) { print_r ...; }'
- */
-function d_print_r($var, $no_debug_text = null)
-{
-    global $debug;
-    if ($debug) {
-        print_r($var);
-    } elseif ($no_debug_text) {
-        echo "$no_debug_text";
-    }
-} // d_print_r
 
 
 /*
@@ -734,11 +739,15 @@ function get_graph_subtypes($type, $device = null)
         closedir($handle);
     }
 
-    // find the MIB subtypes
-    foreach ($config['graph_types'] as $type => $unused1) {
-        foreach ($config['graph_types'][$type] as $subtype => $unused2) {
-            if (is_mib_graph($type, $subtype)  &&  $device != null  &&  is_device_graph($device, $subtype)) {
-                $types[] = $subtype;
+    if ($device != null) {
+        // find the MIB subtypes
+        $graphs = get_device_graphs($device);
+
+        foreach ($config['graph_types'] as $type => $unused1) {
+            foreach ($config['graph_types'][$type] as $subtype => $unused2) {
+                if (is_mib_graph($type, $subtype) && in_array($graphs, $subtype)) {
+                    $types[] = $subtype;
+                }
             }
         }
     }
@@ -747,13 +756,11 @@ function get_graph_subtypes($type, $device = null)
     return $types;
 } // get_graph_subtypes
 
-
-function is_device_graph($device, $subtype)
+function get_device_graphs($device)
 {
-    $query = 'SELECT COUNT(*) FROM `device_graphs` WHERE `device_id` = ? AND `graph` = ?';
-    return dbFetchCell($query, array($device['device_id'], $subtype)) > 0;
-} // is_device_graph
-
+    $query = 'SELECT `graph` FROM `device_graphs` WHERE `device_id` = ?';
+    return dbFetchColumn($query, array($device['device_id']));
+}
 
 function get_smokeping_files($device)
 {
