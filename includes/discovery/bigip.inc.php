@@ -12,16 +12,12 @@
  */
 
 if ($device['os'] == 'f5') {
-
-    $module = 'F5-Big-IP';
-
     require_once 'includes/component.php';
     $component = new component();
     $components = $component->getComponents($device['device_id'],array('type'=>$module));
 
     // We only care about our device id.
     $components = $components[$device['device_id']];
-
 
     // Begin our master array, all other values will be processed into this array.
     $tblBigIP = array();
@@ -36,7 +32,6 @@ if ($device['os'] == 'f5') {
      */
     if ( is_null($ltmVirtualServers) || is_null($ltmVirtualServers) ) {
         // We have to error here or we will end up deleting all our components.
-        echo "Error\n";
     }
     else {
         // No Error, lets process things.
@@ -48,11 +43,30 @@ if ($device['os'] == 'f5') {
             // Find all Virtual servers, they will be first in the table.
             if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.2.3.1.1.') !== false) {
                 list($null, $index) = explode ('1.3.6.1.4.1.3375.2.2.10.2.3.1.1.', $oid);
+                // Replace with hash
                 $result['UID'] = $index;
-                $result['type'] = 'LTMVS';
+                $result['category'] = 'LTMVS';
                 $result['label'] = $value;
-            }
 
+                // Now that we have our UID we can pull all the other data we need.
+                $result['IP'] = hex_to_ip($ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.3.'.$index]);
+                $result['port'] = $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.6.'.$index];
+
+                $result['state'] = $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.22.'.$index];
+                if ($result['state'] == 2) {
+                    // Looks like one of the VS Pool members is down.
+                    $result['status'] == 1;
+                    $result['error'] == $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.25.'.$index];;
+                } elseif ($result['state'] == 3) {
+                    // Looks like ALL of the VS Pool members is down.
+                    $result['status'] == 2;
+                    $result['error'] == $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.25.'.$index];;
+                } else {
+                    // All is good.
+                    $result['status'] == 0;
+                    $result['error'] == '';
+                }
+            }
 
 /*
             // Find all LTMVS Profiles.
@@ -88,14 +102,22 @@ if ($device['os'] == 'f5') {
 
             // Loop over our components to determine if the component exists, or we need to add it.
             foreach ($components as $compid => $child) {
-                if (($child['UID'] === $array['UID']) && ($child['type'] === $array['type'])) {
+//                echo($child['UID']." === ".$array['UID']."\n");
+//                echo($child['category']." === ".$array['category']." - ");
+//                if ($child['UID'] === $array['UID']) {
+//                    echo "Yes\n";
+//                } else {
+//                    echo "No\n";
+//                }
+                if (($child['UID'] === $array['UID']) && ($child['category'] === $array['category'])) {
                     $component_key = $compid;
+                    echo("Found! - ".$compid."\n");
                 }
             }
 
             if (!$component_key) {
                 // The component doesn't exist, we need to ADD it - ADD.
-//                $new_component = $component->createComponent($device['device_id'],$module);
+                $new_component = $component->createComponent($device['device_id'],$module);
                 $component_key = key($new_component);
                 $components[$component_key] = array_merge($new_component[$component_key], $array);
                 echo "+";
@@ -116,7 +138,7 @@ if ($device['os'] == 'f5') {
             $found = false;
 
             foreach ($tblBigIP as $k => $v) {
-                if ( ($array['UID'] == $v['UID']) && ($array['type'] == $v['type'])) {
+                if (($array['UID'] == $v['UID']) && ($array['type'] == $v['type'])) {
                     // Yay, we found it...
                     $found = true;
                 }
@@ -130,7 +152,7 @@ if ($device['os'] == 'f5') {
         }
 
         // Write the Components back to the DB.
-//        $component->setComponentPrefs($device['device_id'],$components);
+        $component->setComponentPrefs($device['device_id'],$components);
         echo "\n";
 
 d_echo($tblBigIP);
