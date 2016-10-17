@@ -1,11 +1,10 @@
 <?php
 
-require_once "../includes/component.php";
-$COMPONENT = new component();
+$COMPONENT = new LibreNMS\Component();
 $options = array();
 $options['filter']['ignore'] = array('=',0);
 $options['type'] = 'Cisco-OTV';
-$COMPONENTS = $COMPONENT->getComponents(null,$options);
+$COMPONENTS = $COMPONENT->getComponents(null, $options);
 
 foreach ($COMPONENTS as $DEVICE_ID => $COMP) {
     $LINK = generate_url(array('page' => 'device', 'device' => $DEVICE_ID, 'tab' => 'routing', 'proto' => 'cisco-otv'));
@@ -19,11 +18,10 @@ foreach ($COMPONENTS as $DEVICE_ID => $COMP) {
         // Loop over each component, pulling out the Overlays.
         foreach ($COMP as $OID => $OVERLAY) {
             if ($OVERLAY['otvtype'] == 'overlay') {
-                if ($OVERLAY['status'] == 1) {
+                if ($OVERLAY['status'] == 0) {
                     $OVERLAY_STATUS = "<span class='green pull-right'>Normal</span>";
                     $GLI = "";
-                }
-                else {
+                } else {
                     $OVERLAY_STATUS = "<span class='pull-right'>".$OVERLAY['error']." - <span class='red'>Alert</span></span>";
                     $GLI = "list-group-item-danger";
                 }
@@ -33,16 +31,15 @@ foreach ($COMPONENTS as $DEVICE_ID => $COMP) {
                     <?php
                     foreach ($COMP as $AID => $ADJACENCY) {
                         if (($ADJACENCY['otvtype'] == 'adjacency') && ($ADJACENCY['index'] == $OVERLAY['index'])) {
-                            if ($ADJACENCY['status'] == 1) {
+                            if ($ADJACENCY['status'] == 0) {
                                 $ADJ_STATUS = "<span class='green pull-right'>Normal</span>";
                                 $GLI = "";
-                            }
-                            else {
+                            } else {
                                 $ADJ_STATUS = "<span class='pull-right'>".$ADJACENCY['error']." - <span class='red'>Alert</span></span>";
                                 $GLI = "list-group-item-danger";
                             }
                             ?>
-                            <a class="list-group-item <?php echo $GLI?> small"><span class="glyphicon glyphicon-chevron-right"></span> <?php echo $ADJACENCY['label']?> - <?php echo $ADJACENCY['endpoint']?> <?php echo $ADJ_STATUS?></a>
+                            <a class="list-group-item <?php echo $GLI?> small"><i class="fa fa-chevron-right" aria-hidden="true"></i> <?php echo $ADJACENCY['label']?> - <?php echo $ADJACENCY['endpoint']?> <?php echo $ADJ_STATUS?></a>
                         <?php
                         }
                     }
