@@ -12,6 +12,16 @@
  */
 
 if ($device['os'] == 'f5') {
+    // Define some error messages
+    $error_poolaction = array();
+    $error_poolaction[0] = "Unused";
+    $error_poolaction[1] = "Reboot";
+    $error_poolaction[2] = "Restart";
+    $error_poolaction[3] = "Failover";
+    $error_poolaction[4] = "Failover and Restart";
+    $error_poolaction[5] = "Go Active";
+    $error_poolaction[6] = "None";
+
     $component = new LibreNMS\Component();
     $components = $component->getComponents($device['device_id'], array('type'=>$module));
 
@@ -24,25 +34,26 @@ if ($device['os'] == 'f5') {
     // Let's gather some data..
     $ltmVirtualServEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.1.2.1', 0);
     $ltmVsStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.13.2.1', 0);
+    $ltmPoolEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.1.2.1', 0);
+//    $ltmPoolMemberEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.3.2.1', 0);
 
     /*
      * False == no object found - this is not an error, OID doesn't exist.
      * null  == timeout or something else that caused an error, OID may exist but we couldn't get it.
      */
-    if (is_null($ltmVirtualServEntry) || is_null($ltmVsStatusEntry)) {
-        // We have to error here or we will end up deleting all our components.
-    } else {
-        // No Error, lets process things.
+    if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($ltmPoolEntry)) {
+        // No Nulls, lets go....
         d_echo("Objects Found:\n");
 
+        // Process all the Virtual Servers
         foreach ($ltmVsStatusEntry as $oid => $value) {
             $result = array();
 
-            // Find all Virtual servers, they will be first in the table.
+            // Find all Virtual server names and UID's, then we can find everything else we need.
             if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.13.2.1.1.') !== false) {
                 list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.10.13.2.1.1.', $oid);
                 $result['UID'] = (string)$index;
-                $result['category'] = 'LTMVS';
+                $result['category'] = 'LTMVirtualServer';
                 $result['label'] = $value;
 
                 // component_prefs.value is varchar(255). if the UID is too long, let the user know.
@@ -74,7 +85,7 @@ if ($device['os'] == 'f5') {
             // Do we have any results
             if (count($result) > 0) {
                 // Let's log some debugging
-                d_echo("\n\nLTMVS: ".$result['label']."\n");
+                d_echo("\n\n".$result['category'].": ".$result['label']."\n");
                 d_echo("    IP: ".$result['IP']."\n");
                 d_echo("    Port: ".$result['port']."\n");
                 d_echo("    UID: ".$result['UID']."\n");
@@ -84,12 +95,63 @@ if ($device['os'] == 'f5') {
             }
         }
 
-        /*
-         * Ok, we have our 2 array's (Components and SNMP) now we need
-         * to compare and see what needs to be added/updated.
-         *
-         * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
-         */
+        // Process all the Pools
+        foreach ($ltmPoolEntry as $oid => $value) {
+            $result = array ();
+
+            // Find all Pool member names and UID's, then we can find everything else we need.
+            if (strpos($oid, '1.3.6.1.4.1.3375.2.2.5.1.2.1.1.') !== false) {
+                list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.5.1.2.1.1.', $oid);
+                $result['UID'] = (string)$index;
+                $result['category'] = 'LTMPool';
+                $result['label'] = $value;
+
+                // component_prefs.value is varchar(255). if the UID is too long, let the user know.
+                if (strlen($result['UID']) > 255) {
+                    echo "Error: The following bigIP UID is longer than 255 characters, please log a github issue to increase component_prefs.value\n";
+                }
+
+                // Now that we have our UID we can pull all the other data we need.
+                $result['mode'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.2.'.$index];
+                $result['minup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.4.'.$index];
+                $result['currentup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.8.'.$index];
+                $result['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$index];
+                $result['monitor'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.17.'.$index];
+
+                // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
+                if ($result['currentup'] <= $result['minup']) {
+                    // Danger Will Robinson... We dont have enough Pool Members!
+                    $result['status'] = 2;
+                    $result['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$result['minupaction']];
+                } else {
+                    // All is good.
+                    $result['status'] = 0;
+                    $result['error'] = '';
+                }
+            }
+
+            // Do we have any results
+            if (count($result) > 0) {
+                // Let's log some debugging
+                d_echo("\n\n".$result['category'].": ".$result['label']."\n");
+                d_echo("    UID: ".$result['UID']."\n");
+                d_echo("    Mode: ".$result['mode']."\n");
+                d_echo("    Minimum Up: ".$result['minup']."\n");
+                d_echo("    Currently Up: ".$result['currentup']."\n");
+                d_echo("    Minimum Up Action: ".$result['minupaction']."\n");
+                d_echo("    Monitor: ".$result['monitor']."\n");
+                d_echo("    Status: ".$result['status']."\n");
+                d_echo("    Message: ".$result['error']."\n");
+                $tblBigIP[] = $result;
+            }
+        }
+
+            /*
+             * Ok, we have our 2 array's (Components and SNMP) now we need
+             * to compare and see what needs to be added/updated.
+             *
+             * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
+             */
         foreach ($tblBigIP as $key => $array) {
             $component_key = false;
 
