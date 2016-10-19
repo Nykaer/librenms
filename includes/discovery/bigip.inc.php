@@ -13,7 +13,7 @@
 
 if ($device['os'] == 'f5') {
     $component = new LibreNMS\Component();
-    $components = $component->getComponents($device['device_id'],array('type'=>$module));
+    $components = $component->getComponents($device['device_id'], array('type'=>$module));
 
     // We only care about our device id.
     $components = $components[$device['device_id']];
@@ -22,7 +22,6 @@ if ($device['os'] == 'f5') {
     $tblBigIP = array();
 
     // Let's gather some data..
-//    $ltmVirtualServers = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10', 0);
     $ltmVirtualServEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.1.2.1', 0);
     $ltmVsStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.13.2.1', 0);
 
@@ -30,10 +29,9 @@ if ($device['os'] == 'f5') {
      * False == no object found - this is not an error, OID doesn't exist.
      * null  == timeout or something else that caused an error, OID may exist but we couldn't get it.
      */
-    if ( is_null($ltmVirtualServEntry) || is_null($ltmVsStatusEntry) ) {
+    if (is_null($ltmVirtualServEntry) || is_null($ltmVsStatusEntry)) {
         // We have to error here or we will end up deleting all our components.
-    }
-    else {
+    } else {
         // No Error, lets process things.
         d_echo("Objects Found:\n");
 
@@ -42,7 +40,7 @@ if ($device['os'] == 'f5') {
 
             // Find all Virtual servers, they will be first in the table.
             if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.13.2.1.1.') !== false) {
-                list($null, $index) = explode ('1.3.6.1.4.1.3375.2.2.10.13.2.1.1.', $oid);
+                list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.10.13.2.1.1.', $oid);
                 $result['UID'] = (string)$index;
                 $result['category'] = 'LTMVS';
                 $result['label'] = $value;
@@ -108,13 +106,11 @@ if ($device['os'] == 'f5') {
                 $component_key = key($new_component);
                 $components[$component_key] = array_merge($new_component[$component_key], $array);
                 echo "+";
-            }
-            else {
+            } else {
                 // The component does exist, merge the details in - UPDATE.
                 $components[$component_key] = array_merge($components[$component_key], $array);
                 echo ".";
             }
-
         }
 
         /*
