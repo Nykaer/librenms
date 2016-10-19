@@ -12,8 +12,7 @@
  */
 
 if ($device['os'] == 'f5') {
-    require_once 'includes/component.php';
-    $component = new component();
+    $component = new LibreNMS\Component();
     $components = $component->getComponents($device['device_id'],array('type'=>$module));
 
     // We only care about our device id.
@@ -23,70 +22,66 @@ if ($device['os'] == 'f5') {
     $tblBigIP = array();
 
     // Let's gather some data..
-    $ltmVirtualServers = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10', 0);
-//    $ltmVirtualServProfileEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.5.2.1', 0);
+//    $ltmVirtualServers = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10', 0);
+    $ltmVirtualServEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.1.2.1', 0);
+    $ltmVsStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.13.2.1', 0);
 
     /*
      * False == no object found - this is not an error, OID doesn't exist.
      * null  == timeout or something else that caused an error, OID may exist but we couldn't get it.
      */
-    if ( is_null($ltmVirtualServers) || is_null($ltmVirtualServers) ) {
+    if ( is_null($ltmVirtualServEntry) || is_null($ltmVsStatusEntry) ) {
         // We have to error here or we will end up deleting all our components.
     }
     else {
         // No Error, lets process things.
         d_echo("Objects Found:\n");
 
-        foreach ($ltmVirtualServers as $oid => $value) {
+        foreach ($ltmVsStatusEntry as $oid => $value) {
             $result = array();
 
             // Find all Virtual servers, they will be first in the table.
-            if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.2.3.1.1.') !== false) {
-                list($null, $index) = explode ('1.3.6.1.4.1.3375.2.2.10.2.3.1.1.', $oid);
-                // Replace with hash
-                $result['UID'] = $index;
+            if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.13.2.1.1.') !== false) {
+                list($null, $index) = explode ('1.3.6.1.4.1.3375.2.2.10.13.2.1.1.', $oid);
+                $result['UID'] = (string)$index;
                 $result['category'] = 'LTMVS';
                 $result['label'] = $value;
 
-                // Now that we have our UID we can pull all the other data we need.
-                $result['IP'] = hex_to_ip($ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.3.'.$index]);
-                $result['port'] = $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.6.'.$index];
+                // component_prefs.value is varchar(255). if the UID is too long, let the user know.
+                if (strlen($result['UID']) > 255) {
+                    echo "Error: The bigIP UID is longer than 255 characters, please log a github issue to increase component_prefs.value\n";
+                }
 
-                $result['state'] = $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.22.'.$index];
+                // Now that we have our UID we can pull all the other data we need.
+                $result['IP'] = hex_to_ip($ltmVirtualServEntry['1.3.6.1.4.1.3375.2.2.10.1.2.1.3.'.$index]);
+                $result['port'] = $ltmVirtualServEntry['1.3.6.1.4.1.3375.2.2.10.1.2.1.6.'.$index];
+
+                // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
+                $result['state'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.2.'.$index];
                 if ($result['state'] == 2) {
                     // Looks like one of the VS Pool members is down.
-                    $result['status'] == 1;
-                    $result['error'] == $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.25.'.$index];;
+                    $result['status'] = 1;
+                    $result['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$index];
                 } elseif ($result['state'] == 3) {
                     // Looks like ALL of the VS Pool members is down.
-                    $result['status'] == 2;
-                    $result['error'] == $ltmVirtualServers['1.3.6.1.4.1.3375.2.2.10.1.2.1.25.'.$index];;
+                    $result['status'] = 2;
+                    $result['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$index];
                 } else {
                     // All is good.
-                    $result['status'] == 0;
-                    $result['error'] == '';
+                    $result['status'] = 0;
+                    $result['error'] = '';
                 }
             }
-
-/*
-            // Find all LTMVS Profiles.
-            if (strpos($oid, '1.3.6.1.4.1.3375.2.2.10.5.2.1.1.') !== false) {
-                list($null,$index) = explode('1.3.6.1.4.1.3375.2.2.10.5.2.1.1.', $oid);
-                $result['UID'] = $index;
-                $result['type'] = 'LTMVSProfile';
-                $result['label'] = $value;
-
-                foreach ($tblBigIP as $bigip) {
-                    // We only care about LTMVS objects.
-                    if (($bigip['type'] == 'LTMVS') && (strpos($result['UID'], $bigip['UID']) !== false)) {
-                        $result['parent'] = $bigip['UID'];
-                    }
-                }
-            }
-*/
 
             // Do we have any results
             if (count($result) > 0) {
+                // Let's log some debugging
+                d_echo("\n\nLTMVS: ".$result['label']."\n");
+                d_echo("    IP: ".$result['IP']."\n");
+                d_echo("    Port: ".$result['port']."\n");
+                d_echo("    UID: ".$result['UID']."\n");
+                d_echo("    Status: ".$result['status']."\n");
+                d_echo("    Message: ".$result['error']."\n");
                 $tblBigIP[] = $result;
             }
         }
@@ -102,22 +97,14 @@ if ($device['os'] == 'f5') {
 
             // Loop over our components to determine if the component exists, or we need to add it.
             foreach ($components as $compid => $child) {
-//                echo($child['UID']." === ".$array['UID']."\n");
-//                echo($child['category']." === ".$array['category']." - ");
-//                if ($child['UID'] === $array['UID']) {
-//                    echo "Yes\n";
-//                } else {
-//                    echo "No\n";
-//                }
                 if (($child['UID'] === $array['UID']) && ($child['category'] === $array['category'])) {
                     $component_key = $compid;
-                    echo("Found! - ".$compid."\n");
                 }
             }
 
             if (!$component_key) {
                 // The component doesn't exist, we need to ADD it - ADD.
-                $new_component = $component->createComponent($device['device_id'],$module);
+                $new_component = $component->createComponent($device['device_id'], $module);
                 $component_key = key($new_component);
                 $components[$component_key] = array_merge($new_component[$component_key], $array);
                 echo "+";
@@ -138,7 +125,7 @@ if ($device['os'] == 'f5') {
             $found = false;
 
             foreach ($tblBigIP as $k => $v) {
-                if (($array['UID'] == $v['UID']) && ($array['type'] == $v['type'])) {
+                if (($array['UID'] == $v['UID']) && ($array['category'] == $v['category'])) {
                     // Yay, we found it...
                     $found = true;
                 }
@@ -152,11 +139,7 @@ if ($device['os'] == 'f5') {
         }
 
         // Write the Components back to the DB.
-        $component->setComponentPrefs($device['device_id'],$components);
+        $component->setComponentPrefs($device['device_id'], $components);
         echo "\n";
-
-d_echo($tblBigIP);
-
     } // End if not error
-
 }
