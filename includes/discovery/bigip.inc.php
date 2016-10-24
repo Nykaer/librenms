@@ -35,17 +35,18 @@ if ($device['os'] == 'f5') {
     $ltmVirtualServEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.1.2.1', 0);
     $ltmVsStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.13.2.1', 0);
     $ltmPoolEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.1.2.1', 0);
-//    $ltmPoolMemberEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.3.2.1', 0);
+    $ltmPoolMemberEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.3.2.1', 0);
+    $ltmPoolMbrStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.6.2.1', 0);
 
     /*
      * False == no object found - this is not an error, OID doesn't exist.
      * null  == timeout or something else that caused an error, OID may exist but we couldn't get it.
      */
-    if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($ltmPoolEntry)) {
+    if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($ltmPoolEntry) || !is_null($ltmPoolMemberEntry) || !is_null($ltmPoolMbrStatusEntry)) {
         // No Nulls, lets go....
         d_echo("Objects Found:\n");
 
-        // Process all the Virtual Servers
+        // Process the Virtual Servers
         foreach ($ltmVsStatusEntry as $oid => $value) {
             $result = array();
 
@@ -56,14 +57,10 @@ if ($device['os'] == 'f5') {
                 $result['category'] = 'LTMVirtualServer';
                 $result['label'] = $value;
 
-                // component_prefs.value is varchar(255). if the UID is too long, let the user know.
-                if (strlen($result['UID']) > 255) {
-                    echo "Error: The bigIP UID is longer than 255 characters, please log a github issue to increase component_prefs.value\n";
-                }
-
                 // Now that we have our UID we can pull all the other data we need.
                 $result['IP'] = hex_to_ip($ltmVirtualServEntry['1.3.6.1.4.1.3375.2.2.10.1.2.1.3.'.$index]);
                 $result['port'] = $ltmVirtualServEntry['1.3.6.1.4.1.3375.2.2.10.1.2.1.6.'.$index];
+                $result['pool'] = $ltmVirtualServEntry['1.3.6.1.4.1.3375.2.2.10.1.2.1.19.'.$index];
 
                 // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
                 $result['state'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.2.'.$index];
@@ -88,28 +85,27 @@ if ($device['os'] == 'f5') {
                 d_echo("\n\n".$result['category'].": ".$result['label']."\n");
                 d_echo("    IP: ".$result['IP']."\n");
                 d_echo("    Port: ".$result['port']."\n");
+                d_echo("    Pool: ".$result['pool']."\n");
                 d_echo("    UID: ".$result['UID']."\n");
                 d_echo("    Status: ".$result['status']."\n");
                 d_echo("    Message: ".$result['error']."\n");
+
+                // We need to compress the string as it can grow bigger than 255 characters
+                $result['UID'] = gzcompress($result['UID'],9);
                 $tblBigIP[] = $result;
             }
         }
 
-        // Process all the Pools
+        // Process the Pools
         foreach ($ltmPoolEntry as $oid => $value) {
             $result = array ();
 
-            // Find all Pool member names and UID's, then we can find everything else we need.
+            // Find all Pool names and UID's, then we can find everything else we need.
             if (strpos($oid, '1.3.6.1.4.1.3375.2.2.5.1.2.1.1.') !== false) {
                 list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.5.1.2.1.1.', $oid);
                 $result['UID'] = (string)$index;
                 $result['category'] = 'LTMPool';
                 $result['label'] = $value;
-
-                // component_prefs.value is varchar(255). if the UID is too long, let the user know.
-                if (strlen($result['UID']) > 255) {
-                    echo "Error: The following bigIP UID is longer than 255 characters, please log a github issue to increase component_prefs.value\n";
-                }
 
                 // Now that we have our UID we can pull all the other data we need.
                 $result['mode'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.2.'.$index];
@@ -118,7 +114,7 @@ if ($device['os'] == 'f5') {
                 $result['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$index];
                 $result['monitor'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.17.'.$index];
 
-                // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
+                // If we have less pool members than the minimum, we should error.
                 if ($result['currentup'] <= $result['minup']) {
                     // Danger Will Robinson... We dont have enough Pool Members!
                     $result['status'] = 2;
@@ -142,22 +138,75 @@ if ($device['os'] == 'f5') {
                 d_echo("    Monitor: ".$result['monitor']."\n");
                 d_echo("    Status: ".$result['status']."\n");
                 d_echo("    Message: ".$result['error']."\n");
+
+                // We need to compress the string as it can grow bigger than 255 characters
+                $result['UID'] = gzcompress($result['UID'],9);
                 $tblBigIP[] = $result;
             }
         }
 
-            /*
-             * Ok, we have our 2 array's (Components and SNMP) now we need
-             * to compare and see what needs to be added/updated.
-             *
-             * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
-             */
+        // Process the Pool Members
+        foreach ($ltmPoolMemberEntry as $oid => $value) {
+            $result = array ();
+
+            // Find all Pool member names and UID's, then we can find everything else we need.
+            if (strpos($oid, '1.3.6.1.4.1.3375.2.2.5.3.2.1.19.') !== false) {
+                list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.5.3.2.1.19.', $oid);
+                $result['UID'] = (string)$index;
+                $result['category'] = 'LTMPoolMember';
+                $result['label'] = $value;
+
+                // Now that we have our UID we can pull all the other data we need.
+                $result['IP'] = hex_to_ip($ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.3.'.$index]);
+                $result['port'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.4.'.$index];
+                $result['ratio'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.6.'.$index];
+                $result['weight'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.7.'.$index];
+                $result['priority'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.8.'.$index];
+                $result['state'] = $ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.5.'.$index];
+
+                // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
+                if ($result['state'] == 3) {
+                    // Warning Alarm, the pool member is down.
+                    $result['status'] = 1;
+                    $result['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$index];;
+                } else {
+                    // All is good.
+                    $result['status'] = 0;
+                    $result['error'] = '';
+                }
+            }
+
+            // Do we have any results
+            if (count($result) > 0) {
+                // Let's log some debugging
+                d_echo("\n\n".$result['category'].": ".$result['label']."\n");
+                d_echo("    UID: ".$result['UID']."\n");
+                d_echo("    IP: ".$result['IP']."\n");
+                d_echo("    Port: ".$result['port']."\n");
+                d_echo("    Ratio: ".$result['ratio']."\n");
+                d_echo("    Weight: ".$result['weight']."\n");
+                d_echo("    Priority: ".$result['priority']."\n");
+                d_echo("    Status: ".$result['status']."\n");
+                d_echo("    Message: ".$result['error']."\n");
+
+                // We need to compress the string as it can grow bigger than 255 characters
+                $result['UID'] = gzcompress($result['UID'],9);
+                $tblBigIP[] = $result;
+            }
+        }
+
+        /*
+         * Ok, we have our 2 array's (Components and SNMP) now we need
+         * to compare and see what needs to be added/updated.
+         *
+         * Let's loop over the SNMP data to see if we need to ADD or UPDATE any components.
+         */
         foreach ($tblBigIP as $key => $array) {
             $component_key = false;
 
             // Loop over our components to determine if the component exists, or we need to add it.
             foreach ($components as $compid => $child) {
-                if (($child['UID'] === $array['UID']) && ($child['category'] === $array['category'])) {
+                if ((gzuncompress($child['UID']) === gzuncompress($array['UID'])) && ($child['category'] === $array['category'])) {
                     $component_key = $compid;
                 }
             }
@@ -183,7 +232,7 @@ if ($device['os'] == 'f5') {
             $found = false;
 
             foreach ($tblBigIP as $k => $v) {
-                if (($array['UID'] == $v['UID']) && ($array['category'] == $v['category'])) {
+                if ((gzuncompress($array['UID']) == gzuncompress($v['UID'])) && ($array['category'] == $v['category'])) {
                     // Yay, we found it...
                     $found = true;
                 }
