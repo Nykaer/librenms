@@ -11,8 +11,16 @@
  * the source code distribution for details.
  */
 
-if ($device['os_group'] == "cisco") {
-    $module = 'Cisco-CBQOS';
+if ($device['os'] == 'f5') {
+    // Define some error messages
+    $error_poolaction = array();
+    $error_poolaction[0] = "Unused";
+    $error_poolaction[1] = "Reboot";
+    $error_poolaction[2] = "Restart";
+    $error_poolaction[3] = "Failover";
+    $error_poolaction[4] = "Failover and Restart";
+    $error_poolaction[5] = "Go Active";
+    $error_poolaction[6] = "None";
 
     $component = new LibreNMS\Component();
     $options['filter']['type'] = array('=',$module);
@@ -26,45 +34,121 @@ if ($device['os_group'] == "cisco") {
     // Only collect SNMP data if we have enabled components
     if (count($components > 0)) {
         // Let's gather the stats..
-        $tblcbQosClassMapStats = snmpwalk_array_num($device, '.1.3.6.1.4.1.9.9.166.1.15.1.1', 2);
+        $ltmVirtualServStatEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.3375.2.2.10.2.3.1', 0);
+        $ltmPoolMemberStatEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.3375.2.2.5.4.3.1', 0);
+        $sysGlobalHttpStat = snmpwalk_array_num($device, '.1.3.6.1.4.1.3375.2.1.1.2.4', 0);
+
+        // Lets capture some global http stats
+        $category = 'http';
+        // Let's make sure the rrd is setup.
+        $rrd_name = array($module, $category);
+        $rrd_def = array(
+            'DS:2xx:COUNTER:600:0:U',
+            'DS:3xx:COUNTER:600:0:U',
+            'DS:4xx:COUNTER:600:0:U',
+            'DS:5xx:COUNTER:600:0:U',
+            'DS:get:COUNTER:600:0:U',
+            'DS:post:COUNTER:600:0:U',
+        );
+
+        $fields = array(
+            '2xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.3.0'],
+            '3xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.4.0'],
+            '4xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.5.0'],
+            '5xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.6.0'],
+            'get' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.9.0'],
+            'post' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.9.0'],
+        );
+
+        // Let's print some debugging info.
+        d_echo("\n\nComponent: ".$key."\n");
+        d_echo("    Category: ".$category."\n");
+        d_echo("    2xx:     1.3.6.1.4.1.3375.2.1.1.2.4.3.0 = ".$fields['2xx']."\n");
+        d_echo("    3xx:     1.3.6.1.4.1.3375.2.1.1.2.4.4.0 = ".$fields['3xx']."\n");
+        d_echo("    4xx:     1.3.6.1.4.1.3375.2.1.1.2.4.5.0 = ".$fields['4xx']."\n");
+        d_echo("    5xx:     1.3.6.1.4.1.3375.2.1.1.2.4.6.0 = ".$fields['5xx']."\n");
+        d_echo("    get:     1.3.6.1.4.1.3375.2.1.1.2.4.8.0 = ".$fields['get']."\n");
+        d_echo("    post:    1.3.6.1.4.1.3375.2.1.1.2.4.9.0 = ".$fields['post']."\n");
+
+        $tags = compact('rrd_name', 'rrd_def', 'category');
+        data_update($device, $module, $tags, $fields);
 
         // Loop through the components and extract the data.
         foreach ($components as $key => $array) {
-            $type = $array['qos-type'];
+            $category = $array['category'];
+            $UID = gzuncompress($array['UID']);
+            $label = $array['label'];
 
-            // Get data from the class table.
-            if ($type == 2) {
-                // Let's make sure the rrd is setup for this class.
-                $ifIndex = $array['ifindex'];
-                $spid = $array['sp-id'];
-                $spobj = $array['sp-obj'];
-                $rrd_name = array('port', $ifIndex, 'cbqos', $spid, $spobj);
+            if ($category == 'LTMVirtualServer') {
+                // Let's make sure the rrd is setup.
+                $rrd_name = array($module, $category, $label, $UID);
                 $rrd_def = array(
-                    'DS:postbits:COUNTER:600:0:U',
-                    'DS:bufferdrops:COUNTER:600:0:U',
-                    'DS:qosdrops:COUNTER:600:0:U'
+                    'DS:pktsin:COUNTER:600:0:U',
+                    'DS:pktsout:COUNTER:600:0:U',
+                    'DS:bytesin:COUNTER:600:0:U',
+                    'DS:bytesout:COUNTER:600:0:U',
+                    'DS:totconns:COUNTER:600:0:U',
+                );
+
+                $fields = array(
+                    'pktsin' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.6.'.$UID],
+                    'pktsout' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.8.'.$UID],
+                    'bytesin' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.7.'.$UID],
+                    'bytesout' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.9.'.$UID],
+                    'totalconns' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.11.'.$UID],
                 );
 
                 // Let's print some debugging info.
                 d_echo("\n\nComponent: ".$key."\n");
-                d_echo("    Class-Map: ".$array['label']."\n");
-                d_echo("    SPID.SPOBJ: ".$array['sp-id'].".".$array['sp-obj']."\n");
-                d_echo("    PostBytes:   1.3.6.1.4.1.9.9.166.1.15.1.1.10.".$array['sp-id'].".".$array['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$array['sp-id']][$array['sp-obj']]."\n");
-                d_echo("    BufferDrops: 1.3.6.1.4.1.9.9.166.1.15.1.1.21.".$array['sp-id'].".".$array['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$array['sp-id']][$array['sp-obj']]."\n");
-                d_echo("    QOSDrops:    1.3.6.1.4.1.9.9.166.1.15.1.1.17.".$array['sp-id'].".".$array['sp-obj']." = ".$tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$array['sp-id']][$array['sp-obj']]."\n");
+                d_echo("    Category: ".$category."\n");
+                d_echo("    Label: ".$label."\n");
+                d_echo("    UID: ".$UID."\n");
+                d_echo("    PktsIn:     1.3.6.1.4.1.3375.2.2.10.2.3.1.6.".$UID." = ".$fields['pktsin']."\n");
+                d_echo("    PktsOut:    1.3.6.1.4.1.3375.2.2.10.2.3.1.8.".$UID." = ".$fields['pktsout']."\n");
+                d_echo("    BytesIn:    1.3.6.1.4.1.3375.2.2.10.2.3.1.7.".$UID." = ".$fields['bytesin']."\n");
+                d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.10.2.3.1.9.".$UID." = ".$fields['bytesout']."\n");
+                d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.10.2.3.1.11.".$UID." = ".$fields['totalconns']."\n");
 
-                $fields = array(
-                    'postbits' => $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.10'][$array['sp-id']][$array['sp-obj']],
-                    'bufferdrops' => $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.21'][$array['sp-id']][$array['sp-obj']],
-                    'qosdrops' => $tblcbQosClassMapStats['1.3.6.1.4.1.9.9.166.1.15.1.1.17'][$array['sp-id']][$array['sp-obj']]
+                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
+                data_update($device, $module, $tags, $fields);
+            }
+
+            if ($category == 'LTMPoolMember') {
+                // Let's make sure the rrd is setup.
+                $rrd_name = array($module, $category, $label, $UID);
+                $rrd_def = array(
+                    'DS:pktsin:COUNTER:600:0:U',
+                    'DS:pktsout:COUNTER:600:0:U',
+                    'DS:bytesin:COUNTER:600:0:U',
+                    'DS:bytesout:COUNTER:600:0:U',
+                    'DS:totconns:COUNTER:600:0:U',
                 );
 
-                $tags = compact('rrd_name', 'rrd_def', 'ifIndex', 'spid', 'spobj');
-                data_update($device, 'cbqos', $tags, $fields);
+                $fields = array(
+                    'pktsin' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.5.'.$UID],
+                    'pktsout' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.7.'.$UID],
+                    'bytesin' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.6.'.$UID],
+                    'bytesout' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.8.'.$UID],
+                    'totalconns' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.10.'.$UID],
+                );
+
+                // Let's print some debugging info.
+                d_echo("\n\nComponent: ".$key."\n");
+                d_echo("    Category: ".$category."\n");
+                d_echo("    Label: ".$label."\n");
+                d_echo("    UID: ".$UID."\n");
+                d_echo("    PktsIn:     1.3.6.1.4.1.3375.2.2.5.4.3.1.5.".$UID." = ".$fields['pktsin']."\n");
+                d_echo("    PktsOut:    1.3.6.1.4.1.3375.2.2.5.4.3.1.7.".$UID." = ".$fields['pktsout']."\n");
+                d_echo("    BytesIn:    1.3.6.1.4.1.3375.2.2.5.4.3.1.6.".$UID." = ".$fields['bytesin']."\n");
+                d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['bytesout']."\n");
+                d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['totalconns']."\n");
+
+                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
+                data_update($device, $module, $tags, $fields);
             }
         } // End foreach components
     } // end if count components
 
     // Clean-up after yourself!
-    unset($type, $components, $component, $options, $module);
+    unset($type, $components, $component, $options);
 }
