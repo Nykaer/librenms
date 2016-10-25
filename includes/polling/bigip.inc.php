@@ -38,6 +38,12 @@ if ($device['os'] == 'f5') {
         $ltmPoolMemberStatEntry = snmpwalk_array_num($device, '.1.3.6.1.4.1.3375.2.2.5.4.3.1', 0);
         $sysGlobalHttpStat = snmpwalk_array_num($device, '.1.3.6.1.4.1.3375.2.1.1.2.4', 0);
 
+        // and check the status
+        $ltmVsStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.10.13.2.1', 0);
+        $ltmPoolMbrStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.6.2.1', 0);
+        $ltmPoolEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.1.2.1', 0);
+
+
         // Lets capture some global http stats
         $category = 'http';
         // Let's make sure the rrd is setup.
@@ -74,7 +80,7 @@ if ($device['os'] == 'f5') {
         data_update($device, $module, $tags, $fields);
 
         // Loop through the components and extract the data.
-        foreach ($components as $key => $array) {
+        foreach ($components as $key => &$array) {
             $category = $array['category'];
             $UID = gzuncompress($array['UID']);
             $label = $array['label'];
@@ -111,6 +117,63 @@ if ($device['os'] == 'f5') {
 
                 $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
                 data_update($device, $module, $tags, $fields);
+
+                // Let's check the status.
+                $array['state'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.2.'.$UID];
+                if ($array['state'] == 2) {
+                    // Looks like one of the VS Pool members is down.
+                    $array['status'] = 1;
+                    $array['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$UID];
+                } elseif ($array['state'] == 3) {
+                    // Looks like ALL of the VS Pool members is down.
+                    $array['status'] = 2;
+                    $array['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$UID];
+                } else {
+                    // All is good.
+                    $array['status'] = 0;
+                    $array['error'] = '';
+                }
+
+            }
+
+            if ($category == 'LTMPool') {
+                // Let's make sure the rrd is setup.
+                $rrd_name = array($module, $category, $label, $UID);
+                $rrd_def = array(
+                    'DS:minup:GAUGE:600:0:U',
+                    'DS:currup:GAUGE:600:0:U',
+                );
+
+                $array['minup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.4.'.$UID];
+                $array['currentup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.8.'.$UID];
+                $array['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$UID];
+
+                $fields = array(
+                    'minup' => $array['minup'],
+                    'currup' => $array['currentup'],
+                );
+
+                // Let's print some debugging info.
+                d_echo("\n\nComponent: ".$key."\n");
+                d_echo("    Category: ".$category."\n");
+                d_echo("    Label: ".$label."\n");
+                d_echo("    UID: ".$UID."\n");
+                d_echo("    Minimum Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.6.".$UID." = ".$fields['minup']."\n");
+                d_echo("    Current Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.8.".$UID." = ".$fields['currup']."\n");
+
+                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
+                data_update($device, $module, $tags, $fields);
+
+                // If we have less pool members than the minimum, we should error.
+                if ($array['currentup'] <= $array['minup']) {
+                    // Danger Will Robinson... We dont have enough Pool Members!
+                    $array['status'] = 2;
+                    $array['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$array['minupaction']];
+                } else {
+                    // All is good.
+                    $array['status'] = 0;
+                    $array['error'] = '';
+                }
             }
 
             if ($category == 'LTMPoolMember') {
@@ -145,8 +208,21 @@ if ($device['os'] == 'f5') {
 
                 $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
                 data_update($device, $module, $tags, $fields);
+
+                if ($array['state'] == 3) {
+                    // Warning Alarm, the pool member is down.
+                    $array['status'] = 1;
+                    $array['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$UID];;
+                } else {
+                    // All is good.
+                    $array['status'] = 0;
+                    $array['error'] = '';
+                }
             }
         } // End foreach components
+
+        // Write the Components back to the DB.
+        $component->setComponentPrefs($device['device_id'], $components);
     } // end if count components
 
     // Clean-up after yourself!
