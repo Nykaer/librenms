@@ -23,22 +23,26 @@ if ($device['type'] == 'wireless' && $device['os'] == 'arubaos') {
     $switch_apname_oids = array('wlsxWlanRadioEntry.16');
 
 
+    // initialize arrays to avoid overwriting them in foreach loops below
+    $aruba_stats = array();
+    $aruba_apstats = array();
+    $aruba_apnames = array();
 
     $aruba_oids = array_merge($switch_info_oids, $switch_counter_oids);
     echo 'Caching Oids: ';
     foreach ($aruba_oids as $oid) {
         echo "$oid ";
-        $aruba_stats = snmpwalk_cache_oid($device, $oid, array(), 'WLSX-SWITCH-MIB');
+        $aruba_stats = snmpwalk_cache_oid($device, $oid, $aruba_stats, 'WLSX-SWITCH-MIB');
     }
 
     foreach ($switch_apinfo_oids as $oid) {
         echo "$oid ";
-        $aruba_apstats = snmpwalk_cache_oid_num($device, $oid, array(), 'WLSX-WLAN-MIB');
+        $aruba_apstats = snmpwalk_cache_oid_num($device, $oid, $aruba_apstats, 'WLSX-WLAN-MIB');
     }
 
     foreach ($switch_apname_oids as $oid) {
         echo "$oid ";
-        $aruba_apnames = snmpwalk_cache_oid_num($device, $oid, array(), 'WLSX-WLAN-MIB');
+        $aruba_apnames = snmpwalk_cache_oid_num($device, $oid, $aruba_apnames, 'WLSX-WLAN-MIB');
     }
 
 
@@ -81,16 +85,16 @@ if ($device['type'] == 'wireless' && $device['os'] == 'arubaos') {
 
     foreach ($aruba_apnames as $key => $value) {
         $radioid       = str_replace('1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.16.', '', $key);
-        $name          = $value;
-        $type          = $aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.2.$radioid"];
-        $channel       = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.3.$radioid"] + 0);
-        $txpow         = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.4.$radioid"] + 0);
-        $radioutil     = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.6.$radioid"] + 0);
-        $numasoclients = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.7.$radioid"] + 0);
-        $nummonclients = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.8.$radioid"] + 0);
-        $numactbssid   = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.9.$radioid"] + 0);
-        $nummonbssid   = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.10.$radioid"] + 0);
-        $interference  = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.3.1.6.1.11.$radioid"] + 0);
+        $name          = $value[''];
+        $type          = $aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.2.$radioid"][''];
+        $channel       = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.3.$radioid"][''] + 0);
+        $txpow         = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.4.$radioid"][''] + 0);
+        $radioutil     = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.6.$radioid"][''] + 0);
+        $numasoclients = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.7.$radioid"][''] + 0);
+        $nummonclients = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.8.$radioid"][''] + 0);
+        $numactbssid   = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.9.$radioid"][''] + 0);
+        $nummonbssid   = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.2.1.5.1.10.$radioid"][''] + 0);
+        $interference  = ($aruba_apstats["1.3.6.1.4.1.14823.2.2.1.5.3.1.6.1.11.$radioid"][''] + 0);
 
         $radionum = substr($radioid, (strlen($radioid) - 1), 1);
 

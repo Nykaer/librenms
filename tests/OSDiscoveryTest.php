@@ -442,6 +442,7 @@ class DiscoveryTest extends \PHPUnit_Framework_TestCase
     public function testDsm()
     {
         $this->checkOS('dsm');
+        $this->checkOS('dsm', 'dsm-ds214');
     }
 
     public function testEatonpdu()
@@ -584,6 +585,7 @@ class DiscoveryTest extends \PHPUnit_Framework_TestCase
     public function testHikvision()
     {
         $this->checkOS('hikvision');
+        $this->checkOS('hikvision', 'hikvision1');
     }
 
     public function testHp3par()
@@ -1145,6 +1147,7 @@ class DiscoveryTest extends \PHPUnit_Framework_TestCase
         $this->checkOS('samsungprinter', 'samsungprinter-scx');
         $this->checkOS('samsungprinter', 'samsungprinter-c');
         $this->checkOS('samsungprinter', 'samsungprinter-s');
+        $this->checkOS('samsungprinter', 'samsungprinter-ml');
     }
 
     public function testSanos()
@@ -1185,6 +1188,16 @@ class DiscoveryTest extends \PHPUnit_Framework_TestCase
     public function testSiklu()
     {
         $this->checkOS('siklu');
+    }
+
+    public function testSinetica()
+    {
+        $this->checkOS('sinetica');
+    }
+
+    public function testMegatec()
+    {
+        $this->checkOS('netagent2');
     }
 
     public function testSmartax()

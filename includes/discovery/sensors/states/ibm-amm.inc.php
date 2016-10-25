@@ -126,7 +126,8 @@ if ($device['os'] == 'ibm-amm') {
      *   notAvailable(3),
      *   critical(4)
      */
-    foreach ($data as $oid => $state) {
+    foreach ($data as $oid => $array) {
+        $state = current($array);  // get the first (and only) item from the array
         $descr = $state_descr . $index;
 
         if (is_numeric($state) && $state != 3) {
@@ -153,24 +154,7 @@ if ($device['os'] == 'ibm-amm') {
                 }//end foreach
             }//end if
 
-            discover_sensor(
-                $valid['sensor'],
-                'state',
-                $device,
-                $oid,
-                $index,
-                $state_name,
-                $descr,
-                '1',
-                '1',
-                null,
-                null,
-                null,
-                null,
-                $state,
-                'snmp',
-                $index
-            );
+            discover_sensor($valid['sensor'], 'state', $device, $oid, $index, $state_name, $descr, '1', '1', null, null, null, null, $state, 'snmp', $index);
             //Create Sensor To State Index
             create_sensor_to_state_index($device, $state_name, $index);
             $index++;

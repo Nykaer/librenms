@@ -140,15 +140,14 @@ function delete_port($int_id)
 {
     $interface = dbFetchRow("SELECT * FROM `ports` AS P, `devices` AS D WHERE P.port_id = ? AND D.device_id = P.device_id", array($int_id));
 
-    $interface_tables = array('adjacencies', 'ipaddr', 'ip6adjacencies', 'ip6addr', 'mac_accounting', 'bill_ports', 'pseudowires', 'ports');
+    $interface_tables = array('ipv4_addresses', 'ipv4_mac', 'ipv6_addresses', 'juniAtmVp', 'mac_accounting', 'ospf_nbrs', 'ospf_ports', 'ports', 'ports_adsl', 'ports_perms', 'ports_statistics', 'ports_stp', 'ports_vlans', 'pseudowires');
 
     foreach ($interface_tables as $table) {
         dbDelete($table, "`port_id` =  ?", array($int_id));
     }
 
-    dbDelete('links', "`local_port_id` =  ?", array($int_id));
-    dbDelete('links', "`remote_port_id` =  ?", array($int_id));
-    dbDelete('bill_ports', "`port_id` =  ?", array($int_id));
+    dbDelete('links', "`local_port_id` = ? OR `remote_port_id` = ?", array($int_id, $int_id));
+    dbDelete('ports_stack', "`port_id_low` = ? OR `port_id_high` = ?", array($int_id, $int_id));
 
     unlink(get_port_rrdfile_path($interface['hostname'], $interface['port_id']));
 }
@@ -1267,11 +1266,12 @@ function get_ports_mapped($device_id, $with_statistics = false)
         'ifDescr' => array(),
     );
 
-    /* Query all information available for ports for this device ... */
-    $query = 'SELECT * FROM `ports` WHERE `device_id` = ? ORDER BY port_id';
     if ($with_statistics) {
         /* ... including any related ports_statistics if requested */
         $query = 'SELECT *, `ports_statistics`.`port_id` AS `ports_statistics_port_id`, `ports`.`port_id` AS `port_id` FROM `ports` LEFT OUTER JOIN `ports_statistics` ON `ports`.`port_id` = `ports_statistics`.`port_id` WHERE `ports`.`device_id` = ? ORDER BY ports.port_id';
+    } else {
+        /* Query all information available for ports for this device ... */
+        $query = 'SELECT * FROM `ports` WHERE `device_id` = ? ORDER BY port_id';
     }
 
     // Query known ports in order of discovery to make sure the latest
@@ -1461,30 +1461,6 @@ function starts_with($haystack, $needles, $case_insensitive = false)
     return false;
 }
 
-/**
- * Search backwards for the $needle, returning $count found occurrence
- *
- * @param string $haystack
- * @param string $needle
- * @param int $count
- * @return bool|int
- */
-function strrpos_count($haystack, $needle, $count = 1)
-{
-    if ($count <= 0) {
-        return false;
-    }
-
-    $len = strlen($haystack);
-    $pos = $len;
-
-    for ($i = 0; $i < $count && $pos; $i++) {
-        $pos = strrpos($haystack, $needle, $pos - $len - 1);
-    }
-
-    return $pos;
-}
-
 function get_auth_ad_user_filter($username)
 {
     global $config;
@@ -1503,4 +1479,22 @@ function get_auth_ad_group_filter($groupname)
         $group_filter = "(&{$config['auth_ad_group_filter']}$group_filter)";
     }
     return $group_filter;
+}
+
+/**
+ * @param $value
+ * @return string
+ */
+function clean($value)
+{
+    return strip_tags(mres($value));
+}
+
+/**
+ * @param $value
+ * @return string
+ */
+function display($value)
+{
+    return htmlentities(stripslashes(strip_tags($value)));
 }

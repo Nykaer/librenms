@@ -12,7 +12,11 @@ if ($config['db']['extension'] == 'mysqli') {
 }
 
 if (!$database_link) {
-    echo '<h2>MySQL Error</h2>';
+    if (isCli()) {
+        c_echo("[%RFAIL%n]  Could not connect to MySQL\n");
+    } else {
+        echo '<h2>MySQL Error: could not connect</h2>';
+    }
     if ($config['db']['extension'] == 'mysqli') {
         echo mysqli_error($database_link);
     } else {
@@ -813,6 +817,10 @@ $config['os'][$os]['type']             = 'wireless';
 $config['os'][$os]['icon']             = 'saf';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_saf_radioRxLevel';
+$config['os'][$os]['over'][1]['text']  = 'Rx Level';
+$config['os'][$os]['over'][2]['graph'] = 'device_ping_perf';
+$config['os'][$os]['over'][2]['text']  = 'Ping Times';
 
 // Sub10
 $os = 'sub10';
@@ -1451,6 +1459,20 @@ $config['os'][$os]['icon']             = 'mge';
 $config['os'][$os]['over'][0]['graph'] = 'device_current';
 $config['os'][$os]['over'][0]['text']  = 'Current';
 
+$os = 'sinetica';
+$config['os'][$os]['text']             = 'Sinetica UPS';
+$config['os'][$os]['group']            = 'ups';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['over'][0]['graph'] = 'device_current';
+$config['os'][$os]['over'][0]['text']  = 'Current';
+
+$os = 'netagent2';
+$config['os'][$os]['text']             = 'NET Agent II UPS';
+$config['os'][$os]['group']            = 'ups';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['over'][0]['graph'] = 'device_load';
+$config['os'][$os]['over'][0]['text']  = 'Load';
+
 $os = 'mgepdu';
 $config['os'][$os]['text'] = 'MGE PDU';
 $config['os'][$os]['type'] = 'power';
@@ -1786,6 +1808,8 @@ $os = 'hikvision';
 $config['os'][$os]['text'] = 'Hikvision';
 $config['os'][$os]['type'] = 'network';
 $config['os'][$os]['icon'] = 'hikvision';
+$config['os'][$os]['over'][0]['graph'] = 'device_uptime';
+$config['os'][$os]['over'][0]['text']  = 'Device Uptime';
 
 // Canopy / Cambium support
 $os = 'cambium';
@@ -2286,6 +2310,15 @@ $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['section'] = 'wire
 $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['order'] = '7';
 $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['descr'] = 'RF Total Packets Rx';
 
+// Unifi Support
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['section'] = 'wireless';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['order'] = '0';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['descr'] = 'Radio0 Capacity Used';
+
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['section'] = 'wireless';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['order'] = '1';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['descr'] = 'Radio1 Capacity Used';
+
 // Siklu support
 $config['graph_types']['device']['siklu_rfAverageRssi']['section'] = 'wireless';
 $config['graph_types']['device']['siklu_rfAverageRssi']['order'] = '0';
@@ -2534,6 +2567,11 @@ $config['graph_types']['device']['ib_dhcp_messages']['descr']                 = 
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['section']      = 'graphs';
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['order']        = '0';
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['descr']        = 'Optimized TCP Connections';
+
+// SonicWALL Sessions
+$config['graph_types']['device']['sonicwall_sessions']['section']      = 'firewall';
+$config['graph_types']['device']['sonicwall_sessions']['order']        = '0';
+$config['graph_types']['device']['sonicwall_sessions']['descr']        = 'Active Sessions';
 
 $config['graph_types']['device']['bits']['section']               = 'netstats';
 $config['graph_types']['device']['bits']['order']                 = '0';
