@@ -199,6 +199,8 @@ $config['icmp_check'] = true;
 
 // Autodiscovery Settings
 $config['autodiscovery']['xdp'] = true;
+$config['autodiscovery']['xdp_exclude']['sysdesc_regexp'][] = '/-K9W8-/'; // Cisco Lightweight Access Point
+$config['autodiscovery']['cdp_exclude']['platform_regexp'][] = '/^Cisco IP Phone/'; //Cisco IP Phone
 // Autodiscover hosts via discovery protocols
 $config['autodiscovery']['ospf'] = true;
 // Autodiscover hosts via OSPF
@@ -718,6 +720,7 @@ $config['poller_modules']['ntp']                         = 1;
 $config['poller_modules']['services']                    = 1;
 $config['poller_modules']['ldap_usersperou']             = 0;
 $config['poller_modules']['cisco-cimc']                  = 1;
+$config['poller_modules']['bigip']                       = 1;
 
 // List of discovery modules. Need to be in this array to be
 // considered for execution.
@@ -761,6 +764,7 @@ $config['discovery_modules']['cisco-otv']      = 1;
 $config['discovery_modules']['ldap_usersperou']= 0;
 $config['discovery_modules']['cisco-cimc']     = 1;
 $config['discovery_modules']['ntp']            = 1;
+$config['discovery_modules']['bigip']          = 1;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;

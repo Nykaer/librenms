@@ -35,7 +35,7 @@ if ($device['os_group'] == "cisco") {
      * Cisco XCode
      * This module graphs the used and total Transcoder resources on a Cisco Voice Gateway
      */
-    include "cisco-voice/cisco-xcode.inc.php";
+    include "cisco-voice/cisco-iosxcode.inc.php";
 
     /*
      * Cisco CallManager Active Calls
@@ -80,5 +80,4 @@ if ($device['os_group'] == "ucos") {
      * This module graphs the number of registered devices on a CallManager Server
      */
     include "cisco-voice/cucm-registereddevices.inc.php";
-
 }
