@@ -20,11 +20,11 @@ $components = $component->getComponents($device['device_id'], $options);
 $components = $components[$device['device_id']];
 
 // Is the ID we are looking for a valid LTM VS
-if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
+if ($components[$vars['id']]['category'] == 'LTMPoolMember') {
     $label = $components[$vars['id']]['label'];
     $UID = gzuncompress($components[$vars['id']]['UID']);
 
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
+    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMPoolMember', $label, $UID));
     if (file_exists($rrd_filename)) {
         $ds_in  = 'pktsin';
         $ds_out = 'pktsout';

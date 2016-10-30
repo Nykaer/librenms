@@ -26,23 +26,19 @@ if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
 
     $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
     if (file_exists($rrd_filename)) {
-        $ds_in  = 'pktsin';
-        $ds_out = 'pktsout';
+        require 'includes/graphs/common.inc.php';
+        $ds = 'totconns';
 
-        $colour_area_in  = 'AA66AA';
-        $colour_line_in  = '330033';
-        $colour_area_out = 'FFDD88';
-        $colour_line_out = 'FF6600';
+        $colour_area = '9999cc';
+        $colour_line = '0000cc';
 
-        $in_text = 'Packets in';
-        $out_text = 'Packets out';
-
-        $colour_area_in_max  = 'cc88cc';
-        $colour_area_out_max = 'FFefaa';
+        $colour_area_max = '9999cc';
 
         $graph_max = 1;
-        $unit_text = 'Packets';
+        $graph_min = 0;
 
-        require 'includes/graphs/generic_duplex.inc.php';
+        $unit_text = 'Total Connections';
+        $line_text = 'Connections';
+        require 'includes/graphs/generic_simplex.inc.php';
     }
 }

@@ -101,7 +101,7 @@ if ($device['os'] == 'f5') {
                     'pktsout' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.8.'.$UID],
                     'bytesin' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.7.'.$UID],
                     'bytesout' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.9.'.$UID],
-                    'totalconns' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.11.'.$UID],
+                    'totconns' => $ltmVirtualServStatEntry['1.3.6.1.4.1.3375.2.2.10.2.3.1.11.'.$UID],
                 );
 
                 // Let's print some debugging info.
@@ -113,7 +113,7 @@ if ($device['os'] == 'f5') {
                 d_echo("    PktsOut:    1.3.6.1.4.1.3375.2.2.10.2.3.1.8.".$UID." = ".$fields['pktsout']."\n");
                 d_echo("    BytesIn:    1.3.6.1.4.1.3375.2.2.10.2.3.1.7.".$UID." = ".$fields['bytesin']."\n");
                 d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.10.2.3.1.9.".$UID." = ".$fields['bytesout']."\n");
-                d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.10.2.3.1.11.".$UID." = ".$fields['totalconns']."\n");
+                d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.10.2.3.1.11.".$UID." = ".$fields['totconns']."\n");
 
                 $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
                 data_update($device, $module, $tags, $fields);
