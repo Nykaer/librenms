@@ -26,22 +26,22 @@ if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
 
     $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
     if (file_exists($rrd_filename)) {
-        $ds_in  = 'pktsin';
-        $ds_out = 'pktsout';
+        $ds_in  = 'bytesin';
+        $ds_out = 'bytesout';
 
         $colour_area_in  = 'AA66AA';
         $colour_line_in  = '330033';
         $colour_area_out = 'FFDD88';
         $colour_line_out = 'FF6600';
 
-        $in_text = 'Packets in';
-        $out_text = 'Packets out';
+        $in_text = 'Bytes in';
+        $out_text = 'Bytes out';
 
         $colour_area_in_max  = 'cc88cc';
         $colour_area_out_max = 'FFefaa';
 
         $graph_max = 1;
-        $unit_text = 'Packets';
+        $unit_text = 'Bytes';
 
         require 'includes/graphs/generic_duplex.inc.php';
     }
