@@ -110,12 +110,13 @@ if ($device['os'] == 'f5') {
                 // Now that we have our UID we can pull all the other data we need.
                 $result['mode'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.2.'.$index];
                 $result['minup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.4.'.$index];
+                $result['minupstatus'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.5.'.$index];
                 $result['currentup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.8.'.$index];
                 $result['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$index];
                 $result['monitor'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.17.'.$index];
 
-                // If we have less pool members than the minimum, we should error.
-                if ($result['currentup'] <= $result['minup']) {
+                // If minupstatus = 1, we should care about minup. If we have less pool members than the minimum, we should error.
+                if (($result['minupstatus'] == 1) && ($result['currentup'] <= $result['minup'])) {
                     // Danger Will Robinson... We dont have enough Pool Members!
                     $result['status'] = 2;
                     $result['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$result['minupaction']];

@@ -1,8 +1,8 @@
 <?php
 /*
- * LibreNMS module to capture Cisco Class-Based QoS Details
+ * LibreNMS module to display F5 LTM Details
  *
- * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
+ * Copyright (c) 2016 Aaron Daniels <aaron@daniels.id.au>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -145,6 +145,7 @@ if ($device['os'] == 'f5') {
                 );
 
                 $array['minup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.4.'.$UID];
+                $array['minupstatus'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.5.'.$index];
                 $array['currentup'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.8.'.$UID];
                 $array['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$UID];
 
@@ -164,8 +165,8 @@ if ($device['os'] == 'f5') {
                 $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
                 data_update($device, $module, $tags, $fields);
 
-                // If we have less pool members than the minimum, we should error.
-                if ($array['currentup'] <= $array['minup']) {
+                // If minupstatus = 1, we should care about minup. If we have less pool members than the minimum, we should error.
+                if (($array['minupstatus'] == 1) && ($array['currentup'] <= $array['minup'])) {
                     // Danger Will Robinson... We dont have enough Pool Members!
                     $array['status'] = 2;
                     $array['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$array['minupaction']];
