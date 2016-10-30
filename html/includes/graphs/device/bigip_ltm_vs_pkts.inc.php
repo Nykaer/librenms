@@ -1,8 +1,8 @@
 <?php
 /*
- * LibreNMS module to display Cisco Class-Based QoS Details
+ * LibreNMS module to display F5 LTM Virtual Server Details
  *
- * Copyright (c) 2015 Aaron Daniels <aaron@daniels.id.au>
+ * Copyright (c) 2016 Aaron Daniels <aaron@daniels.id.au>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -12,41 +12,55 @@
  */
 
 $component = new LibreNMS\Component();
+$options = array();
 $options['filter']['type'] = array('=','bigip');
 $components = $component->getComponents($device['device_id'], $options);
 
 // We only care about our device id.
 $components = $components[$device['device_id']];
 
-include "includes/graphs/common.inc.php";
-$rrd_options .= " -l 0 -E ";
-$rrd_options .= " COMMENT:'LTM Virtual Server Packets       Now    Min     Max\\n'";
+// Is the ID we are looking for a valid LTM VS
+if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
+    $label = $components[$vars['id']]['label'];
+    $UID = gzuncompress($components[$vars['id']]['UID']);
 
-$count = 0;
-foreach ($components as $id => $array) {
-    if ($array['category'] == 'LTMVirtualServer') {
-        $rrd_filename = rrd_name($device['hostname'], array('cisco', 'otv', $array['endpoint'], 'mac'));
+    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
+    if (file_exists($rrd_filename)) {
+//        $ds_in  = 'pktsin';
+//        $ds_out = 'pktsout';
+//
+//        $colour_area_in  = 'AA66AA';
+//        $colour_line_in  = '330033';
+//        $colour_area_out = 'FFDD88';
+//        $colour_line_out = 'FF6600';
+//
+//        $in_text = 'Packets in';
+//        $out_text = 'Packets out';
+//
+//        $colour_area_in_max  = 'cc88cc';
+//        $colour_area_out_max = 'FFefaa';
+//
+//        $graph_max = 1;
+//        $unit_text = 'Packets';
+//
+//        require 'includes/graphs/generic_duplex.inc.php';
 
-        if (file_exists($rrd_filename)) {
-            // Stack the area on the second and subsequent DS's
-            $stack = "";
-            if ($count != 0) {
-                $stack = ":STACK ";
-            }
+        $rrd_filename = "/home/adaniels/www/librenms/rrd/127.0.0.9/temp.rrd";
+        include "includes/graphs/common.inc.php";
+        $rrd_options .= " -l 0 -E ";
+        $rrd_options .= " COMMENT:'                            Cur   Min  Max\\n'";
+        $rrd_options .= " DEF:in=" . $rrd_filename . ":bytesin:AVERAGE ";
+        $rrd_options .= " AREA:in#c099ff ";
+        $rrd_options .= " LINE1.25:in#0000ee:'PRI Channels total      ' ";
+        $rrd_options .= " GPRINT:in:LAST:%3.0lf ";
+        $rrd_options .= " GPRINT:in:MIN:%3.0lf ";
+        $rrd_options .= " GPRINT:in:MAX:%3.0lf\\\l ";
 
-            // Grab a color from the array.
-            if (isset($config['graph_colours']['mixed'][$count])) {
-                $color = $config['graph_colours']['mixed'][$count];
-            } else {
-                $color = $config['graph_colours']['oranges'][$count-7];
-            }
-
-            $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":count:AVERAGE ";
-            $rrd_options .= " AREA:DS" . $count . "#" . $color . ":'" . str_pad(substr($components[$id]['endpoint'], 0, 15), 15) . "'" . $stack;
-            $rrd_options .= " GPRINT:DS" . $count . ":LAST:%4.0lf%s ";
-            $rrd_options .= " GPRINT:DS" . $count .    ":MIN:%4.0lf%s ";
-            $rrd_options .= " GPRINT:DS" . $count . ":MAX:%4.0lf%s\\\l ";
-            $count++;
-        }
+        $rrd_options .= " DEF:out=" . $rrd_filename . ":totconns:AVERAGE ";
+        $rrd_options .= " AREA:out#aaff99 ";
+        $rrd_options .= " LINE1.25:out#00ee00:'PRI Channels in use     ' ";
+        $rrd_options .= " GPRINT:out:LAST:%3.0lf ";
+        $rrd_options .= " GPRINT:out:MIN:%3.0lf ";
+        $rrd_options .= " GPRINT:out:MAX:%3.0lf\\\l ";
     }
 }
