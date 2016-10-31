@@ -16,29 +16,49 @@ $options = array();
 $options['filter']['type'] = array('=','bigip');
 $components = $component->getComponents($device['device_id'], $options);
 
+include "includes/graphs/common.inc.php";
+$rrd_options .= " -l 0 -E ";
+$rrd_options .= " COMMENT:'LTM Pool Members       Now      Avg      Max\\n'";
+$colours = array_merge($config['graph_colours']['mixed'], $config['graph_colours']['manycolours'], $config['graph_colours']['manycolours']);
+$count = 0;
+d_echo("<pre>");
+
 // We only care about our device id.
 $components = $components[$device['device_id']];
 
-// Is the ID we are looking for a valid LTM VS
-if ($components[$vars['id']]['category'] == 'LTMPoolMember') {
-    $label = $components[$vars['id']]['label'];
-    $UID = gzuncompress($components[$vars['id']]['UID']);
+// Is the ID we are looking for a valid LTM VS Pool
+if ($components[$vars['id']]['category'] == 'LTMPool') {
+    $parent = gzuncompress ($components[$vars['id']]['UID']);
 
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMPoolMember', $label, $UID));
-    if (file_exists($rrd_filename)) {
-        require 'includes/graphs/common.inc.php';
-        $ds = 'totconns';
+    // Find all pool members
+    foreach ($components as $compid => $comp) {
+        if ($comp['category'] != 'LTMPoolMember') {
+            continue;
+        }
 
-        $colour_area = '9999cc';
-        $colour_line = '0000cc';
+        // is this a member of our parent?
+        $UID = gzuncompress ($comp['UID']);
+        if (strstr (gzuncompress ($UID), $parent)) {
+            $label = $comp['label'];
+            $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMVirtualServer', $label, $UID));
+            if (file_exists ($rrd_filename)) {
+                d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
 
-        $colour_area_max = '9999cc';
+                // Grab a colour from the array.
+                if (isset($colours[$count])) {
+                    $colour = $colours[$count];
+                } else {
+                    d_echo ("\nError: Out of colours. Have: " . (count ($colours) - 1) . ", Requesting:" . $count);
+                }
 
-        $graph_max = 1;
-        $graph_min = 0;
-
-        $unit_text = 'Total Connections';
-        $line_text = 'Connections';
-        require 'includes/graphs/generic_simplex.inc.php';
-    }
+                $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":totconns:AVERAGE ";
+                $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad (substr ($label, 0, 60), 60) . "'";
+                $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.2lf%s ";
+                $rrd_options .= " GPRINT:DS" . $count . ":AVERAGE:%6.2lf%s ";
+                $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.2lf%s\\\l ";
+                $count++;
+            }
+        } // End if strstr
+    } // End Foreach
 }
+d_echo ("</pre>");
