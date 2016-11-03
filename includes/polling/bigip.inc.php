@@ -83,6 +83,7 @@ if ($device['os'] == 'f5') {
         foreach ($components as $key => &$array) {
             $category = $array['category'];
             $UID = gzuncompress($array['UID']);
+            $RRDUID = $array['RRDUID'];
             $label = $array['label'];
 
             if ($category == 'LTMVirtualServer') {

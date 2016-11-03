@@ -32,33 +32,29 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
 
     // Find all pool members
     foreach ($components as $compid => $comp) {
-        if ($comp['category'] != 'LTMPoolMember') {
-            continue;
-        }
+        if ($comp['category'] != 'LTMPoolMember') { continue; }
+        if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
 
-        // is this a member of our parent?
         $UID = gzuncompress ($comp['UID']);
-        if (strstr (gzuncompress ($UID), $parent)) {
-            $label = $comp['label'];
-            $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMVirtualServer', $label, $UID));
-            if (file_exists ($rrd_filename)) {
-                d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
+        $label = $comp['label'];
+        $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMPoolMember', $label, $UID));
+        if (file_exists ($rrd_filename)) {
+            d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
 
-                // Grab a colour from the array.
-                if (isset($colours[$count])) {
-                    $colour = $colours[$count];
-                } else {
-                    d_echo ("\nError: Out of colours. Have: " . (count ($colours) - 1) . ", Requesting:" . $count);
-                }
-
-                $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":totconns:AVERAGE ";
-                $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad (substr ($label, 0, 60), 60) . "'";
-                $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.2lf%s ";
-                $rrd_options .= " GPRINT:DS" . $count . ":AVERAGE:%6.2lf%s ";
-                $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.2lf%s\\\l ";
-                $count++;
+            // Grab a colour from the array.
+            if (isset($colours[$count])) {
+                $colour = $colours[$count];
+            } else {
+                d_echo ("\nError: Out of colours. Have: " . (count ($colours) - 1) . ", Requesting:" . $count);
             }
-        } // End if strstr
+
+            $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":totconns:AVERAGE ";
+            $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad (substr ($label, 0, 60), 60) . "'";
+            $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.2lf%s ";
+            $rrd_options .= " GPRINT:DS" . $count . ":AVERAGE:%6.2lf%s ";
+            $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.2lf%s\\\l ";
+            $count++;
+        }
     } // End Foreach
 }
 d_echo ("</pre>");
