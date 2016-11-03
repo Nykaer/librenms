@@ -31,8 +31,8 @@ foreach ($components as $compid => $comp) {
     if ($comp['category'] != 'LTMVirtualServer') { continue; }
 
     $label = $comp['label'];
-    $UID = gzuncompress($comp['UID']);
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
+    $hash = $comp['hash'];
+    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $hash));
     if (file_exists($rrd_filename)) {
         d_echo("\n  Adding VS: ".$comp['label']."\t+ added to the graph");
 
