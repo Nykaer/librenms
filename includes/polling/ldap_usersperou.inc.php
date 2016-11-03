@@ -33,7 +33,8 @@ if (isset($ldapuser) && isset($ldappass) && isset($ldapport) && isset($base)) {
     // Only collect SNMP data if we have enabled components
     if (count($components > 0)) {
         // Let's gather the stats..
-        $ldapconn = ldap_connect($device['hostname'].":".$ldapport) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
+        $string = 'ldap://'.$device['hostname'].":".$ldapport.'/';
+        $ldapconn = ldap_connect($string) or d_echo("Could not connect to LDAP server - ".$string.".\n");
         if ($ldapconn) {
             // binding to ldap server
             $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or d_echo("Error trying to bind: " . ldap_error($ldapconn) . "\n");

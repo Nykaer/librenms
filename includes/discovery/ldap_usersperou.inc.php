@@ -32,7 +32,7 @@ if (isset($ldapuser) && isset($ldappass) && isset($base)) {
 
     $string = 'ldap://'.$device['hostname'].":".$ldapport.'/';
     d_echo("Trying to connect to: ".$string."\n");
-    $ldapconn = ldap_connect($string) or d_echo("Could not connect to LDAP server - ".$device['hostname'].":".$ldapport.".\n");
+    $ldapconn = ldap_connect($string) or d_echo("Could not connect to LDAP server - ".$string.".\n");
     if ($ldapconn) {
         // binding to ldap server
         $ldapbind = ldap_bind($ldapconn, $ldapuser, $ldappass) or d_echo("Error trying to bind: ".ldap_error($ldapconn)."\n");
