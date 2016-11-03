@@ -16,38 +16,108 @@ $components = $component->getComponents($device['device_id'], array('filter' => 
 $components = $components[$device['device_id']];
 
 global $config;
+
+if ($components[$vars['id']]['category'] == 'LTMPool') {
+    // Define some error messages
+    $error_poolaction = array();
+    $error_poolaction[0] = "Unused";
+    $error_poolaction[1] = "Reboot";
+    $error_poolaction[2] = "Restart";
+    $error_poolaction[3] = "Failover";
+    $error_poolaction[4] = "Failover and Restart";
+    $error_poolaction[5] = "Go Active";
+    $error_poolaction[6] = "None";
+
+    $parent = gzuncompress($components[$vars['id']]['UID']);
 ?>
-<table id='table' class='table table-condensed table-responsive table-striped'>
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>IP : Port</th>
-        <th>Pool</th>
-        <th>Status</th>
-    </tr>
-    </thead>
-    <?php
-    foreach ($components as $comp) {
-        if ($comp['category'] != 'LTMVirtualServer') { continue; }
-        $string = $comp['IP'].":".$comp['port'];
-        if ($comp['status'] == 2) {
-            $status = $comp['error'];
-            $error = 'class="danger"';
-        } else {
-            $status = 'Ok';
-            $error = '';
-        }
-        ?>
-        <tr <?php echo $error; ?>>
-            <td><?php echo $comp['label']; ?></td>
-            <td><?php echo $string; ?></td>
-            <td><?php echo $comp['pool']; ?></td>
-            <td><?php echo $status; ?></td>
-        </tr>
-        <?php
+    <div class="row">
+        <div class="col-md-6">
+            <div class="container-fluid">
+                <div class='row'>
+                    <div class="col-md-12">
+                        <div class='panel panel-default panel-condensed'>
+                            <div class='panel-heading'><strong>Pool: <?php echo $components[$vars['id']]['label']; ?></strong></div>
+                            <table class="table table-hover table-condensed table-striped"><tr>
+<?php
+    if ($components[$vars['id']]['minupstatus'] == 1) {
+        // We care about min-up
+?>
+                                    <td>Minimum Active Servers: </td>
+                                    <td><?php echo $components[$vars['id']]['minup']; ?></td>
+                                </tr><tr>
+<?php
     }
-    ?>
-</table>
+?>
+                                    <td>Current Active Servers: </td>
+                                    <td><?php echo $components[$vars['id']]['currentup']; ?></td>
+                                </tr><tr>
+                                    <td>Pool Down Action: </td>
+                                    <td><?php echo $error_poolaction[$components[$vars['id']]['minupaction']]; ?></td>
+                                </tr><tr>
+                                    <td>Pool Monitor: </td>
+                                    <td><?php echo $components[$vars['id']]['monitor']; ?></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="container-fluid">
+                <div class='row'>
+                    <div class="col-md-12">
+                        <div class="panel panel-default panel-condensed">
+                            <div class="panel-heading">
+                                <strong>Pool Members</strong>
+                            </div>
+                            <table class="table table-hover table-condensed table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>IP : Port</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+<?php
+                                foreach ($components as $comp) {
+                                    if ($comp['category'] != 'LTMPoolMember') { continue; }
+                                    if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
+
+                                    $string = $comp['IP'].":".$comp['port'];
+                                    if ($comp['status'] == 2) {
+                                        $status = $comp['error'];
+                                        $error = 'class="danger"';
+                                    } else {
+                                        $status = 'Ok';
+                                        $error = '';
+                                    }
+?>
+                                    <tr <?php echo $error; ?>>
+                                        <td><?php echo $comp['label']; ?></td>
+                                        <td><?php echo $string; ?></td>
+                                        <td><?php echo $status; ?></td>
+                                    </tr>
+<?php
+                                }
+                                ?>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php
+}
+?>
+
+<?php
+    foreach ($components as $id => $comp) {
+        if ($comp['category'] != 'LTMPoolMember') { continue; }
+//echo "<pre>ID: ".$id." - ".print_r($comp,true)."</pre>";
+    }
+?>
 
 <div class="panel panel-default" id="connections">
     <div class="panel-heading">
@@ -62,7 +132,8 @@ global $config;
         $graph_array['width']  = '215';
         $graph_array['legend'] = 'no';
         $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allvs_conns';
+        $graph_array['type']   = 'device_bigip_ltm_allpm_conns';
+        $graph_array['id']     = $vars['id'];
         require 'includes/print-graphrow.inc.php';
 
         ?>

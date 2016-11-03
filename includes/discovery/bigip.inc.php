@@ -134,6 +134,7 @@ if ($device['os'] == 'f5') {
                 d_echo("    UID: ".$result['UID']."\n");
                 d_echo("    Mode: ".$result['mode']."\n");
                 d_echo("    Minimum Up: ".$result['minup']."\n");
+                d_echo("    Min Up Status: ".$result['minupstatus']."\n");
                 d_echo("    Currently Up: ".$result['currentup']."\n");
                 d_echo("    Minimum Up Action: ".$result['minupaction']."\n");
                 d_echo("    Monitor: ".$result['monitor']."\n");
