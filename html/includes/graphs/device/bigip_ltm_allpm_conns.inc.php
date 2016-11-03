@@ -35,9 +35,9 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
         if ($comp['category'] != 'LTMPoolMember') { continue; }
         if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
 
-        $UID = gzuncompress ($comp['UID']);
         $label = $comp['label'];
-        $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMPoolMember', $label, $UID));
+        $hash = $comp['hash'];
+        $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMPoolMember', $label, $hash));
         if (file_exists ($rrd_filename)) {
             d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
 

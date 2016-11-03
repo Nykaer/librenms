@@ -22,9 +22,9 @@ $components = $components[$device['device_id']];
 // Is the ID we are looking for a valid LTM VS
 if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
     $label = $components[$vars['id']]['label'];
-    $UID = gzuncompress($components[$vars['id']]['UID']);
+    $hash = $components[$vars['id']]['hash'];
 
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $UID));
+    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $hash));
     if (file_exists($rrd_filename)) {
         $ds_in  = 'pktsin';
         $ds_out = 'pktsout';

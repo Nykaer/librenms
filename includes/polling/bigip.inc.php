@@ -83,12 +83,24 @@ if ($device['os'] == 'f5') {
         foreach ($components as $key => &$array) {
             $category = $array['category'];
             $UID = gzuncompress($array['UID']);
-            $RRDUID = $array['RRDUID'];
             $label = $array['label'];
+            $hash = $array['hash'];
+
+            // -----------------------------------------------------
+            // Temp, remove this block after first run.
+            if ($hash == "") {
+                $array['hash'] = hash('crc32', $array['UID']);
+                $hash = $array['hash'];
+            }
+            $rrd_filename_old = array($module, $category, $label, $UID);
+            $rrd_filename_new = array($module, $category, $label, $hash);
+            if (file_exists(rrd_name($device['hostname'], $rrd_filename_old))) {
+                rrd_file_rename($device, $rrd_filename_old, $rrd_filename_new);
+            }
+            // -----------------------------------------------------
+            $rrd_name = array($module, $category, $label, $hash);
 
             if ($category == 'LTMVirtualServer') {
-                // Let's make sure the rrd is setup.
-                $rrd_name = array($module, $category, $label, $UID);
                 $rrd_def = array(
                     'DS:pktsin:COUNTER:600:0:U',
                     'DS:pktsout:COUNTER:600:0:U',
@@ -116,9 +128,6 @@ if ($device['os'] == 'f5') {
                 d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.10.2.3.1.9.".$UID." = ".$fields['bytesout']."\n");
                 d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.10.2.3.1.11.".$UID." = ".$fields['totconns']."\n");
 
-                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
-                data_update($device, $module, $tags, $fields);
-
                 // Let's check the status.
                 $array['state'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.2.'.$UID];
                 if ($array['state'] == 2) {
@@ -134,12 +143,8 @@ if ($device['os'] == 'f5') {
                     $array['status'] = 0;
                     $array['error'] = '';
                 }
-
             }
-
-            if ($category == 'LTMPool') {
-                // Let's make sure the rrd is setup.
-                $rrd_name = array($module, $category, $label, $UID);
+            elseif ($category == 'LTMPool') {
                 $rrd_def = array(
                     'DS:minup:GAUGE:600:0:U',
                     'DS:currup:GAUGE:600:0:U',
@@ -163,9 +168,6 @@ if ($device['os'] == 'f5') {
                 d_echo("    Minimum Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.6.".$UID." = ".$fields['minup']."\n");
                 d_echo("    Current Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.8.".$UID." = ".$fields['currup']."\n");
 
-                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
-                data_update($device, $module, $tags, $fields);
-
                 // If minupstatus = 1, we should care about minup. If we have less pool members than the minimum, we should error.
                 if (($array['minupstatus'] == 1) && ($array['currentup'] <= $array['minup'])) {
                     // Danger Will Robinson... We dont have enough Pool Members!
@@ -177,10 +179,7 @@ if ($device['os'] == 'f5') {
                     $array['error'] = '';
                 }
             }
-
-            if ($category == 'LTMPoolMember') {
-                // Let's make sure the rrd is setup.
-                $rrd_name = array($module, $category, $label, $UID);
+            elseif ($category == 'LTMPoolMember') {
                 $rrd_def = array(
                     'DS:pktsin:COUNTER:600:0:U',
                     'DS:pktsout:COUNTER:600:0:U',
@@ -208,9 +207,6 @@ if ($device['os'] == 'f5') {
                 d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['bytesout']."\n");
                 d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['totalconns']."\n");
 
-                $tags = compact('rrd_name', 'rrd_def', 'category', 'UID', 'label');
-                data_update($device, $module, $tags, $fields);
-
                 if ($array['state'] == 3) {
                     // Warning Alarm, the pool member is down.
                     $array['status'] = 1;
@@ -220,7 +216,13 @@ if ($device['os'] == 'f5') {
                     $array['status'] = 0;
                     $array['error'] = '';
                 }
+            } else {
+                d_echo("Category is unknown: ".$category."\n");
+                continue;
             }
+
+            $tags = compact('rrd_name', 'rrd_def', 'category', 'hash', 'label');
+            data_update($device, $module, $tags, $fields);
         } // End foreach components
 
         // Write the Components back to the DB.
