@@ -17,6 +17,13 @@ $components = $components[$device['device_id']];
 
 global $config;
 ?>
+<script type="text/javascript">
+    jQuery(document).ready(function($) {
+        $(".clickable-row").click(function() {
+            window.document.location = $(this).data("href");
+        });
+    });
+</script>
 <table id='table' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
@@ -37,8 +44,17 @@ global $config;
             $status = 'Ok';
             $error = '';
         }
+
+        // Find the ID for our pool
+        foreach ($components as $k => $v) {
+            if ($v['category'] != 'LTMPool') { continue; }
+            if ($v['label'] == $comp['pool']) {
+                $id = $k;
+            }
+            $link = generate_url($vars, array('view' => 'LTM-Pool', 'id' => $id));
+        }
         ?>
-        <tr <?php echo $error; ?>>
+        <tr class='clickable-row' data-href='<?php echo $link; ?>' <?php echo $error; ?>>
             <td><?php echo $comp['label']; ?></td>
             <td><?php echo $string; ?></td>
             <td><?php echo $comp['pool']; ?></td>

@@ -108,114 +108,110 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
             </div>
         </div>
     </div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="container-fluid">
+            <div class="panel panel-default" id="connections">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Connections</h3>
+                </div>
+                <div class="panel-body">
+                    <?php
+
+                    $graph_array = array();
+                    $graph_array['device'] = $device['device_id'];
+                    $graph_array['height'] = '100';
+                    $graph_array['width']  = '215';
+                    $graph_array['legend'] = 'no';
+                    $graph_array['to']     = $config['time']['now'];
+                    $graph_array['type']   = 'device_bigip_ltm_allpm_conns';
+                    $graph_array['id']     = $vars['id'];
+                    require 'includes/print-graphrow.inc.php';
+
+                    ?>
+                </div>
+            </div>
+
+            <div class="panel panel-default" id="bytesin">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Bytes In</h3>
+                </div>
+                <div class="panel-body">
+                    <?php
+
+                    $graph_array = array();
+                    $graph_array['device'] = $device['device_id'];
+                    $graph_array['height'] = '100';
+                    $graph_array['width']  = '215';
+                    $graph_array['legend'] = 'no';
+                    $graph_array['to']     = $config['time']['now'];
+                    $graph_array['type']   = 'device_bigip_ltm_allvs_bytesin';
+                    require 'includes/print-graphrow.inc.php';
+
+                    ?>
+                </div>
+            </div>
+
+            <div class="panel panel-default" id="bytesout">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Bytes Out</h3>
+                </div>
+                <div class="panel-body">
+                    <?php
+
+                    $graph_array = array();
+                    $graph_array['device'] = $device['device_id'];
+                    $graph_array['height'] = '100';
+                    $graph_array['width']  = '215';
+                    $graph_array['legend'] = 'no';
+                    $graph_array['to']     = $config['time']['now'];
+                    $graph_array['type']   = 'device_bigip_ltm_allvs_bytesout';
+                    require 'includes/print-graphrow.inc.php';
+
+                    ?>
+                </div>
+            </div>
+
+            <div class="panel panel-default" id="pktsin">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Packets In</h3>
+                </div>
+                <div class="panel-body">
+                    <?php
+
+                    $graph_array = array();
+                    $graph_array['device'] = $device['device_id'];
+                    $graph_array['height'] = '100';
+                    $graph_array['width']  = '215';
+                    $graph_array['legend'] = 'no';
+                    $graph_array['to']     = $config['time']['now'];
+                    $graph_array['type']   = 'device_bigip_ltm_allvs_pktsin';
+                    require 'includes/print-graphrow.inc.php';
+
+                    ?>
+                </div>
+            </div>
+
+            <div class="panel panel-default" id="pktsout">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Packets Out</h3>
+                </div>
+                <div class="panel-body">
+                    <?php
+
+                    $graph_array = array();
+                    $graph_array['device'] = $device['device_id'];
+                    $graph_array['height'] = '100';
+                    $graph_array['width']  = '215';
+                    $graph_array['legend'] = 'no';
+                    $graph_array['to']     = $config['time']['now'];
+                    $graph_array['type']   = 'device_bigip_ltm_allvs_pktsout';
+                    require 'includes/print-graphrow.inc.php';
+
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
 <?php
 }
-?>
-
-<?php
-    foreach ($components as $id => $comp) {
-        if ($comp['category'] != 'LTMPoolMember') { continue; }
-//echo "<pre>ID: ".$id." - ".print_r($comp,true)."</pre>";
-    }
-?>
-
-<div class="panel panel-default" id="connections">
-    <div class="panel-heading">
-        <h3 class="panel-title">Connections</h3>
-    </div>
-    <div class="panel-body">
-        <?php
-
-        $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['legend'] = 'no';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allpm_conns';
-        $graph_array['id']     = $vars['id'];
-        require 'includes/print-graphrow.inc.php';
-
-        ?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="bytesin">
-    <div class="panel-heading">
-        <h3 class="panel-title">Bytes In</h3>
-    </div>
-    <div class="panel-body">
-        <?php
-
-        $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['legend'] = 'no';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allvs_bytesin';
-        require 'includes/print-graphrow.inc.php';
-
-        ?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="bytesout">
-    <div class="panel-heading">
-        <h3 class="panel-title">Bytes Out</h3>
-    </div>
-    <div class="panel-body">
-        <?php
-
-        $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['legend'] = 'no';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allvs_bytesout';
-        require 'includes/print-graphrow.inc.php';
-
-        ?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="pktsin">
-    <div class="panel-heading">
-        <h3 class="panel-title">Packets In</h3>
-    </div>
-    <div class="panel-body">
-        <?php
-
-        $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['legend'] = 'no';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allvs_pktsin';
-        require 'includes/print-graphrow.inc.php';
-
-        ?>
-    </div>
-</div>
-
-<div class="panel panel-default" id="pktsout">
-    <div class="panel-heading">
-        <h3 class="panel-title">Packets Out</h3>
-    </div>
-    <div class="panel-body">
-        <?php
-
-        $graph_array = array();
-        $graph_array['device'] = $device['device_id'];
-        $graph_array['height'] = '100';
-        $graph_array['width']  = '215';
-        $graph_array['legend'] = 'no';
-        $graph_array['to']     = $config['time']['now'];
-        $graph_array['type']   = 'device_bigip_ltm_allvs_pktsout';
-        require 'includes/print-graphrow.inc.php';
-
-        ?>
-    </div>
-</div>
