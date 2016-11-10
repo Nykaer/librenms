@@ -65,6 +65,9 @@ global $config;
     ?>
 </table>
 
+<?php
+if($vars['graphs'] == 'on') {
+?>
 <div class="panel panel-default" id="connections">
     <div class="panel-heading">
         <h3 class="panel-title">Connections</h3>
@@ -164,3 +167,6 @@ global $config;
         ?>
     </div>
 </div>
+<?php
+}
+?>

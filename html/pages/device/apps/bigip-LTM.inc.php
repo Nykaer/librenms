@@ -11,18 +11,27 @@
  * the source code distribution for details.
  */
 
+/*
+ * The LTM page structure looks like this:
+ * ---      LTM-VS - Shows all Virtual Servers
+ *   |\
+ *   | ---  LTM-VS - Shows an individual VS
+ *   \
+ *    ---   LTM-Pool - Shows pool and pool member details
+ */
+
 print_optionbar_start();
 
 // Pages
 $pages = array(
-    'LTM-VS'    => 'LTM Virtual Servers',
+    'LTM-VS'    => 'All Virtual Servers',
     'LTM-Pool'  => 'LTM Pool',
 );
 
 // Graphs
 $graphs = array('on' => 'On', 'off' => 'Off');
 
-echo "<span style='font-weight: bold;'>F5 BigIP</span> &#187; ";
+echo "<span style='font-weight: bold;'>F5 BigIP LTM</span> &#187; ";
 
 // Pages, on the left.
 $sep = '';

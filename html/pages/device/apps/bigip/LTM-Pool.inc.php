@@ -19,7 +19,7 @@ global $config;
 
 if ($components[$vars['id']]['category'] == 'LTMPool') {
     // Define some error messages
-    $error_poolaction = array();
+    $error_poolaction = array ();
     $error_poolaction[0] = "Unused";
     $error_poolaction[1] = "Reboot";
     $error_poolaction[2] = "Restart";
@@ -28,33 +28,38 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
     $error_poolaction[5] = "Go Active";
     $error_poolaction[6] = "None";
 
-    $parent = gzuncompress($components[$vars['id']]['UID']);
-?>
+    $parent = gzuncompress ($components[$vars['id']]['UID']);
+    ?>
     <div class="row">
         <div class="col-md-6">
             <div class="container-fluid">
                 <div class='row'>
                     <div class="col-md-12">
                         <div class='panel panel-default panel-condensed'>
-                            <div class='panel-heading'><strong>Pool: <?php echo $components[$vars['id']]['label']; ?></strong></div>
-                            <table class="table table-hover table-condensed table-striped"><tr>
-<?php
-    if ($components[$vars['id']]['minupstatus'] == 1) {
-        // We care about min-up
-?>
-                                    <td>Minimum Active Servers: </td>
+                            <div class='panel-heading'>
+                                <strong>Pool: <?php echo $components[$vars['id']]['label']; ?></strong></div>
+                            <table class="table table-hover table-condensed table-striped">
+                                <tr>
+                                    <?php
+                                    if ($components[$vars['id']]['minupstatus'] == 1) {
+                                    // We care about min-up
+                                    ?>
+                                    <td>Minimum Active Servers:</td>
                                     <td><?php echo $components[$vars['id']]['minup']; ?></td>
-                                </tr><tr>
-<?php
-    }
-?>
-                                    <td>Current Active Servers: </td>
+                                </tr>
+                                <tr>
+                                    <?php
+                                    }
+                                    ?>
+                                    <td>Current Active Servers:</td>
                                     <td><?php echo $components[$vars['id']]['currentup']; ?></td>
-                                </tr><tr>
-                                    <td>Pool Down Action: </td>
+                                </tr>
+                                <tr>
+                                    <td>Pool Down Action:</td>
                                     <td><?php echo $error_poolaction[$components[$vars['id']]['minupaction']]; ?></td>
-                                </tr><tr>
-                                    <td>Pool Monitor: </td>
+                                </tr>
+                                <tr>
+                                    <td>Pool Monitor:</td>
                                     <td><?php echo $components[$vars['id']]['monitor']; ?></td>
                                 </tr>
                             </table>
@@ -79,12 +84,16 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
                                     <th>Status</th>
                                 </tr>
                                 </thead>
-<?php
+                                <?php
                                 foreach ($components as $comp) {
-                                    if ($comp['category'] != 'LTMPoolMember') { continue; }
-                                    if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
+                                    if ($comp['category'] != 'LTMPoolMember') {
+                                        continue;
+                                    }
+                                    if (!strstr (gzuncompress ($comp['UID']), $parent)) {
+                                        continue;
+                                    }
 
-                                    $string = $comp['IP'].":".$comp['port'];
+                                    $string = $comp['IP'] . ":" . $comp['port'];
                                     if ($comp['status'] == 2) {
                                         $status = $comp['error'];
                                         $error = 'class="danger"';
@@ -92,13 +101,13 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
                                         $status = 'Ok';
                                         $error = '';
                                     }
-?>
+                                    ?>
                                     <tr <?php echo $error; ?>>
                                         <td><?php echo $comp['label']; ?></td>
                                         <td><?php echo $string; ?></td>
                                         <td><?php echo $status; ?></td>
                                     </tr>
-<?php
+                                    <?php
                                 }
                                 ?>
                             </table>
@@ -108,110 +117,114 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
             </div>
         </div>
     </div>
-<div class="row">
-    <div class="col-md-12">
-        <div class="container-fluid">
-            <div class="panel panel-default" id="connections">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Connections</h3>
+    <?php
+    if ($vars['graphs'] == 'on') {
+        ?>
+        <div class="row">
+        <div class="col-md-12">
+            <div class="container-fluid">
+                <div class="panel panel-default" id="connections">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Connections</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php
+
+                        $graph_array = array ();
+                        $graph_array['device'] = $device['device_id'];
+                        $graph_array['height'] = '100';
+                        $graph_array['width'] = '215';
+                        $graph_array['legend'] = 'no';
+                        $graph_array['to'] = $config['time']['now'];
+                        $graph_array['type'] = 'device_bigip_ltm_allpm_conns';
+                        $graph_array['id'] = $vars['id'];
+                        require 'includes/print-graphrow.inc.php';
+
+                        ?>
+                    </div>
                 </div>
-                <div class="panel-body">
-                    <?php
 
-                    $graph_array = array();
-                    $graph_array['device'] = $device['device_id'];
-                    $graph_array['height'] = '100';
-                    $graph_array['width']  = '215';
-                    $graph_array['legend'] = 'no';
-                    $graph_array['to']     = $config['time']['now'];
-                    $graph_array['type']   = 'device_bigip_ltm_allpm_conns';
-                    $graph_array['id']     = $vars['id'];
-                    require 'includes/print-graphrow.inc.php';
+                <div class="panel panel-default" id="bytesin">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Bytes In</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php
 
-                    ?>
+                        $graph_array = array ();
+                        $graph_array['device'] = $device['device_id'];
+                        $graph_array['height'] = '100';
+                        $graph_array['width'] = '215';
+                        $graph_array['legend'] = 'no';
+                        $graph_array['to'] = $config['time']['now'];
+                        $graph_array['type'] = 'device_bigip_ltm_allvs_bytesin';
+                        require 'includes/print-graphrow.inc.php';
+
+                        ?>
+                    </div>
                 </div>
-            </div>
 
-            <div class="panel panel-default" id="bytesin">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Bytes In</h3>
+                <div class="panel panel-default" id="bytesout">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Bytes Out</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php
+
+                        $graph_array = array ();
+                        $graph_array['device'] = $device['device_id'];
+                        $graph_array['height'] = '100';
+                        $graph_array['width'] = '215';
+                        $graph_array['legend'] = 'no';
+                        $graph_array['to'] = $config['time']['now'];
+                        $graph_array['type'] = 'device_bigip_ltm_allvs_bytesout';
+                        require 'includes/print-graphrow.inc.php';
+
+                        ?>
+                    </div>
                 </div>
-                <div class="panel-body">
-                    <?php
 
-                    $graph_array = array();
-                    $graph_array['device'] = $device['device_id'];
-                    $graph_array['height'] = '100';
-                    $graph_array['width']  = '215';
-                    $graph_array['legend'] = 'no';
-                    $graph_array['to']     = $config['time']['now'];
-                    $graph_array['type']   = 'device_bigip_ltm_allvs_bytesin';
-                    require 'includes/print-graphrow.inc.php';
+                <div class="panel panel-default" id="pktsin">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Packets In</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php
 
-                    ?>
+                        $graph_array = array ();
+                        $graph_array['device'] = $device['device_id'];
+                        $graph_array['height'] = '100';
+                        $graph_array['width'] = '215';
+                        $graph_array['legend'] = 'no';
+                        $graph_array['to'] = $config['time']['now'];
+                        $graph_array['type'] = 'device_bigip_ltm_allvs_pktsin';
+                        require 'includes/print-graphrow.inc.php';
+
+                        ?>
+                    </div>
                 </div>
-            </div>
 
-            <div class="panel panel-default" id="bytesout">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Bytes Out</h3>
-                </div>
-                <div class="panel-body">
-                    <?php
+                <div class="panel panel-default" id="pktsout">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Packets Out</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php
 
-                    $graph_array = array();
-                    $graph_array['device'] = $device['device_id'];
-                    $graph_array['height'] = '100';
-                    $graph_array['width']  = '215';
-                    $graph_array['legend'] = 'no';
-                    $graph_array['to']     = $config['time']['now'];
-                    $graph_array['type']   = 'device_bigip_ltm_allvs_bytesout';
-                    require 'includes/print-graphrow.inc.php';
+                        $graph_array = array ();
+                        $graph_array['device'] = $device['device_id'];
+                        $graph_array['height'] = '100';
+                        $graph_array['width'] = '215';
+                        $graph_array['legend'] = 'no';
+                        $graph_array['to'] = $config['time']['now'];
+                        $graph_array['type'] = 'device_bigip_ltm_allvs_pktsout';
+                        require 'includes/print-graphrow.inc.php';
 
-                    ?>
-                </div>
-            </div>
-
-            <div class="panel panel-default" id="pktsin">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Packets In</h3>
-                </div>
-                <div class="panel-body">
-                    <?php
-
-                    $graph_array = array();
-                    $graph_array['device'] = $device['device_id'];
-                    $graph_array['height'] = '100';
-                    $graph_array['width']  = '215';
-                    $graph_array['legend'] = 'no';
-                    $graph_array['to']     = $config['time']['now'];
-                    $graph_array['type']   = 'device_bigip_ltm_allvs_pktsin';
-                    require 'includes/print-graphrow.inc.php';
-
-                    ?>
-                </div>
-            </div>
-
-            <div class="panel panel-default" id="pktsout">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Packets Out</h3>
-                </div>
-                <div class="panel-body">
-                    <?php
-
-                    $graph_array = array();
-                    $graph_array['device'] = $device['device_id'];
-                    $graph_array['height'] = '100';
-                    $graph_array['width']  = '215';
-                    $graph_array['legend'] = 'no';
-                    $graph_array['to']     = $config['time']['now'];
-                    $graph_array['type']   = 'device_bigip_ltm_allvs_pktsout';
-                    require 'includes/print-graphrow.inc.php';
-
-                    ?>
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-<?php
+        <?php
+    }
 }
