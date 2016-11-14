@@ -17,22 +17,16 @@ $components = $components[$device['device_id']];
 
 global $config;
 ?>
-<script type="text/javascript">
-    jQuery(document).ready(function($) {
-        $(".clickable-row").click(function() {
-            window.document.location = $(this).data("href");
-        });
-    });
-</script>
-<table id='table' class='table table-condensed table-responsive table-striped'>
+<table id='grid' data-toggle='bootgrid' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
-        <th>Name</th>
-        <th>IP : Port</th>
-        <th>Pool</th>
-        <th>Status</th>
+        <th data-column-id="name">Name</th>
+        <th data-column-id="host">IP : Port</th>
+        <th data-column-id="pool">Pool</th>
+        <th data-column-id="status">Status</th>
     </tr>
     </thead>
+    <tbody>
     <?php
     foreach ($components as $comp) {
         if ($comp['category'] != 'LTMVirtualServer') { continue; }
@@ -63,6 +57,7 @@ global $config;
         <?php
     }
     ?>
+    </tbody>
 </table>
 
 <?php
@@ -167,6 +162,17 @@ if($vars['graphs'] == 'on') {
         ?>
     </div>
 </div>
+    <script type="text/javascript">
+//        $("#grid").bootgrid({});
+        jQuery(document).ready(function($) {
+            $(".clickable-row").click(function() {
+                window.document.location = $(this).data("href");
+            });
+            $("#grid tbody tr").click(function() {
+                window.document.location = $(this).data("href");
+            });
+        });
+    </script>
 <?php
 }
 ?>
