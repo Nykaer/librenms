@@ -11,40 +11,40 @@
  * the source code distribution for details.
  */
 
-$COMPONENT = new LibreNMS\Component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'], array('type'=>'CUCM-H323', 'ignore'=>0));
+$component = new LibreNMS\Component();
+$components = $component->getComponents($device['device_id'], array('type'=>'CUCM-H323', 'ignore'=>0));
 
 // We only care about our device id.
-$COMPONENTS = $COMPONENTS[$device['device_id']];
+$components = $components[$device['device_id']];
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'All Calls                    Now      Avg      Max\\n'";
 
-$COUNT = 0;
-foreach ($COMPONENTS as $ID => $ARRAY) {
-    $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'H323', $ARRAY['label']));
+$count = 0;
+foreach ($components as $id => $array) {
+    $rrd_filename = rrd_name($device['hostname'], array('CUCM-H323', $array['label']));
     if (file_exists($rrd_filename)) {
         // Stack the area on the second and subsequent DS's
-        $STACK = "";
-        if ($COUNT != 0) {
-            $STACK = ":STACK ";
+        $stack = "";
+        if ($count != 0) {
+            $stack = ":STACK ";
         }
 
         // Grab a color from the array.
-        if (isset($config['graph_colours']['mixed'][$COUNT])) {
-            $COLOR = $config['graph_colours']['mixed'][$COUNT];
+        if (isset($config['graph_colours']['mixed'][$count])) {
+            $COLOR = $config['graph_colours']['mixed'][$count];
         } else {
-            $COLOR = $config['graph_colours']['oranges'][$COUNT-7];
+            $COLOR = $config['graph_colours']['oranges'][$count-7];
         }
 
-        $rrd_options .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":callsall:AVERAGE ";
-        $rrd_options .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
-        $rrd_options .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'], 0, 25), 25) . "'" . $STACK;
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":LAST:%3.0lf ";
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%3.0lf ";
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":MAX:%3.0lf\l ";
+        $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":callsall:AVERAGE ";
+        $rrd_options .= " CDEF:MOD" . $count . "=DS" . $count . ",8,* ";
+        $rrd_options .= " AREA:MOD" . $count . "#" . $COLOR . ":'" . str_pad(substr($components[$id]['label'], 0, 25), 25) . "'" . $stack;
+        $rrd_options .= " GPRINT:MOD" . $count . ":LAST:%3.0lf ";
+        $rrd_options .= " GPRINT:MOD" . $count . ":AVERAGE:%3.0lf ";
+        $rrd_options .= " GPRINT:MOD" . $count . ":MAX:%3.0lf\l ";
 
-        $COUNT++;
+        $count++;
     }
 }

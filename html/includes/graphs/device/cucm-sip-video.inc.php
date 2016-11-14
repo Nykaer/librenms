@@ -11,41 +11,41 @@
  * the source code distribution for details.
  */
 
-$COMPONENT = new LibreNMS\Component();
-$COMPONENTS = $COMPONENT->getComponents($device['device_id'], array('type'=>'CUCM-SIP', 'ignore'=>0));
+$component = new LibreNMS\Component();
+$components = $component->getComponents($device['device_id'], array('type'=>'CUCM-SIP', 'ignore'=>0));
 
 // We only care about our device id.
-$COMPONENTS = $COMPONENTS[$device['device_id']];
+$components = $components[$device['device_id']];
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Video Calls                    Now      Avg      Max\\n'";
 
-$COUNT = 0;
-foreach ($COMPONENTS as $ID => $ARRAY) {
-    $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'SIP', $ARRAY['label']));
+$count = 0;
+foreach ($components as $id => $array) {
+    $rrd_filename = rrd_name($device['hostname'], array('CUCM-SIP', $array['label']));
 
     if (file_exists($rrd_filename)) {
         // Stack the area on the second and subsequent DS's
-        $STACK = "";
-        if ($COUNT != 0) {
-            $STACK = ":STACK ";
+        $stack = "";
+        if ($count != 0) {
+            $stack = ":STACK ";
         }
 
         // Grab a color from the array.
-        if (isset($config['graph_colours']['mixed'][$COUNT])) {
-            $COLOR = $config['graph_colours']['mixed'][$COUNT];
+        if (isset($config['graph_colours']['mixed'][$count])) {
+            $color = $config['graph_colours']['mixed'][$count];
         } else {
-            $COLOR = $config['graph_colours']['oranges'][$COUNT-7];
+            $color = $config['graph_colours']['oranges'][$count-7];
         }
 
-        $rrd_options .= " DEF:DS" . $COUNT . "=" . $rrd_filename . ":callsvideo:AVERAGE ";
-        $rrd_options .= " CDEF:MOD" . $COUNT . "=DS" . $COUNT . ",8,* ";
-        $rrd_options .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'], 0, 25), 25) . "'" . $STACK;
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\l ";
+        $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":callsvideo:AVERAGE ";
+        $rrd_options .= " CDEF:MOD" . $count . "=DS" . $count . ",8,* ";
+        $rrd_options .= " AREA:MOD" . $count . "#" . $color . ":'" . str_pad(substr($components[$id]['label'], 0, 25), 25) . "'" . $stack;
+        $rrd_options .= " GPRINT:MOD" . $count . ":LAST:%6.2lf%s ";
+        $rrd_options .= " GPRINT:MOD" . $count . ":AVERAGE:%6.2lf%s ";
+        $rrd_options .= " GPRINT:MOD" . $count . ":MAX:%6.2lf%s\l ";
 
-        $COUNT++;
+        $count++;
     }
 }
