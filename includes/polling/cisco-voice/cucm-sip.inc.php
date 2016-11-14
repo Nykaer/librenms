@@ -73,7 +73,7 @@ if ($device['os'] == "cucm") {
                 );
 
                 $tags = compact('label', 'rrd_name', 'rrd_def');
-                data_update($device, 'CUCM-SIP', $label, $tags, $fields);
+                data_update($device, $label, $tags, $fields);
             } // End foreach COMPONENT
 
             // Enable the graph.

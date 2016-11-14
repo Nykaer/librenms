@@ -245,7 +245,7 @@ if ($device['os'] == "cucm") {
                 // Do we need to do anything with the RRD?
                 if (isset($fields)) {
                     $tags = compact('label', 'rrd_name', 'rrd_def');
-                    data_update($device, $module, $label, $tags, $fields);
+                    data_update($device, $label, $tags, $fields);
                 }
             } // End foreach COMPONENT
 
