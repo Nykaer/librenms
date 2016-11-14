@@ -12,45 +12,44 @@
  */
 
 if ($device['os'] == "cucm") {
-
-    $MODULE = 'CUCM-ELCAC';
+    $ctype = 'CUCM-ELCAC';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_cucm_perfmon.inc.php';
-    $COMPONENT = new LibreNMS\Component();
-    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
+    $component = new LibreNMS\Component();
+    $components = $component->getComponents($device['device_id'],array('type'=>$ctype,'ignore'=>0));
 
     // We only care about our device id.
-    $COMPONENTS = $COMPONENTS[$device['device_id']];
+    $components = $components[$device['device_id']];
 
     // Grab the details UCOS requires.
-    $USER = get_dev_attrib($device, 'ucosaxl_user');
-    $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
-    $HOST = get_dev_attrib($device, 'ucosaxl_host');
+    $user = get_dev_attrib($device, 'ucosaxl_user');
+    $pass = get_dev_attrib($device, 'ucosaxl_pass');;
+    $host = get_dev_attrib($device, 'ucosaxl_host');
 
-    $API = new api_cucm_perfmon();
-    $API->connect($USER, $PASS, array($HOST));
+    $api = new api_cucm_perfmon();
+    $api->connect($user, $pass, array($host));
 
     // Create our empty arrays.
-    $COUNTER = array();
+    $counter = array();
 
     // Add a counter for each enabled component
-    foreach($COMPONENTS as $COMPID => $ARRAY) {
+    foreach($components as $compid => $array) {
         // Add the counters to be retrieved for each location
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthMaximum';
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\BandwidthAvailable';
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthMaximum';
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\ImmersiveVideoBandwidthAvailable';
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthMaximum';
-        $COUNTER[] = '\\\\'.$HOST.'\Cisco Locations LBM('.$ARRAY['label'].')\VideoBandwidthAvailable';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\BandwidthMaximum';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\BandwidthAvailable';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\ImmersiveVideoBandwidthMaximum';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\ImmersiveVideoBandwidthAvailable';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\VideoBandwidthMaximum';
+        $counter[] = '\\\\'.$host.'\Cisco Locations LBM('.$array['label'].')\VideoBandwidthAvailable';
     }
 
     // Can we add the counters.
-    if ($API->addCounter($COUNTER)) {
+    if ($api->addCounter($counter)) {
         d_echo("Counter(s) Added\n");
-        $RESULT = $API->collectSessionData();
+        $result = $api->collectSessionData();
 
-        if ($RESULT === false) {
+        if ($result === false) {
             d_echo("No Data was returned.\n");
         }
         else {
@@ -58,25 +57,25 @@ if ($device['os'] == "cucm") {
             d_echo("We have counter data.\n");
 
             // Refactor the array so the data is more accessible.
-            $STATISTICS = array();
-            foreach ($RESULT as $VALUE) {
-                $STATISTICS[$VALUE['Name']] = array('Value'=>$VALUE['Value'],'CStatus'=>$VALUE['CStatus']);
+            $statistics = array();
+            foreach ($result as $value) {
+                $statistics[$value['Name']] = array('Value'=>$value['Value'],'CStatus'=>$value['CStatus']);
             }
 
             // We should be able to retrieve the counter data now..
-            foreach($COMPONENTS as $COMPID => $ARRAY) {
+            foreach($components as $compid => $array) {
                 // If we need to create the RRD, MODULE-Label is the convention.
-                $label = $ARRAY['label'];
-                $rrd_name = array($module, $label);
+                $label = $array['label'];
+                $rrd_name = array($ctype, $label);
                 unset($fields);
 
                 $fields = array(
-                    'totalvoice' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\BandwidthMaximum'),
-                    'availablevoice' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\BandwidthAvailable'),
-                    'totalimmersive' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthMaximum'),
-                    'availableimmersive' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthAvailable'),
-                    'totalvideo' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\VideoBandwidthMaximum'),
-                    'availablevideo' => $API->getRRDValue($STATISTICS,'\\\\'.$HOST.'\Cisco Locations LBM('.$label.')\VideoBandwidthAvailable'),
+                    'totalvoice' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\BandwidthMaximum'),
+                    'availablevoice' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\BandwidthAvailable'),
+                    'totalimmersive' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthMaximum'),
+                    'availableimmersive' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\ImmersiveVideoBandwidthAvailable'),
+                    'totalvideo' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\VideoBandwidthMaximum'),
+                    'availablevideo' => $api->getRRDValue($statistics,'\\\\'.$host.'\Cisco Locations LBM('.$label.')\VideoBandwidthAvailable'),
                 );
                 $rrd_def = array(
                     'DS:totalvoice:GAUGE:600:0:U',
@@ -92,12 +91,12 @@ if ($device['os'] == "cucm") {
             } // End foreach COMPONENT
 
             // Enable the graph.
-            $graphs[$MODULE."-voice"] = TRUE;
-            $graphs[$MODULE."-video"] = TRUE;
-            $graphs[$MODULE."-immersive"] = TRUE;
+            $graphs[$ctype."-voice"] = TRUE;
+            $graphs[$ctype."-video"] = TRUE;
+            $graphs[$ctype."-immersive"] = TRUE;
 
-            echo $MODULE.' ';
+            echo $ctype.' ';
         } // End if RESULTS
     }
-    unset($COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
+    unset($counter, $result, $ctype, $api, $components, $component);
 }

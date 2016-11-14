@@ -12,24 +12,23 @@
  */
 
 if ($device['os'] == "cucm") {
-
-    $MODULE = 'CUCM-RegisteredDevices';
+    $ctype = 'CUCM-RegisteredDevices';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
 
     // Grab the details UCOS requires.
-    $USER = get_dev_attrib($device, 'ucosaxl_user');
-    $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
-    $HOST = get_dev_attrib($device, 'ucosaxl_host');
+    $user = get_dev_attrib($device, 'ucosaxl_user');
+    $pass = get_dev_attrib($device, 'ucosaxl_pass');;
+    $host = get_dev_attrib($device, 'ucosaxl_host');
 
-    $API = new api_ucos_ast();
-    $API->connect($USER, $PASS, $HOST);
+    $api = new api_ucos_ast();
+    $api->connect($user, $pass, $host);
 
-    $RESULT = $API->getRegisteredDevices();
+    $result = $api->getRegisteredDevices();
 
-    if (isset($RESULT['RegisteredPhone'])) {
-        $rrd_name = $module;
+    if (isset($result['RegisteredPhone'])) {
+        $rrd_name = $ctype;
         unset($fields);
 
         $rrd_def = array(
@@ -51,114 +50,114 @@ if ($device['os'] == "cucm") {
             'DS:h323-total:GAUGE:600:0:U',
         );
 
-        if (isset($RESULT['RegisteredPhone']["@attributes"]['Total'])) {
-            $fields['phone-total'] = $RESULT['RegisteredPhone']["@attributes"]['Total'];
+        if (isset($result['RegisteredPhone']["@attributes"]['Total'])) {
+            $fields['phone-total'] = $result['RegisteredPhone']["@attributes"]['Total'];
         } else {
             $fields['phone-total'] = "U";
         }
 
-        if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSIP'])) {
-            $fields['phone-sip'] = $RESULT['RegisteredPhone']["@attributes"]['TotalSIP'];
+        if (isset($result['RegisteredPhone']["@attributes"]['TotalSIP'])) {
+            $fields['phone-sip'] = $result['RegisteredPhone']["@attributes"]['TotalSIP'];
         } else {
             $fields['phone-sip'] = "U";
         }
 
-        if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'])) {
-            $fields['phone-sccp'] = $RESULT['RegisteredPhone']["@attributes"]['TotalSCCP'];
+        if (isset($result['RegisteredPhone']["@attributes"]['TotalSCCP'])) {
+            $fields['phone-sccp'] = $result['RegisteredPhone']["@attributes"]['TotalSCCP'];
         } else {
             $fields['phone-sccp'] = "U";
         }
 
-        if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'])) {
-            $fields['phone-partial'] = $RESULT['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'];
+        if (isset($result['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'])) {
+            $fields['phone-partial'] = $result['RegisteredPhone']["@attributes"]['TotalPartiallyRegistered'];
         } else {
             $fields['phone-partial'] = "U";
         }
 
-        if (isset($RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'])) {
-            $fields['phone-failed'] = $RESULT['RegisteredPhone']["@attributes"]['TotalFailedAttempts'];
+        if (isset($result['RegisteredPhone']["@attributes"]['TotalFailedAttempts'])) {
+            $fields['phone-failed'] = $result['RegisteredPhone']["@attributes"]['TotalFailedAttempts'];
         } else {
             $fields['phone-failed'] = "U";
         }
 
-        if (isset($RESULT['RegisteredGateway']["@attributes"]['Total'])) {
-            $fields['gw-total'] = $RESULT['RegisteredGateway']["@attributes"]['Total'];
+        if (isset($result['RegisteredGateway']["@attributes"]['Total'])) {
+            $fields['gw-total'] = $result['RegisteredGateway']["@attributes"]['Total'];
         } else {
             $fields['gw-total'] = "U";
         }
 
-        if (isset($RESULT['RegisteredGateway']["@attributes"]['FXS'])) {
-            $fields['gw-fxs'] = $RESULT['RegisteredGateway']["@attributes"]['FXS'];
+        if (isset($result['RegisteredGateway']["@attributes"]['FXS'])) {
+            $fields['gw-fxs'] = $result['RegisteredGateway']["@attributes"]['FXS'];
         } else {
             $fields['gw-fxs'] = "U";
         }
 
-        if (isset($RESULT['RegisteredGateway']["@attributes"]['FXO'])) {
-            $fields['gw-fxo'] = $RESULT['RegisteredGateway']["@attributes"]['FXO'];
+        if (isset($result['RegisteredGateway']["@attributes"]['FXO'])) {
+            $fields['gw-fxo'] = $result['RegisteredGateway']["@attributes"]['FXO'];
         } else {
             $fields['gw-fxo'] = "U";
         }
 
-        if (isset($RESULT['RegisteredGateway']["@attributes"]['T1CAS'])) {
-            $fields['gw-t1cas'] = $RESULT['RegisteredGateway']["@attributes"]['T1CAS'];
+        if (isset($result['RegisteredGateway']["@attributes"]['T1CAS'])) {
+            $fields['gw-t1cas'] = $result['RegisteredGateway']["@attributes"]['T1CAS'];
         } else {
             $fields['gw-t1cas'] = "U";
         }
 
-        if (isset($RESULT['RegisteredGateway']["@attributes"]['PRI'])) {
-            $fields['gw-pri'] = $RESULT['RegisteredGateway']["@attributes"]['PRI'];
+        if (isset($result['RegisteredGateway']["@attributes"]['PRI'])) {
+            $fields['gw-pri'] = $result['RegisteredGateway']["@attributes"]['PRI'];
         } else {
             $fields['gw-pri'] = "U";
         }
 
-        if (isset($RESULT['RegisteredMediaResource']["@attributes"]['Total'])) {
-            $fields['mr-total'] = $RESULT['RegisteredMediaResource']["@attributes"]['Total'];
+        if (isset($result['RegisteredMediaResource']["@attributes"]['Total'])) {
+            $fields['mr-total'] = $result['RegisteredMediaResource']["@attributes"]['Total'];
         } else {
             $fields['mr-total'] = "U";
         }
 
-        if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MOH'])) {
-            $fields['mr-moh'] = $RESULT['RegisteredMediaResource']["@attributes"]['MOH'];
+        if (isset($result['RegisteredMediaResource']["@attributes"]['MOH'])) {
+            $fields['mr-moh'] = $result['RegisteredMediaResource']["@attributes"]['MOH'];
         } else {
             $fields['mr-moh'] = "U";
         }
 
-        if (isset($RESULT['RegisteredMediaResource']["@attributes"]['MTP'])) {
-            $fields['mr-mtp'] = $RESULT['RegisteredMediaResource']["@attributes"]['MTP'];
+        if (isset($result['RegisteredMediaResource']["@attributes"]['MTP'])) {
+            $fields['mr-mtp'] = $result['RegisteredMediaResource']["@attributes"]['MTP'];
         } else {
             $fields['mr-mtp'] = "U";
         }
 
-        if (isset($RESULT['RegisteredMediaResource']["@attributes"]['XCODE'])) {
-            $fields['mr-xcode'] = $RESULT['RegisteredMediaResource']["@attributes"]['XCODE'];
+        if (isset($result['RegisteredMediaResource']["@attributes"]['XCODE'])) {
+            $fields['mr-xcode'] = $result['RegisteredMediaResource']["@attributes"]['XCODE'];
         } else {
             $fields['mr-xcode'] = "U";
         }
 
-        if (isset($RESULT['RegisteredMediaResource']["@attributes"]['CFB'])) {
-            $fields['mr-cfb'] = $RESULT['RegisteredMediaResource']["@attributes"]['CFB'];
+        if (isset($result['RegisteredMediaResource']["@attributes"]['CFB'])) {
+            $fields['mr-cfb'] = $result['RegisteredMediaResource']["@attributes"]['CFB'];
         } else {
             $fields['mr-cfb'] = "U";
         }
 
-        if (isset($RESULT['H323']["@attributes"]['Total'])) {
-            $fields['h323-total'] = $RESULT['H323']["@attributes"]['Total'];
+        if (isset($result['H323']["@attributes"]['Total'])) {
+            $fields['h323-total'] = $result['H323']["@attributes"]['Total'];
         } else {
             $fields['h323-total'] = "U";
         }
 
         $tags = compact('rrd_name', 'rrd_def');
-        data_update($device, $module, $tags, $fields);
+        data_update($device, $ctype, $tags, $fields);
     }
 
     // Enable the graphs.
-    $graphs[$MODULE.'-total'] = TRUE;
-    $graphs[$MODULE.'-phonebytype'] = TRUE;
-    $graphs[$MODULE.'-phonebystatus'] = TRUE;
-    $graphs[$MODULE.'-gw'] = TRUE;
-    $graphs[$MODULE.'-mr'] = TRUE;
-    $graphs[$MODULE.'-h323'] = TRUE;
+    $graphs[$ctype.'-total'] = TRUE;
+    $graphs[$ctype.'-phonebytype'] = TRUE;
+    $graphs[$ctype.'-phonebystatus'] = TRUE;
+    $graphs[$ctype.'-gw'] = TRUE;
+    $graphs[$ctype.'-mr'] = TRUE;
+    $graphs[$ctype.'-h323'] = TRUE;
 
-    echo $MODULE.' ';
-    unset($RESULT, $MODULE, $API);
+    echo $ctype.' ';
+    unset($result, $ctype, $api);
 }
