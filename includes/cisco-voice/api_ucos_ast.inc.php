@@ -92,9 +92,13 @@ class api_ucos_ast extends \transport_http {
                         // We have found our host. Extract the node
                         $this->sNODE = $NODE["@attributes"]['value2'];
                         return true;
+                    } elseif (stristr($NODE["@attributes"]['value2'], $this->sHOST)) {
+                        // We have found our host. Extract the node
+                        $this->sNODE = $NODE["@attributes"]['value2'];
+                        return true;
                     }
                 }
-                d_echo("Error: We were looking for \"".$this->sHOST."\" in value1, but we couldnt find it.\n");
+                d_echo("Error: We were looking for \"".$this->sHOST."\", but we couldnt find it.\n");
                 return false;
             }
         } // End if is_null

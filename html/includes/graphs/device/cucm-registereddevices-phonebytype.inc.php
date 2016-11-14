@@ -23,11 +23,11 @@ if (file_exists($rrd_filename)) {
     $rrd_options .= " AREA:SIP" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'SIP Phones          '";
     $rrd_options .= " GPRINT:SIP" . $COUNT . ":LAST:%3.0lf";
     $rrd_options .= " GPRINT:SIP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_options .= " GPRINT:SIP" . $COUNT . ":MAX:%3.0lf\\\l ";
+    $rrd_options .= " GPRINT:SIP" . $COUNT . ":MAX:%3.0lf\l ";
 
     $rrd_options .= " DEF:SCCP" . $COUNT . "=" . $rrd_filename . ":phone-sccp:AVERAGE";
     $rrd_options .= " AREA:SCCP" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'SCCP Phones         ':STACK";
     $rrd_options .= " GPRINT:SCCP" . $COUNT . ":LAST:%3.0lf";
     $rrd_options .= " GPRINT:SCCP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":MAX:%3.0lf\\\l ";
+    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":MAX:%3.0lf\l ";
 }

@@ -50,19 +50,16 @@ if ($device['os_group'] == "ucos") {
              * 1 = Service Started - Operating normally
              * 2 = Service Not Started, Deactivated - not an issue, has been manually disabled.
              * 3 = Unknown - Guessing Stopping state
-             * 4 = Unknown - Guessing Starting State
-             * 5 = Service Stopped but should be running - Error State.
+             * 4 = Unknown - Guessing Down State
+             * 5 = Service Stopped by Admin
              */
-            if (($status == 1) || ($status == 5)) {
-                if ($status == 1) {
-                    $status = 1;
-                }
-                else {
-                    $status = 0;
-                }
-                // Add a component for each Running Service
-                $SERVICES[] = array('label'=>$ARRAY["@attributes"]['ServiceName'], 'status'=>$status);
+            if (($status == 3) || ($status == 4)) {
+                $status = 2;
+            } else {
+                $status = 0;
             }
+            // Add a component for each Running Service
+            $SERVICES[] = array('label'=>$ARRAY["@attributes"]['ServiceName'], 'status'=>$status);
         }
 
         /*
