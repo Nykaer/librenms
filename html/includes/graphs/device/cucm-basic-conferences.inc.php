@@ -29,7 +29,7 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             $rrd_options .= " AREA:DS1" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total Hardware      '";
             $rrd_options .= " GPRINT:DS1" . $COUNT . ":LAST:%3.0lf ";
             $rrd_options .= " GPRINT:DS1" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_options .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\l ";
         }
     } elseif ($ARRAY['label'] == 'SWConferenceResource') {
         if (file_exists($rrd_filename)) {
@@ -37,7 +37,7 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             $rrd_options .= " AREA:DS2" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Total Software      '";
             $rrd_options .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
             $rrd_options .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_options .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\l ";
         }
     }
 }

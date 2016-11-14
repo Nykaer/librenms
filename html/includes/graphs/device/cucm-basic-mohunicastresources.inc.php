@@ -29,13 +29,13 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
             $rrd_options .= " AREA:DS1" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total                  '";
             $rrd_options .= " GPRINT:DS1" . $COUNT . ":LAST:%3.0lf ";
             $rrd_options .= " GPRINT:DS1" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_options .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " GPRINT:DS1" . $COUNT . ":MAX:%3.0lf\l ";
 
             $rrd_options .= " DEF:DS2" . $COUNT . "=" . $rrd_filename . ":active:AVERAGE ";
             $rrd_options .= " AREA:DS2" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Active                 '";
             $rrd_options .= " GPRINT:DS2" . $COUNT . ":LAST:%3.0lf ";
             $rrd_options .= " GPRINT:DS2" . $COUNT . ":AVERAGE:%3.0lf ";
-            $rrd_options .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\\\l ";
+            $rrd_options .= " GPRINT:DS2" . $COUNT . ":MAX:%3.0lf\l ";
         }
     }
 }

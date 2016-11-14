@@ -43,7 +43,7 @@ foreach ($COMPONENTS as $ID => $ARRAY) {
         $rrd_options .= " AREA:MOD" . $COUNT . "#" . $COLOR . ":'" . str_pad(substr($COMPONENTS[$ID]['label'], 0, 25), 25) . "'" . $STACK;
         $rrd_options .= " GPRINT:MOD" . $COUNT . ":LAST:%6.2lf%s ";
         $rrd_options .= " GPRINT:MOD" . $COUNT . ":AVERAGE:%6.2lf%s ";
-        $rrd_options .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\\\l ";
+        $rrd_options .= " GPRINT:MOD" . $COUNT . ":MAX:%6.2lf%s\l ";
 
         $COUNT++;
     }

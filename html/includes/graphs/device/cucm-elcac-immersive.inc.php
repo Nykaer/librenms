@@ -42,11 +42,11 @@ if (isset($vars['item'])) {
         $rrd_options .= " AREA:TOT" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'Total                         '";
         $rrd_options .= " GPRINT:TOT" . $COUNT . ":LAST:%3.0lf";
         $rrd_options .= " GPRINT:TOT" . $COUNT . ":AVERAGE:%3.0lf";
-        $rrd_options .= " GPRINT:TOT" . $COUNT . ":MAX:%3.0lf\\\l ";
+        $rrd_options .= " GPRINT:TOT" . $COUNT . ":MAX:%3.0lf\l ";
 
         $rrd_options .= " AREA:ACT" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'Used                          '";
         $rrd_options .= " GPRINT:ACT" . $COUNT . ":LAST:%3.0lf";
         $rrd_options .= " GPRINT:ACT" . $COUNT . ":AVERAGE:%3.0lf";
-        $rrd_options .= " GPRINT:ACT" . $COUNT . ":MAX:%3.0lf\\\l";
+        $rrd_options .= " GPRINT:ACT" . $COUNT . ":MAX:%3.0lf\l";
     }
 }
