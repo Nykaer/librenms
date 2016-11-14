@@ -2,7 +2,7 @@
 require_once 'pages/device/apps/cucm/widgets/functions.inc.php';
 $options = array();
 $options['filter']['type'] = array('LIKE', 'CUCM-');
-$options['filter']['status'] = array('=',0);
+$options['filter']['status'] = array('=',2);
 $ALERTS1 = $COMPONENT->getComponents($device['device_id'], $options);
 $ALERTS1 = $ALERTS1[$device['device_id']];
 $options['filter']['type'] = array('LIKE','UCOS-');

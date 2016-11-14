@@ -56,16 +56,15 @@ if ($device['os'] == "cucm") {
              * 1 = Service Started - Operating normally
              * 2 = Service Not Started, Deactivated - not an issue, has been manually disabled.
              * 3 = Unknown - Guessing Stopping state
-             * 4 = Unknown - Guessing Starting State
-             * 5 = Service Stopped but should be running - Error State.
+             * 4 = Unknown - Guessing Down State
+             * 5 = Service Stopped by Admin
              */
             $status = $STATISTICS[$ARRAY['label']]['status'];
 
-            if ($status == 1) {
-                $ARRAY['status'] = 0;
-            }
-            else {
+            if (($status == 3) || ($status == 4)) {
                 $ARRAY['status'] = 2;
+            } else {
+                $ARRAY['status'] = 0;
             }
 
             // Warning if the uptime has been restarted
