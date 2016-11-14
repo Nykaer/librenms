@@ -12,8 +12,7 @@
  */
 
 if ($device['os'] == "cucm") {
-
-    $MODULE = 'CUCM-RegisteredDevices';
+    $ctype = 'CUCM-RegisteredDevices';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
@@ -29,7 +28,7 @@ if ($device['os'] == "cucm") {
     $RESULT = $API->getRegisteredDevices();
 
     if (isset($RESULT['RegisteredPhone'])) {
-        $rrd_name = $module;
+        $rrd_name = $ctype;
         unset($fields);
 
         $rrd_def = array(
@@ -148,17 +147,17 @@ if ($device['os'] == "cucm") {
         }
 
         $tags = compact('rrd_name', 'rrd_def');
-        data_update($device, $module, $tags, $fields);
+        data_update($device, $ctype, $tags, $fields);
     }
 
     // Enable the graphs.
-    $graphs[$MODULE.'-total'] = TRUE;
-    $graphs[$MODULE.'-phonebytype'] = TRUE;
-    $graphs[$MODULE.'-phonebystatus'] = TRUE;
-    $graphs[$MODULE.'-gw'] = TRUE;
-    $graphs[$MODULE.'-mr'] = TRUE;
-    $graphs[$MODULE.'-h323'] = TRUE;
+    $graphs[$ctype.'-total'] = TRUE;
+    $graphs[$ctype.'-phonebytype'] = TRUE;
+    $graphs[$ctype.'-phonebystatus'] = TRUE;
+    $graphs[$ctype.'-gw'] = TRUE;
+    $graphs[$ctype.'-mr'] = TRUE;
+    $graphs[$ctype.'-h323'] = TRUE;
 
-    echo $MODULE.' ';
-    unset($RESULT, $MODULE, $API);
+    echo $ctype.' ';
+    unset($RESULT, $ctype, $API);
 }

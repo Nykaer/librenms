@@ -20,9 +20,12 @@ $SERVICES = $SERVICES[$device['device_id']];
         <tbody>
         <?php
         foreach ($SERVICES as $VALUE) {
-            if ($VALUE['status'] == 1) {
+            if ($VALUE['status'] == 0) {
                 $STATUS = "Ok";
                 $CLASS = "";
+            } elseif ($VALUE['status'] == 1) {
+                $STATUS = "Warning";
+                $CLASS = "bg-warning";
             } else {
                 $STATUS = "Alert";
                 $CLASS = 'bg-danger';

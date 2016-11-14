@@ -12,32 +12,31 @@
  */
 
 if ($device['os'] == "cucm") {
-
-    $MODULE = 'UCOS-SERVICES';
+    $ctype = 'UCOS-SERVICES';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_ucos_ast.inc.php';
 
-    $COMPONENT = new LibreNMS\Component();
-    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
+    $component = new LibreNMS\Component();
+    $components = $component->getComponents($device['device_id'],array('type'=>$ctype,'ignore'=>0));
 
     // We only care about our device id.
-    $COMPONENTS = $COMPONENTS[$device['device_id']];
+    $components = $components[$device['device_id']];
 
     // Grab the details UCOS requires.
-    $USER = get_dev_attrib($device, 'ucosaxl_user');
-    $PASS = get_dev_attrib($device, 'ucosaxl_pass');;
-    $HOST = get_dev_attrib($device, 'ucosaxl_host');
+    $user = get_dev_attrib($device, 'ucosaxl_user');
+    $pass = get_dev_attrib($device, 'ucosaxl_pass');;
+    $host = get_dev_attrib($device, 'ucosaxl_host');
 
-    $API = new api_ucos_ast();
-    $API->connect($USER, $PASS, $HOST);
+    $api = new api_ucos_ast();
+    $api->connect($user, $pass, $host);
 
     // Begin the master array, all data will be processed into this array.
-    $SERVICES = array();
+    $services = array();
 
     // Extract all Services.
-    $RESULT = $API->getServices();
-    if ($RESULT === false) {
+    $result = $api->getServices();
+    if ($result === false) {
         d_echo("No Data was returned.\n");
         echo "Error\n";
     }
@@ -45,13 +44,13 @@ if ($device['os'] == "cucm") {
         d_echo("We have Services.\n");
 
         // Refactor the array so the data is more accessible.
-        $STATISTICS = array();
-        foreach ($RESULT['Service'] as $VALUE) {
-            $STATISTICS[$VALUE["@attributes"]['ServiceName']] = array('status'=>$VALUE["@attributes"]['ServiceStatus'],'uptime'=>$VALUE["@attributes"]['ElapsedTime']);
+        $statistics = array();
+        foreach ($result['Service'] as $value) {
+            $statistics[$value["@attributes"]['ServiceName']] = array('status'=>$value["@attributes"]['ServiceStatus'],'uptime'=>$value["@attributes"]['ElapsedTime']);
         }
 
         // We should be able to retrieve the counter data now..
-        foreach($COMPONENTS as $COMPID => &$ARRAY) {
+        foreach($components as $compid => &$array) {
             /* A note on Service Status
              * 1 = Service Started - Operating normally
              * 2 = Service Not Started, Deactivated - not an issue, has been manually disabled.
@@ -59,27 +58,26 @@ if ($device['os'] == "cucm") {
              * 4 = Unknown - Guessing Down State
              * 5 = Service Stopped by Admin
              */
-            $status = $STATISTICS[$ARRAY['label']]['status'];
+            $status = $statistics[$array['label']]['status'];
 
             if (($status == 3) || ($status == 4)) {
-                $ARRAY['status'] = 2;
+                $array['status'] = 2;
             } else {
-                $ARRAY['status'] = 0;
+                $array['status'] = 0;
             }
 
             // Warning if the uptime has been restarted
-            if ($STATISTICS[$ARRAY['label']]['uptime'] < $ARRAY['uptime']) {
-                $ARRAY['status'] = 1;
+            if ($statistics[$array['label']]['uptime'] < $array['uptime']) {
+                $array['status'] = 1;
             }
             // Update our uptime to the new value
-            $ARRAY['uptime'] = $STATISTICS[$ARRAY['label']]['uptime'];
+            $array['uptime'] = $statistics[$array['label']]['uptime'];
         } // End foreach COMPONENT
-
-        echo $MODULE.' ';
+        echo $ctype.' ';
     }
 
     // Write the Components back to the DB.
-    $COMPONENT->setComponentPrefs($device['device_id'],$COMPONENTS);
+    $component->setComponentPrefs($device['device_id'],$components);
 
-    unset($RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
+    unset($result, $ctype, $api, $components, $component);
 }

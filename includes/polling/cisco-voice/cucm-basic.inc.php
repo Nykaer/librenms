@@ -12,13 +12,12 @@
  */
 
 if ($device['os'] == "cucm") {
-
-    $MODULE = 'CUCM-Basic';
+    $ctype = 'CUCM-Basic';
 
     require_once 'includes/cisco-voice/transport_http.inc.php';
     require_once 'includes/cisco-voice/api_cucm_perfmon.inc.php';
     $COMPONENT = new LibreNMS\Component();
-    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$MODULE,'ignore'=>0));
+    $COMPONENTS = $COMPONENT->getComponents($device['device_id'],array('type'=>$ctype,'ignore'=>0));
 
     // We only care about our device id.
     $COMPONENTS = $COMPONENTS[$device['device_id']];
@@ -109,11 +108,11 @@ if ($device['os'] == "cucm") {
             foreach($COMPONENTS as $COMPID => $ARRAY) {
                 // If we need to create the RRD, MODULE-Label is the convention.
                 $label = $ARRAY['label'];
-                $rrd_name = array($module, $label);
+                $rrd_name = array($ctype, $label);
                 unset($fields);
 
                 // Enable the graph.
-                $graphs[$MODULE.'-'.$label] = TRUE;
+                $graphs[$ctype.'-'.$label] = TRUE;
 
                 switch ($label) {
                     case 'Calls':
@@ -252,8 +251,8 @@ if ($device['os'] == "cucm") {
             // Write the Components back to the DB, in case something was set to alert.
             $COMPONENT->setComponentPrefs($device['device_id'],$COMPONENTS);
 
-            echo $MODULE.' ';
+            echo $ctype.' ';
         } // End if RESULTS
     }
-    unset($COUNTERS, $RESULT, $MODULE, $API, $COMPONENTS, $COMPONENT);
+    unset($COUNTERS, $RESULT, $ctype, $API, $COMPONENTS, $COMPONENT);
 }
