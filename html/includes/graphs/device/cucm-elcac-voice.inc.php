@@ -32,7 +32,7 @@ $rrd_options .= " COMMENT:'Voice Bandwidth (kbps)   Now  Avg  Max\\n'";
 if (isset($vars['item'])) {
     $id = $vars['item'];
     // Have we found a valid location to display?
-    $rrd_filename = rrd_name($device['hostname'], array('CUCM-ELCAC', $array['label']));
+    $rrd_filename = rrd_name($device['hostname'], array('CUCM-ELCAC', $components[$id]['label']));
     if (file_exists($rrd_filename)) {
         $rrd_options .= " DEF:TOT" . $count . "=" . $rrd_filename . ":totalvoice:AVERAGE";
         $rrd_options .= " DEF:AVA" . $count . "=" . $rrd_filename . ":availablevoice:AVERAGE";

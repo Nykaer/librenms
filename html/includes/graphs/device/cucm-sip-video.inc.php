@@ -21,6 +21,7 @@ include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
 $rrd_options .= " COMMENT:'Video Calls                    Now      Avg      Max\\n'";
 
+$colours = array_merge($config['graph_colours']['mixed'], $config['graph_colours']['manycolours'], $config['graph_colours']['manycolours']);
 $count = 0;
 foreach ($components as $id => $array) {
     $rrd_filename = rrd_name($device['hostname'], array('CUCM-SIP', $array['label']));
@@ -32,16 +33,16 @@ foreach ($components as $id => $array) {
             $stack = ":STACK ";
         }
 
-        // Grab a color from the array.
-        if (isset($config['graph_colours']['mixed'][$count])) {
-            $color = $config['graph_colours']['mixed'][$count];
+        // Grab a colour from the array.
+        if (isset($colours[$count])) {
+            $colour = $colours[$count];
         } else {
-            $color = $config['graph_colours']['oranges'][$count-7];
+            d_echo("\nError: Out of colours. Have: ".(count($colours)-1).", Requesting:".$count);
         }
 
         $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":callsvideo:AVERAGE ";
         $rrd_options .= " CDEF:MOD" . $count . "=DS" . $count . ",8,* ";
-        $rrd_options .= " AREA:MOD" . $count . "#" . $color . ":'" . str_pad(substr($components[$id]['label'], 0, 25), 25) . "'" . $stack;
+        $rrd_options .= " AREA:MOD" . $count . "#" . $colour . ":'" . str_pad(substr($array['label'], 0, 25), 25) . "'" . $stack;
         $rrd_options .= " GPRINT:MOD" . $count . ":LAST:%6.2lf%s ";
         $rrd_options .= " GPRINT:MOD" . $count . ":AVERAGE:%6.2lf%s ";
         $rrd_options .= " GPRINT:MOD" . $count . ":MAX:%6.2lf%s\l ";
