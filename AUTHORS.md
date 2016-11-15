@@ -147,6 +147,12 @@ LibreNMS contributors:
 - Timothy Willey <developer@timothywilley.net> (twilley)
 - Jon Ward	<librenms@yonzb.net> (yon2004)
 - Ian Viemeister <github@ian.viemeister.com> (iviemeister)
+- Thane Gill <me@thanegill.com> (thanegill)
+- Christoffer Stokbæk <christoffers@easyspeedy.com> (stokbaek)
+- Markus Wigge <markus@cultcom.de> (cultcom)
+- Matthew Wall <llawwehttam@gmail.com> (llawwehttam)
+- Andres Rahn <andreser@gmail.com> (Andreser)
+- Christoph Zilian <czilian@hotmail.com> (czilian)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
