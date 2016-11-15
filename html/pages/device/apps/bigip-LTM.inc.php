@@ -11,72 +11,21 @@
  * the source code distribution for details.
  */
 
-/*
- * The LTM page structure looks like this:
- * ---      LTM-VS - Shows all Virtual Servers
- *   |\
- *   | ---  LTM-VS - Shows an individual VS
- *   \
- *    ---   LTM-Pool - Shows pool and pool member details
- */
-
-print_optionbar_start();
-
 // Pages
 $pages = array(
-    'LTM-VS'    => 'All Virtual Servers',
+    'LTM-AllVS' => 'All Virtual Servers',
+    'LTM-VS'    => 'Virtual Server',
     'LTM-Pool'  => 'LTM Pool',
 );
+if (!$vars['view']) {
+    $vars['view'] = 'LTM-AllVS';
+}
 
 // Graphs
 $graphs = array('on' => 'On', 'off' => 'Off');
-
-echo "<span style='font-weight: bold;'>F5 BigIP LTM</span> &#187; ";
-
-// Pages, on the left.
-$sep = '';
-foreach ($pages as $page => $text) {
-    if (!$vars['view']) {
-        $vars['view'] = $page;
-    }
-
-    echo $sep;
-    if ($vars['view'] == $page) {
-        echo "<span class='pagemenu-selected'>";
-    }
-
-    echo generate_link($text, $vars, array('view' => $page));
-    if ($vars['view'] == $page) {
-        echo '</span>';
-    }
-
-    $sep = ' | ';
+if (empty($vars['graphs'])) {
+    $vars['graphs'] = 'on';
 }
-unset($sep);
 
-// Graphs, on the right
-echo '<div class="pull-right">';
-echo "<span style='font-weight: bold;'>Graphs</span> &#187; ";
-$sep = '';
-foreach ($graphs as $option => $text) {
-    if (empty($vars['graphs'])) {
-        $vars['graphs'] = $option;
-    }
-    echo $sep;
-    if ($vars['graphs'] == $option) {
-        echo "<span class='pagemenu-selected'>";
-    }
-
-    echo generate_link($text, $vars, array('graphs' => $option));
-    if ($vars['graphs'] == $option) {
-        echo '</span>';
-    }
-    $sep = ' | ';
-}
-unset($sep);
-echo '</div>';
-
-print_optionbar_end();
 $pagetitle[] = $pages[$vars['view']];
-
 include 'pages/device/apps/bigip/'.$vars['view'].'.inc.php';
