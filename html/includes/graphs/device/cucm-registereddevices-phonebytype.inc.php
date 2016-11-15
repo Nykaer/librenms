@@ -19,15 +19,15 @@ $rrd_options = "";
 $rrd_filename = rrd_name($device['hostname'], array('CUCM', 'RegisteredDevices'));
 
 if (file_exists($rrd_filename)) {
-    $rrd_options .= " DEF:SIP" . $COUNT . "=" . $rrd_filename . ":phone-sip:AVERAGE";
-    $rrd_options .= " AREA:SIP" . $COUNT . "#" . $config['graph_colours']['mixed'][2] . ":'SIP Phones          '";
-    $rrd_options .= " GPRINT:SIP" . $COUNT . ":LAST:%3.0lf";
-    $rrd_options .= " GPRINT:SIP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_options .= " GPRINT:SIP" . $COUNT . ":MAX:%3.0lf\l ";
+    $rrd_options .= " DEF:SIP" . $count . "=" . $rrd_filename . ":phone-sip:AVERAGE";
+    $rrd_options .= " AREA:SIP" . $count . "#" . $config['graph_colours']['mixed'][2] . ":'SIP Phones          '";
+    $rrd_options .= " GPRINT:SIP" . $count . ":LAST:%3.0lf";
+    $rrd_options .= " GPRINT:SIP" . $count . ":AVERAGE:%3.0lf";
+    $rrd_options .= " GPRINT:SIP" . $count . ":MAX:%3.0lf\l ";
 
-    $rrd_options .= " DEF:SCCP" . $COUNT . "=" . $rrd_filename . ":phone-sccp:AVERAGE";
-    $rrd_options .= " AREA:SCCP" . $COUNT . "#" . $config['graph_colours']['mixed'][4] . ":'SCCP Phones         ':STACK";
-    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":LAST:%3.0lf";
-    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":AVERAGE:%3.0lf";
-    $rrd_options .= " GPRINT:SCCP" . $COUNT . ":MAX:%3.0lf\l ";
+    $rrd_options .= " DEF:SCCP" . $count . "=" . $rrd_filename . ":phone-sccp:AVERAGE";
+    $rrd_options .= " AREA:SCCP" . $count . "#" . $config['graph_colours']['mixed'][4] . ":'SCCP Phones         ':STACK";
+    $rrd_options .= " GPRINT:SCCP" . $count . ":LAST:%3.0lf";
+    $rrd_options .= " GPRINT:SCCP" . $count . ":AVERAGE:%3.0lf";
+    $rrd_options .= " GPRINT:SCCP" . $count . ":MAX:%3.0lf\l ";
 }
