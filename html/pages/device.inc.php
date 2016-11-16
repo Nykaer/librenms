@@ -32,6 +32,9 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
         $device['os_group'] = $config['os'][$device['os']]['group'];
     }
 
+    $component = new LibreNMS\Component();
+    $component_count = $component->getComponentCount($device['device_id']);
+
     echo '<div class="panel panel-default">';
         echo '<table class="device-header-table" style="margin: 0px 7px 7px 7px;" cellspacing="0" class="devicetable" width="99%">';
         require 'includes/device-header.inc.php';
@@ -154,19 +157,28 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
         }
 
         // $loadbalancer_tabs is used in device/loadbalancer/ to build the submenu. we do it here to save queries
-        if ($device['os'] == 'netscaler') {
+// AD Testing, REMOVE BEFORE COMMIT!!!!
+//        if ($device['os'] == 'netscaler') {
             // Netscaler
             $device_loadbalancer_count['netscaler_vsvr'] = dbFetchCell('SELECT COUNT(*) FROM `netscaler_vservers` WHERE `device_id` = ?', array($device['device_id']));
             if ($device_loadbalancer_count['netscaler_vsvr']) {
                 $loadbalancer_tabs[] = 'netscaler_vsvr';
             }
-        }
+//        }
 
-        if ($device['os'] == 'acsw') {
+//        if ($device['os'] == 'acsw') {
             // Cisco ACE
             $device_loadbalancer_count['loadbalancer_vservers'] = dbFetchCell('SELECT COUNT(*) FROM `loadbalancer_vservers` WHERE `device_id` = ?', array($device['device_id']));
             if ($device_loadbalancer_count['loadbalancer_vservers']) {
                 $loadbalancer_tabs[] = 'loadbalancer_vservers';
+            }
+//        }
+
+        if ($device['os'] == 'f5') {
+            // F5 BigIP
+            if (isset($component_count['bigip'])) {
+                $device_loadbalancer_count['ltm-allvs'] = $component_count['bigip'];
+                $loadbalancer_tabs[] = 'ltm-allvs';
             }
         }
 

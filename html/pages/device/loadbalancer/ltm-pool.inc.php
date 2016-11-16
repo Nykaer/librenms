@@ -11,6 +11,50 @@
  * the source code distribution for details.
  */
 
+print_optionbar_start();
+
+// Pages, on the left.
+$sep = '';
+foreach ($pages as $page => $text) {
+
+    echo $sep;
+    if ($vars['view'] == $page) {
+        echo "<span class='pagemenu-selected'>";
+    }
+
+    echo generate_link($text, $vars, array('view' => $page));
+    if ($vars['view'] == $page) {
+        echo '</span>';
+    }
+
+    $sep = ' | ';
+}
+unset($sep);
+
+// Graphs, on the right
+echo '<div class="pull-right">';
+echo "<span style='font-weight: bold;'>Graphs</span> &#187; ";
+$sep = '';
+foreach ($graphs as $option => $text) {
+    if (empty($vars['graphs'])) {
+        $vars['graphs'] = $option;
+    }
+    echo $sep;
+    if ($vars['graphs'] == $option) {
+        echo "<span class='pagemenu-selected'>";
+    }
+
+    echo generate_link($text, $vars, array('graphs' => $option));
+    if ($vars['graphs'] == $option) {
+        echo '</span>';
+    }
+    $sep = ' | ';
+}
+unset($sep);
+echo '</div>';
+
+print_optionbar_end();
+
 $component = new LibreNMS\Component();
 $components = $component->getComponents($device['device_id'], array('filter' => array('type' => array('=', 'bigip'), 'ignore' => array('=', 0))));
 $components = $components[$device['device_id']];

@@ -13,9 +13,8 @@
 
 // Pages
 $pages = array(
-    'LTM-AllVS' => 'All Virtual Servers',
     'LTM-VS'    => 'Virtual Server',
-    'LTM-Pool'  => 'LTM Pool',
+    'LTM-Pool'  => 'Pool',
 );
 if (!$vars['view']) {
     $vars['view'] = 'LTM-AllVS';
