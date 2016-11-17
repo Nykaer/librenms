@@ -48,7 +48,7 @@ if ($components[$vars['id']]['category'] == 'LTMPool') {
                 d_echo ("\nError: Out of colours. Have: " . (count ($colours) - 1) . ", Requesting:" . $count);
             }
 
-            $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":totconns:AVERAGE ";
+            $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":bytesout:AVERAGE ";
             $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad (substr ($label, 0, 40), 40) . "'";
             $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.2lf%s ";
             $rrd_options .= " GPRINT:DS" . $count . ":AVERAGE:%6.2lf%s ";

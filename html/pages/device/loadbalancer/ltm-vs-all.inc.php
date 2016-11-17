@@ -11,34 +11,23 @@
  * the source code distribution for details.
  */
 
-$component = new LibreNMS\Component();
-$components = $component->getComponents($device['device_id'], array('filter' => array('type' => array('=', 'bigip'), 'ignore' => array('=', 0))));
-$components = $components[$device['device_id']];
-
-global $config;
 ?>
-<script type="text/javascript">
-    jQuery(document).ready(function($) {
-        $(".clickable-row").click(function() {
-            window.document.location = $(this).data("href");
-        });
-    });
-</script>
-<table id='table' class='table table-condensed table-responsive table-striped'>
+<table id='grid' data-toggle='bootgrid' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
-        <th>Name</th>
-        <th>IP : Port</th>
-        <th>Pool</th>
-        <th>Status</th>
+        <th data-column-id="name">Name</th>
+        <th data-column-id="host">IP : Port</th>
+        <th data-column-id="pool">Pool</th>
+        <th data-column-id="status">Status</th>
     </tr>
     </thead>
+    <tbody>
     <?php
-    foreach ($components as $comp) {
-        if ($comp['category'] != 'LTMVirtualServer') { continue; }
-        $string = $comp['IP'].":".$comp['port'];
-        if ($comp['status'] == 2) {
-            $status = $comp['error'];
+    foreach ($components as $vs_id => $array) {
+        if ($array['category'] != 'LTMVirtualServer') { continue; }
+        $string = $array['IP'].":".$array['port'];
+        if ($array['status'] == 2) {
+            $status = $array['error'];
             $error = 'class="danger"';
         } else {
             $status = 'Ok';
@@ -48,21 +37,22 @@ global $config;
         // Find the ID for our pool
         foreach ($components as $k => $v) {
             if ($v['category'] != 'LTMPool') { continue; }
-            if ($v['label'] == $comp['pool']) {
+            if ($v['label'] == $array['pool']) {
                 $id = $k;
             }
-            $link = generate_url($vars, array('view' => 'LTM-Pool', 'id' => $id));
+            $link = generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool', 'vsid' => $vs_id, 'poolid' => $id));
         }
         ?>
         <tr class='clickable-row' data-href='<?php echo $link; ?>' <?php echo $error; ?>>
-            <td><?php echo $comp['label']; ?></td>
+            <td><?php echo $array['label']; ?></td>
             <td><?php echo $string; ?></td>
-            <td><?php echo $comp['pool']; ?></td>
+            <td><?php echo $array['pool']; ?></td>
             <td><?php echo $status; ?></td>
         </tr>
         <?php
     }
     ?>
+    </tbody>
 </table>
 
 <div class="panel panel-default" id="connections">
@@ -71,7 +61,6 @@ global $config;
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -80,7 +69,6 @@ global $config;
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_conns';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -91,7 +79,6 @@ global $config;
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -100,7 +87,6 @@ global $config;
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_bytesin';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -111,7 +97,6 @@ global $config;
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -120,7 +105,6 @@ global $config;
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_bytesout';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -131,7 +115,6 @@ global $config;
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -140,7 +123,6 @@ global $config;
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_pktsin';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -151,7 +133,6 @@ global $config;
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -160,7 +141,17 @@ global $config;
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_pktsout';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
+    <script type="text/javascript">
+//        $("#grid").bootgrid({});
+        jQuery(document).ready(function($) {
+            $(".clickable-row").click(function() {
+                window.document.location = $(this).data("href");
+            });
+            $("#grid tbody tr").click(function() {
+                window.document.location = $(this).data("href");
+            });
+        });
+    </script>
