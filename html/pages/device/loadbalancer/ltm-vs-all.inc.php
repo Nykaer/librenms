@@ -28,11 +28,11 @@ global $config;
     </thead>
     <tbody>
     <?php
-    foreach ($components as $comp) {
-        if ($comp['category'] != 'LTMVirtualServer') { continue; }
-        $string = $comp['IP'].":".$comp['port'];
-        if ($comp['status'] == 2) {
-            $status = $comp['error'];
+    foreach ($components as $vs_id => $array) {
+        if ($array['category'] != 'LTMVirtualServer') { continue; }
+        $string = $array['IP'].":".$array['port'];
+        if ($array['status'] == 2) {
+            $status = $array['error'];
             $error = 'class="danger"';
         } else {
             $status = 'Ok';
@@ -42,16 +42,16 @@ global $config;
         // Find the ID for our pool
         foreach ($components as $k => $v) {
             if ($v['category'] != 'LTMPool') { continue; }
-            if ($v['label'] == $comp['pool']) {
+            if ($v['label'] == $array['pool']) {
                 $id = $k;
             }
-            $link = generate_url($vars, array('view' => 'LTM-Pool', 'id' => $id));
+            $link = generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool', 'vsid' => $vs_id, 'poolid' => $id));
         }
         ?>
         <tr class='clickable-row' data-href='<?php echo $link; ?>' <?php echo $error; ?>>
-            <td><?php echo $comp['label']; ?></td>
+            <td><?php echo $array['label']; ?></td>
             <td><?php echo $string; ?></td>
-            <td><?php echo $comp['pool']; ?></td>
+            <td><?php echo $array['pool']; ?></td>
             <td><?php echo $status; ?></td>
         </tr>
         <?php
@@ -60,16 +60,12 @@ global $config;
     </tbody>
 </table>
 
-<?php
-if($vars['graphs'] == 'on') {
-?>
 <div class="panel panel-default" id="connections">
     <div class="panel-heading">
         <h3 class="panel-title">Connections</h3>
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -78,7 +74,6 @@ if($vars['graphs'] == 'on') {
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_conns';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -89,7 +84,6 @@ if($vars['graphs'] == 'on') {
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -98,7 +92,6 @@ if($vars['graphs'] == 'on') {
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_bytesin';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -109,7 +102,6 @@ if($vars['graphs'] == 'on') {
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -118,7 +110,6 @@ if($vars['graphs'] == 'on') {
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_bytesout';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -129,7 +120,6 @@ if($vars['graphs'] == 'on') {
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -138,7 +128,6 @@ if($vars['graphs'] == 'on') {
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_pktsin';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -149,7 +138,6 @@ if($vars['graphs'] == 'on') {
     </div>
     <div class="panel-body">
         <?php
-
         $graph_array = array();
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
@@ -158,7 +146,6 @@ if($vars['graphs'] == 'on') {
         $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_bigip_ltm_allvs_pktsout';
         require 'includes/print-graphrow.inc.php';
-
         ?>
     </div>
 </div>
@@ -173,6 +160,3 @@ if($vars['graphs'] == 'on') {
             });
         });
     </script>
-<?php
-}
-?>
