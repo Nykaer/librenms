@@ -157,22 +157,21 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
         }
 
         // $loadbalancer_tabs is used in device/loadbalancer/ to build the submenu. we do it here to save queries
-// AD Testing, REMOVE BEFORE COMMIT!!!!
-//        if ($device['os'] == 'netscaler') {
+        if ($device['os'] == 'netscaler') {
             // Netscaler
             $device_loadbalancer_count['netscaler_vsvr'] = dbFetchCell('SELECT COUNT(*) FROM `netscaler_vservers` WHERE `device_id` = ?', array($device['device_id']));
             if ($device_loadbalancer_count['netscaler_vsvr']) {
                 $loadbalancer_tabs[] = 'netscaler_vsvr';
             }
-//        }
+        }
 
-//        if ($device['os'] == 'acsw') {
+        if ($device['os'] == 'acsw') {
             // Cisco ACE
             $device_loadbalancer_count['loadbalancer_vservers'] = dbFetchCell('SELECT COUNT(*) FROM `loadbalancer_vservers` WHERE `device_id` = ?', array($device['device_id']));
             if ($device_loadbalancer_count['loadbalancer_vservers']) {
                 $loadbalancer_tabs[] = 'loadbalancer_vservers';
             }
-//        }
+        }
 
         if ($device['os'] == 'f5') {
             // F5 BigIP
@@ -221,11 +220,7 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
             $routing_tabs[] = 'vrf';
         }
 
-        $component = new LibreNMS\Component();
-        $options['type'] = 'Cisco-OTV';
-        $options['filter']['device_id'] = array('=',$device['device_id']);
-        $otv = $component->getComponents(null, $options);
-        $device_routing_count['cisco-otv'] = count($otv);
+        $device_routing_count['cisco-otv'] = $component_count['Cisco-OTV'];
         if ($device_routing_count['cisco-otv'] > 0) {
             $routing_tabs[] = 'cisco-otv';
         }

@@ -29,7 +29,6 @@ if (!isset($vars['vsid'])) {
 }
 
 print_optionbar_start();
-
 ?>
     <div class='row' style="margin-bottom: 10px;">
         <div class='col-md-12'>

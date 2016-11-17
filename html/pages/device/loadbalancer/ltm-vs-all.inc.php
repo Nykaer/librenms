@@ -11,11 +11,6 @@
  * the source code distribution for details.
  */
 
-$component = new LibreNMS\Component();
-$components = $component->getComponents($device['device_id'], array('filter' => array('type' => array('=', 'bigip'), 'ignore' => array('=', 0))));
-$components = $components[$device['device_id']];
-
-global $config;
 ?>
 <table id='grid' data-toggle='bootgrid' class='table table-condensed table-responsive table-striped'>
     <thead>

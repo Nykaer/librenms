@@ -13,8 +13,6 @@
 
 include 'pages/device/loadbalancer/ltm-vs-common.inc.php';
 
-global $config;
-
 if ($components[$vars['poolid']]['category'] == 'LTMPool') {
     $array = $components[$vars['vsid']];
     $parent = gzuncompress ($array['UID']);
