@@ -12,9 +12,22 @@
  */
 
 $component = new LibreNMS\Component();
-$options = array();
-$options['filter']['type'] = array('=','bigip');
-$components = $component->getComponents($device['device_id'], $options);
+$components = $component->getComponents($device['device_id']);
+
+// We only care about our device id.
+$components = $components[$device['device_id']];
+
+// We extracted all the components for this device, now lets only get the LTM ones.
+$keep = array();
+$types = array('f5-ltm-pool', 'f5-ltm-poolmember');
+foreach ($components as $k => $v) {
+    foreach ($types as $type) {
+        if ($v['type'] == $type) {
+            $keep[$k] = $v;
+        }
+    }
+}
+$components = $keep;
 
 include "includes/graphs/common.inc.php";
 $rrd_options .= " -l 0 -E ";
@@ -23,21 +36,18 @@ $colours = array_merge($config['graph_colours']['mixed'], $config['graph_colours
 $count = 0;
 d_echo("<pre>");
 
-// We only care about our device id.
-$components = $components[$device['device_id']];
-
 // Is the ID we are looking for a valid LTM VS Pool
-if ($components[$vars['id']]['category'] == 'LTMPool') {
+if ($components[$vars['id']]['type'] == 'f5-ltm-pool') {
     $parent = gzuncompress ($components[$vars['id']]['UID']);
 
     // Find all pool members
     foreach ($components as $compid => $comp) {
-        if ($comp['category'] != 'LTMPoolMember') { continue; }
+        if ($comp['type'] != 'f5-ltm-poolmember') { continue; }
         if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
 
         $label = $comp['label'];
         $hash = $comp['hash'];
-        $rrd_filename = rrd_name ($device['hostname'], array ('bigip', 'LTMPoolMember', $label, $hash));
+        $rrd_filename = rrd_name ($device['hostname'], array ($comp['type'], $label, $hash));
         if (file_exists ($rrd_filename)) {
             d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
 

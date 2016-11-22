@@ -13,7 +13,7 @@
 
 include 'pages/device/loadbalancer/ltm-vs-common.inc.php';
 
-if ($components[$vars['poolid']]['category'] == 'LTMPool') {
+if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
     $array = $components[$vars['poolid']];
     // Define some error messages
     $error_poolaction = array ();

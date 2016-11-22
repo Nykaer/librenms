@@ -175,8 +175,8 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
 
         if ($device['os'] == 'f5') {
             // F5 BigIP
-            if (isset($component_count['bigip'])) {
-                $device_loadbalancer_count['ltm-vs'] = $component_count['bigip'];
+            if (isset($component_count['f5-ltm-vs'])) {
+                $device_loadbalancer_count['ltm-vs'] = $component_count['f5-ltm-vs'];
                 $loadbalancer_tabs[] = 'ltm-vs';
             }
         }

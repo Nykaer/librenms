@@ -13,7 +13,7 @@
 
 $component = new LibreNMS\Component();
 $options = array();
-$options['filter']['type'] = array('=','bigip');
+$options['filter']['type'] = array('=','f5-ltm-vs');
 $components = $component->getComponents($device['device_id'], $options);
 
 // We only care about our device id.
@@ -28,11 +28,9 @@ d_echo("<pre>");
 
 // add all LTM VS on this device.
 foreach ($components as $compid => $comp) {
-    if ($comp['category'] != 'LTMVirtualServer') { continue; }
-
     $label = $comp['label'];
     $hash = $comp['hash'];
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $hash));
+    $rrd_filename = rrd_name($device['hostname'], array($comp['type'], $label, $hash));
     if (file_exists($rrd_filename)) {
         d_echo("\n  Adding VS: ".$comp['label']."\t+ added to the graph");
 
