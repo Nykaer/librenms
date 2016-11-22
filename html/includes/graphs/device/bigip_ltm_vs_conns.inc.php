@@ -13,18 +13,18 @@
 
 $component = new LibreNMS\Component();
 $options = array();
-$options['filter']['type'] = array('=','bigip');
+$options['filter']['type'] = array('=','f5-ltm-vs');
 $components = $component->getComponents($device['device_id'], $options);
 
 // We only care about our device id.
 $components = $components[$device['device_id']];
 
 // Is the ID we are looking for a valid LTM VS
-if ($components[$vars['id']]['category'] == 'LTMVirtualServer') {
+if (isset($components[$vars['id']])) {
     $label = $components[$vars['id']]['label'];
     $hash = $components[$vars['id']]['hash'];
 
-    $rrd_filename = rrd_name($device['hostname'], array('bigip', 'LTMVirtualServer', $label, $hash));
+    $rrd_filename = rrd_name($device['hostname'], array('f5-ltm-vs', $label, $hash));
     if (file_exists($rrd_filename)) {
         require 'includes/graphs/common.inc.php';
         $ds = 'totconns';

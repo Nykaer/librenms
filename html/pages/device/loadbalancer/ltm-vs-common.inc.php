@@ -23,7 +23,7 @@ if (!$vars['subtype']) {
 // Determine a policy to show.
 if (!isset($vars['vsid'])) {
     foreach ($components as $id => $array) {
-        if ($array['category'] != 'LTMVirtualServer') { continue; }
+        if ($array['type'] != 'f5-ltm-vs') { continue; }
         $vars['vsid'] = $id;
     }
 }

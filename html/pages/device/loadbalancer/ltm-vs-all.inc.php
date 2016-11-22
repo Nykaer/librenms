@@ -24,7 +24,7 @@
     <tbody>
     <?php
     foreach ($components as $vs_id => $array) {
-        if ($array['category'] != 'LTMVirtualServer') { continue; }
+        if ($array['type'] != 'f5-ltm-vs') { continue; }
         $string = $array['IP'].":".$array['port'];
         if ($array['status'] == 2) {
             $status = $array['error'];
@@ -36,7 +36,7 @@
 
         // Find the ID for our pool
         foreach ($components as $k => $v) {
-            if ($v['category'] != 'LTMPool') { continue; }
+            if ($v['type'] != 'f5-ltm-pool') { continue; }
             if ($v['label'] == $array['pool']) {
                 $id = $k;
             }
