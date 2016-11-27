@@ -92,7 +92,6 @@ if (count($components > 0)) {
     // Loop through the components and extract the data.
     foreach ($components as $key => &$array) {
         $type = $array['type'];
-//        $UID = gzuncompress($array['UID']);
         $UID = $array['UID'];
         $label = $array['label'];
         $hash = $array['hash'];

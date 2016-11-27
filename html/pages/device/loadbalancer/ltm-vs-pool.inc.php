@@ -25,7 +25,6 @@ if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
     $error_poolaction[5] = "Go Active";
     $error_poolaction[6] = "None";
 
-//    $parent = gzuncompress($array['UID']);
     $parent = $array['UID'];
     ?>
     <div class="row">
@@ -84,7 +83,6 @@ if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
                                     if ($comp['category'] != 'LTMPoolMember') {
                                         continue;
                                     }
-//                                    if (!strstr (gzuncompress ($comp['UID']), $parent)) {
                                     if (!strstr($comp['UID'], $parent)) {
                                         continue;
                                     }

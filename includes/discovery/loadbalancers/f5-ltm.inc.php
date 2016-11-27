@@ -106,7 +106,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Message: ".$result['error']."\n");
 
             // We need to compress the string as it can grow bigger than 255 characters
-//            $result['UID'] = gzcompress($result['UID'],9);
             $tblBigIP[] = $result;
         }
     }
@@ -161,7 +160,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Message:           ".$result['error']."\n");
 
             // We need to compress the string as it can grow bigger than 255 characters
-//            $result['UID'] = gzcompress($result['UID'],9);
             $tblBigIP[] = $result;
         }
     }
@@ -215,7 +213,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Message:  ".$result['error']."\n");
 
             // We need to compress the string as it can grow bigger than 255 characters
-//            $result['UID'] = gzcompress($result['UID'],9);
             $tblBigIP[] = $result;
         }
     }
@@ -231,7 +228,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
 
         // Loop over our components to determine if the component exists, or we need to add it.
         foreach ($components as $compid => $child) {
-//            if ((gzuncompress($child['UID']) === gzuncompress($array['UID'])) && ($child['type'] === $array['type']) && ($child['category'] === $array['category'])) {
             if (($child['UID'] === $array['UID']) && ($child['type'] === $array['type']) && ($child['category'] === $array['category'])) {
                 $component_key = $compid;
             }
@@ -258,7 +254,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
         $found = false;
 
         foreach ($tblBigIP as $k => $v) {
-//            if ((gzuncompress($array['UID']) == gzuncompress($v['UID'])) && ($array['category'] == $v['category'])) {
             if (($array['UID'] == $v['UID']) && ($array['type'] == $v['type'])) {
                 // Yay, we found it...
                 $found = true;
