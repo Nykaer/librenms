@@ -14,8 +14,6 @@
 include 'pages/device/loadbalancer/ltm-vs-common.inc.php';
 
 if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
-    $array = $components[$vars['vsid']];
-    $parent = gzuncompress ($array['UID']);
     ?>
     <div class="row">
         <div class="col-md-12">

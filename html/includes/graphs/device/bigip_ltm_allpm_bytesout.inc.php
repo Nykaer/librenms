@@ -38,12 +38,12 @@ d_echo("<pre>");
 
 // Is the ID we are looking for a valid LTM VS Pool
 if ($components[$vars['id']]['type'] == 'f5-ltm-pool') {
-    $parent = gzuncompress ($components[$vars['id']]['UID']);
+    $parent = $components[$vars['id']]['UID'];
 
     // Find all pool members
     foreach ($components as $compid => $comp) {
         if ($comp['type'] != 'f5-ltm-poolmember') { continue; }
-        if (!strstr(gzuncompress($comp['UID']), $parent)) { continue; }
+        if (!strstr($comp['UID'], $parent)) { continue; }
 
         $label = $comp['label'];
         $hash = $comp['hash'];
