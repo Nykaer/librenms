@@ -15,7 +15,6 @@
 
 chdir(__DIR__); // cwd to the directory containing this script
 
-require_once 'includes/defaults.inc.php';
 require_once 'includes/common.php';
 
 $options = getopt('m:h::');
@@ -38,7 +37,6 @@ if (isset($options['h'])) {
     exit;
 }
 
-$console_color = new Console_Color2();
 
 // critical config.php checks
 if (!file_exists('config.php')) {
@@ -68,8 +66,8 @@ if ($config_failed) {
     exit;
 }
 
-// load config.php now
-require_once 'config.php';
+$init_modules = array();
+require 'includes/init.php';
 
 // make sure install_dir is set correctly, or the next includes will fail
 if (!file_exists($config['install_dir'].'/config.php')) {
@@ -77,22 +75,22 @@ if (!file_exists($config['install_dir'].'/config.php')) {
     exit;
 }
 
-// continue loading includes
-require_once 'includes/definitions.inc.php';
-require_once 'includes/functions.php';
-require_once 'includes/alerts.inc.php';
-
 $versions = version_info();
 $cur_sha = $versions['local_sha'];
 
-echo "==========================================================\n";
-echo "LibreNMS Version: $cur_sha\n";
-echo "DB Schema: ".$versions['db_schema']."\n";
-echo "PHP: ".$versions['php_ver']."\n";
-echo "MySQL: ".$versions['mysql_ver']."\n";
-echo "RRDTool: ".$versions['rrdtool_ver']."\n";
-echo "SNMP: ".$versions['netsnmp_ver']."\n";
-echo "==========================================================\n\n";
+echo <<< EOF
+==========================================================
+Component | Version
+--------- | -------
+LibreNMS  | {$cur_sha}
+DB Schema | {$versions['db_schema']}
+PHP       | {$versions['php_ver']}
+MySQL     | {$versions['mysql_ver']}
+RRDTool   | {$versions['rrdtool_ver']}
+SNMP      | {$versions['netsnmp_ver']}
+==========================================================
+\n
+EOF;
 
 // Check we are running this as the root user
 if (function_exists('posix_getpwuid')) {
@@ -141,10 +139,7 @@ if (isset($config['user'])) {
         $files = explode(PHP_EOL, $find_result);
         if (is_array($files)) {
             print_fail("We have found some files that are owned by a different user than $tmp_user, this will stop you updating automatically and / or rrd files being updated causing graphs to fail:\nIf you don't run a bespoke install then you can fix this by running `chown -R $tmp_user:$tmp_user ".$config['install_dir']."`");
-            foreach ($files as $file) {
-                echo "$file\n";
-            }
-            echo "\n";
+            print_list($files, "\t %s\n");
         }
     }
 } else {
@@ -165,9 +160,14 @@ if (strstr($strict_mode, 'STRICT_TRANS_TABLES')) {
     print_fail('You have MySQL STRICT_TRANS_TABLES enabled, please disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
 }
 
-$tz = ini_get('date.timezone');
-if (empty($tz)) {
-    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone');
+$ini_tz = ini_get('date.timezone');
+$sh_tz = rtrim(shell_exec('date +%Z'));
+$php_tz = date('T');
+
+if (empty($ini_tz)) {
+    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone.');
+} elseif ($sh_tz !== $php_tz) {
+    print_fail("You have a different system timezone ($sh_tz) specified to the php configured timezone ($php_tz), please correct this.");
 }
 
 // Test transports
@@ -240,12 +240,14 @@ if (dbFetchCell('SELECT COUNT(`device_id`) FROM `devices` WHERE `last_polled` IS
     print_fail('The poller has never run, check the cron job');
 } elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE `last_polled` < DATE_ADD(NOW(), INTERVAL - 5 minute) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
     print_fail("The poller has not run in the last 5 minutes, check the cron job");
-} elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE (`last_polled` < DATE_ADD(NOW(), INTERVAL - 5 minute) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
+} elseif (count($devices = dbFetchColumn("SELECT `hostname` FROM `devices` WHERE (`last_polled` < DATE_ADD(NOW(), INTERVAL - 5 minute) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1")) > 0) {
     print_warn("Some devices have not been polled in the last 5 minutes, check your poll log");
+    print_list($devices, "\t %s\n");
 }
 
-if (dbFetchCell('SELECT COUNT(`device_id`) FROM `devices` WHERE last_polled_timetaken > 300 AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1') > 0) {
+if (count($devices = dbFetchColumn('SELECT `hostname` FROM `devices` WHERE last_polled_timetaken > 300 AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1')) > 0) {
     print_fail("Some devices have not completed their polling run in 5 minutes, this will create gaps in data.\n        Check your poll log and refer to http://docs.librenms.org/Support/Performance/");
+    print_list($devices, "\t %s\n");
 }
 
 if ($versions['local_branch'] != 'master') {
@@ -260,7 +262,7 @@ if ($username === 'root') {
 exec($modifiedcmd, $cmdoutput, $code);
 if ($code !== 0 && !empty($cmdoutput)) {
     print_warn("Your local git contains modified files, this could prevent automatic updates.\nModified files:");
-    echo('    ' . implode("\n    ", $cmdoutput) . "\n");
+    print_list($cmdoutput, "\t %s\n");
 }
 
 // Modules test
