@@ -13,7 +13,7 @@
 
 // Pages
 $subtypes = array(
-    'ltm-vs-pool'   => 'Pool Details',
+    'ltm-vs-pool'   => 'Default Pool Details',
     'ltm-vs-det'    => 'Virtual Server Details',
 );
 if (!$vars['subtype']) {

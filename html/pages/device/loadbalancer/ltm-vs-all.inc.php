@@ -17,7 +17,7 @@
     <tr>
         <th data-column-id="name">Name</th>
         <th data-column-id="host">IP : Port</th>
-        <th data-column-id="pool">Pool</th>
+        <th data-column-id="pool">Default Pool</th>
         <th data-column-id="status">Status</th>
     </tr>
     </thead>
