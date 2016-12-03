@@ -17,14 +17,16 @@
     <tr>
         <th data-column-id="name">Name</th>
         <th data-column-id="host">IP : Port</th>
-        <th data-column-id="pool">Pool</th>
+        <th data-column-id="pool">Default Pool</th>
         <th data-column-id="status">Status</th>
     </tr>
     </thead>
     <tbody>
     <?php
     foreach ($components as $vs_id => $array) {
-        if ($array['type'] != 'f5-ltm-vs') { continue; }
+        if ($array['type'] != 'f5-ltm-vs') {
+            continue;
+        }
         $string = $array['IP'].":".$array['port'];
         if ($array['status'] == 2) {
             $status = $array['error'];
@@ -36,7 +38,9 @@
 
         // Find the ID for our pool
         foreach ($components as $k => $v) {
-            if ($v['type'] != 'f5-ltm-pool') { continue; }
+            if ($v['type'] != 'f5-ltm-pool') {
+                continue;
+            }
             if ($v['label'] == $array['pool']) {
                 $id = $k;
             }

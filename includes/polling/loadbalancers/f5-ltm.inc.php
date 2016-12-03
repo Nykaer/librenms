@@ -150,8 +150,7 @@ if (count($components > 0)) {
                 $array['status'] = 0;
                 $array['error'] = '';
             }
-        }
-        elseif ($type == 'f5-ltm-pool') {
+        } elseif ($type == 'f5-ltm-pool') {
             $rrd_def = array(
                 'DS:minup:GAUGE:600:0:U',
                 'DS:currup:GAUGE:600:0:U',
@@ -185,8 +184,7 @@ if (count($components > 0)) {
                 $array['status'] = 0;
                 $array['error'] = '';
             }
-        }
-        elseif ($type == 'f5-ltm-poolmember') {
+        } elseif ($type == 'f5-ltm-poolmember') {
             $rrd_def = array(
                 'DS:pktsin:COUNTER:600:0:U',
                 'DS:pktsout:COUNTER:600:0:U',
@@ -217,7 +215,7 @@ if (count($components > 0)) {
             if ($array['state'] == 3) {
                 // Warning Alarm, the pool member is down.
                 $array['status'] = 1;
-                $array['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$UID];;
+                $array['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$UID];
             } else {
                 // All is good.
                 $array['status'] = 0;

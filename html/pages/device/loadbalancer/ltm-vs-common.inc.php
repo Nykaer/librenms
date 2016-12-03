@@ -13,7 +13,7 @@
 
 // Pages
 $subtypes = array(
-    'ltm-vs-pool'   => 'Pool Details',
+    'ltm-vs-pool'   => 'Default Pool Details',
     'ltm-vs-det'    => 'Virtual Server Details',
 );
 if (!$vars['subtype']) {
@@ -23,7 +23,9 @@ if (!$vars['subtype']) {
 // Determine a policy to show.
 if (!isset($vars['vsid'])) {
     foreach ($components as $id => $array) {
-        if ($array['type'] != 'f5-ltm-vs') { continue; }
+        if ($array['type'] != 'f5-ltm-vs') {
+            continue;
+        }
         $vars['vsid'] = $id;
     }
 }
@@ -42,7 +44,6 @@ print_optionbar_start();
 // Pages, on the left.
 $sep = '';
 foreach ($subtypes as $page => $text) {
-
     echo $sep;
     if ($vars['subtype'] == $page) {
         echo "<span class='pagemenu-selected'>";

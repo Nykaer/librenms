@@ -190,7 +190,7 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             if ($result['state'] == 3) {
                 // Warning Alarm, the pool member is down.
                 $result['status'] = 1;
-                $result['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$index];;
+                $result['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$index];
             } else {
                 // All is good.
                 $result['status'] = 0;

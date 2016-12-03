@@ -42,24 +42,28 @@ if ($components[$vars['id']]['type'] == 'f5-ltm-pool') {
 
     // Find all pool members
     foreach ($components as $compid => $comp) {
-        if ($comp['type'] != 'f5-ltm-poolmember') { continue; }
-        if (!strstr($comp['UID'], $parent)) { continue; }
+        if ($comp['type'] != 'f5-ltm-poolmember') {
+            continue;
+        }
+        if (!strstr($comp['UID'], $parent)) {
+            continue;
+        }
 
         $label = $comp['label'];
         $hash = $comp['hash'];
-        $rrd_filename = rrd_name ($device['hostname'], array ($comp['type'], $label, $hash));
-        if (file_exists ($rrd_filename)) {
-            d_echo ("\n  Adding PM: " . $label . "\t+ added to the graph");
+        $rrd_filename = rrd_name($device['hostname'], array($comp['type'], $label, $hash));
+        if (file_exists($rrd_filename)) {
+            d_echo("\n  Adding PM: " . $label . "\t+ added to the graph");
 
             // Grab a colour from the array.
             if (isset($colours[$count])) {
                 $colour = $colours[$count];
             } else {
-                d_echo ("\nError: Out of colours. Have: " . (count ($colours) - 1) . ", Requesting:" . $count);
+                d_echo("\nError: Out of colours. Have: " . (count($colours) - 1) . ", Requesting:" . $count);
             }
 
             $rrd_options .= " DEF:DS" . $count . "=" . $rrd_filename . ":bytesout:AVERAGE ";
-            $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad (substr ($label, 0, 40), 40) . "'";
+            $rrd_options .= " LINE1.25:DS" . $count . "#" . $colour . ":'" . str_pad(substr($label, 0, 40), 40) . "'";
             $rrd_options .= " GPRINT:DS" . $count . ":LAST:%6.2lf%s ";
             $rrd_options .= " GPRINT:DS" . $count . ":AVERAGE:%6.2lf%s ";
             $rrd_options .= " GPRINT:DS" . $count . ":MAX:%6.2lf%s\l ";
@@ -67,4 +71,4 @@ if ($components[$vars['id']]['type'] == 'f5-ltm-pool') {
         }
     } // End Foreach
 }
-d_echo ("</pre>");
+d_echo("</pre>");
