@@ -105,7 +105,7 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Status:  ".$result['status']."\n");
             d_echo("    Message: ".$result['error']."\n");
 
-            // We need to compress the string as it can grow bigger than 255 characters
+            // Add this result to the master array.
             $tblBigIP[] = $result;
         }
     }
@@ -132,8 +132,8 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             $result['minupaction'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.6.'.$index];
             $result['monitor'] = $ltmPoolEntry['1.3.6.1.4.1.3375.2.2.5.1.2.1.17.'.$index];
 
-            // If minupstatus = 1, we should care about minup. If we have less pool members than the minimum, we should error.
-            if (($result['minupstatus'] == 1) && ($result['currentup'] <= $result['minup'])) {
+            // If we have less pool members than the minimum, we should error.
+            if ($result['currentup'] < $result['minup']) {
                 // Danger Will Robinson... We dont have enough Pool Members!
                 $result['status'] = 2;
                 $result['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$result['minupaction']];
@@ -159,7 +159,7 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Status:            ".$result['status']."\n");
             d_echo("    Message:           ".$result['error']."\n");
 
-            // We need to compress the string as it can grow bigger than 255 characters
+            // Add this result to the master array.
             $tblBigIP[] = $result;
         }
     }
@@ -185,9 +185,11 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             $result['weight'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.7.'.$index];
             $result['priority'] = $ltmPoolMemberEntry['1.3.6.1.4.1.3375.2.2.5.3.2.1.8.'.$index];
             $result['state'] = $ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.5.'.$index];
+            $result['available'] = $ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.6.'.$index];
 
+            // If available and bad state
             // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
-            if ($result['state'] == 3) {
+            if (($result['available'] == 1) && ($result['state'] == 3)) {
                 // Warning Alarm, the pool member is down.
                 $result['status'] = 1;
                 $result['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$index];
@@ -212,7 +214,7 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             d_echo("    Status:   ".$result['status']."\n");
             d_echo("    Message:  ".$result['error']."\n");
 
-            // We need to compress the string as it can grow bigger than 255 characters
+            // Add this result to the master array.
             $tblBigIP[] = $result;
         }
     }
