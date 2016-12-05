@@ -53,58 +53,12 @@ if (count($components > 0)) {
     $ltmPoolMbrStatusEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.6.2.1', 0);
     $ltmPoolEntry = snmpwalk_array_num($device, '1.3.6.1.4.1.3375.2.2.5.1.2.1', 0);
 
-
-    // Lets capture some global http stats
-    $category = 'http';
-    // Let's make sure the rrd is setup.
-    $rrd_name = array('bigip', $category);
-    $rrd_def = array(
-        'DS:2xx:COUNTER:600:0:U',
-        'DS:3xx:COUNTER:600:0:U',
-        'DS:4xx:COUNTER:600:0:U',
-        'DS:5xx:COUNTER:600:0:U',
-        'DS:get:COUNTER:600:0:U',
-        'DS:post:COUNTER:600:0:U',
-    );
-
-    $fields = array(
-        '2xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.3.0'],
-        '3xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.4.0'],
-        '4xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.5.0'],
-        '5xx' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.6.0'],
-        'get' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.9.0'],
-        'post' => $sysGlobalHttpStat['1.3.6.1.4.1.3375.2.1.1.2.4.9.0'],
-    );
-
-    // Let's print some debugging info.
-    d_echo("\n\nComponent: ".$key."\n");
-    d_echo("    Type: ".$category."\n");
-    d_echo("    2xx:     1.3.6.1.4.1.3375.2.1.1.2.4.3.0 = ".$fields['2xx']."\n");
-    d_echo("    3xx:     1.3.6.1.4.1.3375.2.1.1.2.4.4.0 = ".$fields['3xx']."\n");
-    d_echo("    4xx:     1.3.6.1.4.1.3375.2.1.1.2.4.5.0 = ".$fields['4xx']."\n");
-    d_echo("    5xx:     1.3.6.1.4.1.3375.2.1.1.2.4.6.0 = ".$fields['5xx']."\n");
-    d_echo("    get:     1.3.6.1.4.1.3375.2.1.1.2.4.8.0 = ".$fields['get']."\n");
-    d_echo("    post:    1.3.6.1.4.1.3375.2.1.1.2.4.9.0 = ".$fields['post']."\n");
-
-    $tags = compact('rrd_name', 'rrd_def', 'category');
-    data_update($device, 'bigip', $tags, $fields);
-
     // Loop through the components and extract the data.
     foreach ($components as $key => &$array) {
         $type = $array['type'];
         $UID = $array['UID'];
         $label = $array['label'];
         $hash = $array['hash'];
-
-        // -----------------------------------------------------
-        // Temp, remove this block after first run.
-        $category = $array['category'];
-        $rrd_filename_old = array($module, $category, $label, $hash);
-        $rrd_filename_new = array($type, $label, $hash);
-        if (file_exists(rrd_name($device['hostname'], $rrd_filename_old))) {
-            rrd_file_rename($device, $rrd_filename_old, $rrd_filename_new);
-        }
-        // -----------------------------------------------------
         $rrd_name = array($type, $label, $hash);
 
         if ($type == 'f5-ltm-vs') {
@@ -174,8 +128,8 @@ if (count($components > 0)) {
             d_echo("    Minimum Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.6.".$UID." = ".$fields['minup']."\n");
             d_echo("    Current Up:   1.3.6.1.4.1.3375.2.2.10.2.3.1.8.".$UID." = ".$fields['currup']."\n");
 
-            // If minupstatus = 1, we should care about minup. If we have less pool members than the minimum, we should error.
-            if (($array['minupstatus'] == 1) && ($array['currentup'] <= $array['minup'])) {
+            // If we have less pool members than the minimum, we should error.
+            if ($array['currentup'] < $array['minup']) {
                 // Danger Will Robinson... We dont have enough Pool Members!
                 $array['status'] = 2;
                 $array['error'] = "Minimum Pool Members not met. Action taken: ".$error_poolaction[$array['minupaction']];
@@ -192,6 +146,9 @@ if (count($components > 0)) {
                 'DS:bytesout:COUNTER:600:0:U',
                 'DS:totconns:COUNTER:600:0:U',
             );
+
+            $array['state'] = $ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.5.'.$UID];
+            $array['available'] = $ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.6.'.$UID];
 
             $fields = array(
                 'pktsin' => $ltmPoolMemberStatEntry['1.3.6.1.4.1.3375.2.2.5.4.3.1.5.'.$UID],
@@ -212,7 +169,9 @@ if (count($components > 0)) {
             d_echo("    BytesOut:   1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['bytesout']."\n");
             d_echo("    TotalConns: 1.3.6.1.4.1.3375.2.2.5.4.3.1.8.".$UID." = ".$fields['totalconns']."\n");
 
-            if ($array['state'] == 3) {
+            // If available and bad state
+            // 0 = None, 1 = Green, 2 = Yellow, 3 = Red, 4 = Blue
+            if (($array['available'] == 1) && ($array['state'] == 3)) {
                 // Warning Alarm, the pool member is down.
                 $array['status'] = 1;
                 $array['error'] = "Pool Member is Down: ".$ltmPoolMbrStatusEntry['1.3.6.1.4.1.3375.2.2.5.6.2.1.8.'.$UID];
