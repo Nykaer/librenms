@@ -15,6 +15,8 @@
 <table id='grid' data-toggle='bootgrid' class='table table-condensed table-responsive table-striped'>
     <thead>
     <tr>
+        <th data-column-id="vsid" data-type="numeric" data-visible="false">vsid</th>
+        <th data-column-id="poolid" data-type="numeric" data-visible="false">poolid</th>
         <th data-column-id="name">Name</th>
         <th data-column-id="host">IP : Port</th>
         <th data-column-id="pool">Default Pool</th>
@@ -36,7 +38,7 @@
             $error = '';
         }
 
-        // Find the ID for our pool
+        // Find the ID for this pool
         foreach ($components as $k => $v) {
             if ($v['type'] != 'f5-ltm-pool') {
                 continue;
@@ -44,10 +46,11 @@
             if ($v['label'] == $array['pool']) {
                 $id = $k;
             }
-            $link = generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool', 'vsid' => $vs_id, 'poolid' => $id));
         }
         ?>
-        <tr class='clickable-row' data-href='<?php echo $link; ?>' <?php echo $error; ?>>
+        <tr <?php echo $error; ?>>
+            <td><?php echo $vs_id; ?></td>
+            <td><?php echo $id; ?></td>
             <td><?php echo $array['label']; ?></td>
             <td><?php echo $string; ?></td>
             <td><?php echo $array['pool']; ?></td>
@@ -149,13 +152,8 @@
     </div>
 </div>
     <script type="text/javascript">
-//        $("#grid").bootgrid({});
-        jQuery(document).ready(function($) {
-            $(".clickable-row").click(function() {
-                window.document.location = $(this).data("href");
-            });
-            $("#grid tbody tr").click(function() {
-                window.document.location = $(this).data("href");
-            });
+        $("#grid").bootgrid({}).on("click.rs.jquery.bootgrid", function (e, columns, row) {
+            var link = '<?php echo generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool')); ?>vsid='+row['vsid']+'/poolid='+row['poolid'];
+            window.location.href = link;
         });
     </script>
