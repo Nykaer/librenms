@@ -19,7 +19,8 @@
         <th data-column-id="name">Name</th>
         <th data-column-id="minup">Minimum Members</th>
         <th data-column-id="currentup">Current Members</th>
-        <th data-column-id="status">Status</th>
+        <th data-column-id="status" data-visible="false">Status</th>
+        <th data-column-id="message">Status</th>
     </tr>
     </thead>
     <tbody>
@@ -28,12 +29,12 @@
         if ($array['type'] != 'f5-ltm-pool') {
             continue;
         }
-        if ($array['status'] == 2) {
-            $status = $array['error'];
-            $error = 'class="danger"';
+        if ($array['status'] != 0) {
+            $message = $array['error'];
+            $status = 2;
         } else {
-            $status = 'Ok';
-            $error = '';
+            $message = 'Ok';
+            $status = '';
         }
         ?>
         <tr <?php echo $error; ?>>
@@ -42,6 +43,7 @@
             <td><?php echo $array['minup']; ?></td>
             <td><?php echo $array['currentup']; ?></td>
             <td><?php echo $status; ?></td>
+            <td><?php echo $message; ?></td>
         </tr>
         <?php
     }
@@ -49,7 +51,11 @@
     </tbody>
 </table>
 <script type="text/javascript">
-    $("#grid").bootgrid({}).on("click.rs.jquery.bootgrid", function (e, columns, row) {
+    $("#grid").bootgrid({
+        statusMappings: {
+            2: "danger"
+        },
+    }).on("click.rs.jquery.bootgrid", function (e, columns, row) {
         var link = '<?php echo generate_url($vars, array('type' => 'ltm-pool', 'subtype' => 'ltm-pool-details')); ?>poolid='+row['poolid'];
         window.location.href = link;
     });
