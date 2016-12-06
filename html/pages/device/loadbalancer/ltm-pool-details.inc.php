@@ -44,17 +44,10 @@ if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
                                 <strong>Pool: <?php echo $array['label']; ?></strong></div>
                             <table class="table table-hover table-condensed table-striped">
                                 <tr>
-                                    <?php
-                                    if ($array['minupstatus'] == 1) {
-                                    // We care about min-up
-                                    ?>
                                     <td>Minimum Active Servers:</td>
                                     <td><?php echo $array['minup']; ?></td>
                                 </tr>
                                 <tr>
-                                    <?php
-                                    }
-                                    ?>
                                     <td>Current Active Servers:</td>
                                     <td><?php echo $array['currentup']; ?></td>
                                 </tr>
@@ -96,7 +89,7 @@ if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
                                     }
 
                                     $string = $comp['IP'] . ":" . $comp['port'];
-                                    if ($comp['status'] == 2) {
+                                    if ($comp['status'] != 0) {
                                         $status = $comp['error'];
                                         $error = 'class="danger"';
                                     } else {

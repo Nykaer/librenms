@@ -81,7 +81,7 @@ if ($components[$vars['poolid']]['type'] == 'f5-ltm-pool') {
                                     }
 
                                     $string = $comp['IP'] . ":" . $comp['port'];
-                                    if ($comp['status'] == 2) {
+                                    if ($comp['status'] != 0) {
                                         $status = $comp['error'];
                                         $error = 'class="danger"';
                                     } else {

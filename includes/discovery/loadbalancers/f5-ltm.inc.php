@@ -66,7 +66,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.10.13.2.1.1.', $oid);
             $result['type'] = 'f5-ltm-vs';
             $result['UID'] = (string)$index;
-            $result['category'] = 'LTMVirtualServer';
             $result['label'] = $value;
             // The UID is far too long to have in a RRD filename, use a hash of it instead.
             $result['hash'] = hash('crc32', $result['UID']);
@@ -119,7 +118,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.5.1.2.1.1.', $oid);
             $result['type'] = 'f5-ltm-pool';
             $result['UID'] = (string)$index;
-            $result['category'] = 'LTMPool';
             $result['label'] = $value;
             // The UID is far too long to have in a RRD filename, use a hash of it instead.
             $result['hash'] = hash('crc32', $result['UID']);
@@ -173,7 +171,6 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
             list($null, $index) = explode('1.3.6.1.4.1.3375.2.2.5.3.2.1.19.', $oid);
             $result['type'] = 'f5-ltm-poolmember';
             $result['UID'] = (string)$index;
-            $result['category'] = 'LTMPoolMember';
             $result['label'] = $value;
             // The UID is far too long to have in a RRD filename, use a hash of it instead.
             $result['hash'] = hash('crc32', $result['UID']);
@@ -230,7 +227,7 @@ if (!is_null($ltmVirtualServEntry) || !is_null($ltmVsStatusEntry) || !is_null($l
 
         // Loop over our components to determine if the component exists, or we need to add it.
         foreach ($components as $compid => $child) {
-            if (($child['UID'] === $array['UID']) && ($child['type'] === $array['type']) && ($child['category'] === $array['category'])) {
+            if (($child['UID'] === $array['UID']) && ($child['type'] === $array['type'])) {
                 $component_key = $compid;
             }
         }

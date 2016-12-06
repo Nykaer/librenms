@@ -20,7 +20,8 @@
         <th data-column-id="name">Name</th>
         <th data-column-id="host">IP : Port</th>
         <th data-column-id="pool">Default Pool</th>
-        <th data-column-id="status">Status</th>
+        <th data-column-id="status" data-visible="false">Status</th>
+        <th data-column-id="message">Status</th>
     </tr>
     </thead>
     <tbody>
@@ -30,15 +31,16 @@
             continue;
         }
         $string = $array['IP'].":".$array['port'];
-        if ($array['status'] == 2) {
-            $status = $array['error'];
-            $error = 'class="danger"';
+        if ($array['status'] != 0) {
+            $message = $array['error'];
+            $status = 2;
         } else {
-            $status = 'Ok';
-            $error = '';
+            $message = 'Ok';
+            $status = '';
         }
 
         // Find the ID for this pool
+        $id = 0;
         foreach ($components as $k => $v) {
             if ($v['type'] != 'f5-ltm-pool') {
                 continue;
@@ -48,13 +50,14 @@
             }
         }
         ?>
-        <tr <?php echo $error; ?>>
+        <tr>
             <td><?php echo $vs_id; ?></td>
             <td><?php echo $id; ?></td>
             <td><?php echo $array['label']; ?></td>
             <td><?php echo $string; ?></td>
             <td><?php echo $array['pool']; ?></td>
             <td><?php echo $status; ?></td>
+            <td><?php echo $message; ?></td>
         </tr>
         <?php
     }
@@ -152,8 +155,16 @@
     </div>
 </div>
     <script type="text/javascript">
-        $("#grid").bootgrid({}).on("click.rs.jquery.bootgrid", function (e, columns, row) {
-            var link = '<?php echo generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool')); ?>vsid='+row['vsid']+'/poolid='+row['poolid'];
-            window.location.href = link;
+        $("#grid").bootgrid({
+            statusMappings: {
+                2: "danger"
+            },
+        }).on("click.rs.jquery.bootgrid", function (e, columns, row) {
+            if (row['poolid'] == 0) {
+                alert('There is no default pool for this Virtual Server.')
+            } else {
+                var link = '<?php echo generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool')); ?>vsid='+row['vsid']+'/poolid='+row['poolid'];
+                window.location.href = link;
+            }
         });
     </script>
