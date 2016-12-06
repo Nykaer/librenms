@@ -17,7 +17,8 @@
     <tr>
         <th data-column-id="poolid" data-type="numeric" data-visible="false">poolid</th>
         <th data-column-id="name">Name</th>
-        <th data-column-id="currentup">Members</th>
+        <th data-column-id="minup">Minimum Members</th>
+        <th data-column-id="currentup">Current Members</th>
         <th data-column-id="status">Status</th>
     </tr>
     </thead>
@@ -38,6 +39,7 @@
         <tr <?php echo $error; ?>>
             <td><?php echo $pool_id; ?></td>
             <td><?php echo $array['label']; ?></td>
+            <td><?php echo $array['minup']; ?></td>
             <td><?php echo $array['currentup']; ?></td>
             <td><?php echo $status; ?></td>
         </tr>
