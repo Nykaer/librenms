@@ -91,12 +91,8 @@ if (count($components > 0)) {
 
             // Let's check the status.
             $array['state'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.2.'.$UID];
-            if ($array['state'] == 2) {
-                // Looks like one of the VS Pool members is down.
-                $array['status'] = 1;
-                $array['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$UID];
-            } elseif ($array['state'] == 3) {
-                // Looks like ALL of the VS Pool members is down.
+            if (($array['state'] == 2) || ($array['state'] == 3)) {
+                // The Virtual Server is unavailable.
                 $array['status'] = 2;
                 $array['error'] = $ltmVsStatusEntry['1.3.6.1.4.1.3375.2.2.10.13.2.1.5.'.$UID];
             } else {
