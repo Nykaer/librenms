@@ -160,11 +160,7 @@
                 2: "danger"
             },
         }).on("click.rs.jquery.bootgrid", function (e, columns, row) {
-            if (row['poolid'] == 0) {
-                alert('There is no default pool for this Virtual Server.')
-            } else {
-                var link = '<?php echo generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-pool')); ?>vsid='+row['vsid']+'/poolid='+row['poolid'];
-                window.location.href = link;
-            }
+            var link = '<?php echo generate_url($vars, array('type' => 'ltm-vs', 'subtype' => 'ltm-vs-det')); ?>vsid='+row['vsid']+'/poolid='+row['poolid'];
+            window.location.href = link;
         });
     </script>
