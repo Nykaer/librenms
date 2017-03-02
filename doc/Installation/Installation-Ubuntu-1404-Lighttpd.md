@@ -28,7 +28,7 @@ Enter the MySQL root password to enter the MySQL command-line interface.
 Create database.
 
 ```sql
-CREATE DATABASE librenms;
+CREATE DATABASE librenms CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 GRANT ALL PRIVILEGES ON librenms.*
   TO 'librenms'@'<ip>'
   IDENTIFIED BY '<password>'
@@ -184,6 +184,12 @@ If the thread count needs to be changed, you can do so by editing the cron file 
 Create the cronjob
 
     cp librenms.nonroot.cron /etc/cron.d/librenms
+
+### Copy logrotate config ###
+
+LibreNMS keeps logs in `/opt/librenms/logs`. Over time these can become large and be rotated out.  To rotate out the old logs you can use the provided logrotate config file:
+
+    cp misc/librenms.logrotate /etc/logrotate.d/librenms
 
 ### Daily Updates ###
 

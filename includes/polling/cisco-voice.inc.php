@@ -81,3 +81,8 @@ if ($device['os_group'] == "ucos") {
      */
     include "cisco-voice/cucm-registereddevices.inc.php";
 }
+
+unset(
+    $output,
+    $key
+);
