@@ -604,10 +604,14 @@ $config['ignore_mount'][] = '/kern';
 $config['ignore_mount'][] = '/mnt/cdrom';
 $config['ignore_mount'][] = '/proc';
 $config['ignore_mount'][] = '/dev';
+$config['ignore_mount'][] = '/compat/linux/proc';
+$config['ignore_mount'][] = '/compat/linux/sys';
 
 $config['ignore_mount_string'][] = 'packages';
 $config['ignore_mount_string'][] = 'devfs';
 $config['ignore_mount_string'][] = 'procfs';
+$config['ignore_mount_string'][] = 'linprocfs';
+$config['ignore_mount_string'][] = 'linsysfs';
 $config['ignore_mount_string'][] = 'UMA';
 $config['ignore_mount_string'][] = 'MALLOC';
 
@@ -714,6 +718,7 @@ $config['poller_modules']['services']                    = 1;
 $config['poller_modules']['ldap_usersperou']             = 0;
 $config['poller_modules']['cisco-cimc']                  = 1;
 $config['poller_modules']['loadbalancers']               = 0;
+$config['poller_modules']['mef']                         = 0;
 
 // List of discovery modules. Need to be in this array to be
 // considered for execution.
@@ -751,6 +756,7 @@ $config['discovery_modules']['services']             = 1;
 $config['discovery_modules']['stp']                  = 1;
 $config['discovery_modules']['ntp']                  = 1;
 $config['discovery_modules']['loadbalancers']        = 0;
+$config['discovery_modules']['mef']                  = 0;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;

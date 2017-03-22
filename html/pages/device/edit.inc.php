@@ -39,6 +39,8 @@ if ($_SESSION['userlevel'] < '7') {
     }
 
     $panes['storage']  = 'Storage';
+    $panes['processors']  = 'Processors';
+    $panes['mempools']  = 'Memory';
     $panes['misc']     = 'Misc';
 
     $panes['component'] = 'Components';

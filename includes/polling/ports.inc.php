@@ -181,17 +181,12 @@ if ($device['os'] === 'f5' && (version_compare($device['version'], '11.2.0', '>=
 } else {
     if ($config['polling']['selected_ports'] === true || $device['attribs']['selected_ports'] == 'true') {
         echo('Select ports polling');
-        foreach ($table_base_oids as $oid) {
-            $data = snmpwalk_cache_oid($device, $oid, $data, 'IF-MIB');
-        }
-        unset(
-            $oid,
-            $table_base_oids
-        );
         $lports = dbFetchRows("SELECT * FROM `ports` where `device_id` = ? AND `deleted` = 0 AND `disabled` = 0", array($device['device_id']));
         foreach ($lports as $lport) {
             if (is_port_valid($lport, $device)) {
                 $i = $lport['ifIndex'];
+                $base_oids = implode(".$i ", $table_base_oids) . ".$i";
+                $data = snmp_get_multi($device, $base_oids, '-OQUst', 'IF-MIB', null, $data);
                 if ($lport['ifAdminStatus_prev'] === 'down' && $data[$i]['ifAdminStatus'] === 'down') {
                     echo 'port is still admin down';
                 } elseif ($lport['ifOperStatus_prev'] === 'down' && $data[$i]['ifOperStatus'] === 'down') {
@@ -232,7 +227,7 @@ if ($device['os'] === 'f5' && (version_compare($device['version'], '11.2.0', '>=
 if ($config['enable_ports_etherlike']) {
     echo 'dot3Stats ';
     $port_stats = snmpwalk_cache_oid($device, 'dot3StatsEntry', $port_stats, 'EtherLike-MIB');
-} else {
+} elseif ($device['os'] != 'asa') {
     echo 'dot3StatsDuplexStatus';
     $port_stats = snmpwalk_cache_oid($device, 'dot3StatsDuplexStatus', $port_stats, 'EtherLike-MIB');
 }
@@ -284,7 +279,7 @@ if ($device['os_group'] == 'cisco' && $device['os'] != 'asa') {
     $port_stats = snmpwalk_cache_oid($device, 'vmVlan', $port_stats, 'CISCO-VLAN-MEMBERSHIP-MIB');
     $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortEncapsulationOperType', $port_stats, 'CISCO-VTP-MIB');
     $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortNativeVlan', $port_stats, 'CISCO-VTP-MIB');
-} else {
+} elseif ($device['os'] != 'asa') {
     $port_stats = snmpwalk_cache_oid($device, 'dot1qPortVlanTable', $port_stats, 'Q-BRIDGE-MIB');
 }//end if
 
@@ -445,15 +440,13 @@ foreach ($ports as $port) {
             $port['update']['poll_period'] = $polled_period;
         }
 
-        // Copy ifHC[In|Out]Octets values to non-HC if they exist
-        if ($this_port['ifHCInOctets'] > 0 && is_numeric($this_port['ifHCInOctets']) && $this_port['ifHCOutOctets'] > 0 && is_numeric($this_port['ifHCOutOctets'])) {
-            echo 'HC ';
-            $this_port['ifInOctets']  = $this_port['ifHCInOctets'];
+        // use HC values if they are available
+        if (!isset($this_port['ifInOctets'])) {
+            echo "HC ";
+            $this_port['ifInOctets'] = $this_port['ifHCInOctets'];
             $this_port['ifOutOctets'] = $this_port['ifHCOutOctets'];
-        }
-        if (is_numeric($this_port['ifHCInUcastPkts']) && $this_port['ifHCInUcastPkts'] > 0 && is_numeric($this_port['ifHCOutUcastPkts']) && $this_port['ifHCOutUcastPkts'] > 0) {
-            $this_port['ifInUcastPkts']  = $this_port['ifHCInUcastPkts'];
-            $this_port['ifOutUcastPkts'] = $this_port['ifHCOutUcastPkts'];
+            $this_port['ififInUcastPkts'] = $this_port['ifHCInUcastPkts'];
+            $this_port['ififOutUcastPkts'] = $this_port['ifHCOutUcastPkts'];
         }
 
         if ($device['os'] === 'airos-af' && $port['ifAlias'] === 'eth0') {

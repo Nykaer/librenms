@@ -823,20 +823,30 @@ function get_astext($asn)
     }
 }
 
-# Use this function to write to the eventlog table
+/**
+ * Log events to the event table
+ *
+ * @param string $text message describing the event
+ * @param array|int $device device array or device_id
+ * @param string $type brief category for this event. Examples: sensor, state, stp, system, temperature, interface
+ * @param int $severity 1: ok, 2: info, 3: notice, 4: warning, 5: critical, 0: unknown
+ * @param int $reference the id of the referenced entity.  Supported types: interface
+ */
 function log_event($text, $device = null, $type = null, $severity = 2, $reference = null)
 {
     if (!is_array($device)) {
         $device = device_by_id_cache($device);
     }
 
-    $insert = array('host' => ($device['device_id'] ? $device['device_id'] : 0),
-        'device_id' => ($device['device_id'] ? $device['device_id'] : 0),
-        'reference' => ($reference ? $reference : "NULL"),
-        'type' => ($type ? $type : "NULL"),
+    $insert = array('host' => ($device['device_id'] ?: 0),
+        'device_id' => ($device['device_id'] ?: 0),
+        'reference' => ($reference ?: "NULL"),
+        'type' => ($type ?: "NULL"),
         'datetime' => array("NOW()"),
         'severity' => $severity,
-        'message' => $text);
+        'message' => $text,
+        'username'  => $_SESSION['username'] ?: '',
+     );
 
     dbInsert($insert, 'eventlog');
 }
@@ -870,9 +880,7 @@ function send_mail($emails, $subject, $message, $html = false)
     if (is_array($emails) || ($emails = parse_email($emails))) {
         $mail = new PHPMailer();
         $mail->Hostname = php_uname('n');
-        if (empty($config['email_from'])) {
-            $config['email_from'] = '"' . $config['project_name'] . '" <' . $config['email_user'] . '@'.$mail->Hostname.'>';
-        }
+
         foreach (parse_email($config['email_from']) as $from => $from_name) {
             $mail->setFrom($from, $from_name);
         }
@@ -1131,9 +1139,6 @@ if (!defined('JSON_UNESCAPED_UNICODE')) {
 
 function _json_encode($data, $options = 448)
 {
-    array_walk_recursive($data, function (&$val) {
-        $val = utf8_encode($val);
-    });
     if (version_compare(PHP_VERSION, '5.4', '>=')) {
         return json_encode($data, $options);
     } else {
@@ -1488,7 +1493,12 @@ function host_exists($hostname, $snmphost = '')
         return true;
     } else {
         if ($config['allow_duplicate_sysName'] === false && !empty($snmphost)) {
-            $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            if (!empty($config['mydomain'])) {
+                $full_host = rtrim($snmphost, '.') . '.' . $config['mydomain'];
+                $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ? or `sysName` = ?", array($snmphost,$full_host));
+            } else {
+                $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            }
             if ($count > 0) {
                 return true;
             } else {
